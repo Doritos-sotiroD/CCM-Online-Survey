@@ -1,171 +1,170 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Music Emotion Survey</title>
 
-    <!-- jsPsych core -->
-    <script src="https://unpkg.com/jspsych@8.3.0"></script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/jspsych@8.3.0/css/jspsych.css"
-    />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Music Emotion Survey</title>
 
-    <!-- General experiment utilities -->
-    <script src="https://unpkg.com/@jspsych/plugin-preload@2.1.0"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-browser-check@2.1.0"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@2.1.0"></script>
+  <!-- jsPsych core -->
+  <script src="https://unpkg.com/jspsych@8.3.0"></script>
+  <link rel="stylesheet" href="https://unpkg.com/jspsych@8.3.0/css/jspsych.css" />
 
-    <!-- Instructions and simple response screens -->
-    <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.2.0"></script>
+  <!-- General experiment utilities -->
+  <script src="https://unpkg.com/@jspsych/plugin-preload@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-browser-check@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@2.1.0"></script>
 
-    <!-- Audio presentation -->
-    <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.2.0"></script>
+  <!-- Instructions and simple response screens -->
+  <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.2.0"></script>
 
-    <!-- Survey response formats -->
-    <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-survey-likert@2.2.0"></script>
+  <!-- Audio presentation -->
+  <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.2.0"></script>
 
-    <style>
-      /* Keep global styling minimal. Add the final UI styles here later. */
-      .jspsych-content {
-        max-width: 900px;
-      }
-      /* Condition 1: emotion-keyword entry */
+  <!-- Survey response formats -->
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-likert@2.2.0"></script>
 
-      .keyword-response {
-        width: min(700px, 90vw);
-        margin: 0 auto;
-        text-align: left;
-      }
+  <style>
+    /* Keep global styling minimal. Add the final UI styles here later. */
+    .jspsych-content {
+      max-width: 900px;
+    }
 
-      .keyword-input {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 12px 14px;
-        border: 1px solid #aeb7c2;
-        border-radius: 5px;
-        font-size: 18px;
-      }
+    /* Condition 1: emotion-keyword entry */
 
-      .keyword-input:focus {
-        border-color: #3b73b9;
-        outline: 2px solid rgba(59, 115, 185, 0.2);
-      }
+    .keyword-response {
+      width: min(700px, 90vw);
+      margin: 0 auto;
+      text-align: left;
+    }
 
-      .keyword-tags {
-        display: flex;
-        flex-wrap: wrap;
-        min-height: 52px;
-        gap: 8px;
-        margin: 18px 0;
-        padding: 10px;
-        border: 1px solid #d5dae0;
-        border-radius: 5px;
-        background: #f7f8fa;
-      }
+    .keyword-input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #aeb7c2;
+      border-radius: 5px;
+      font-size: 18px;
+    }
 
-      .keyword-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 10px;
-        border: 1px solid #9db9dc;
-        border-radius: 16px;
-        background: #eaf2fb;
-        color: #173f6d;
-      }
+    .keyword-input:focus {
+      border-color: #3b73b9;
+      outline: 2px solid rgba(59, 115, 185, 0.2);
+    }
 
-      .keyword-remove {
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: #52677d;
-        font-size: 17px;
-        cursor: pointer;
-      }
+    .keyword-tags {
+      display: flex;
+      flex-wrap: wrap;
+      min-height: 52px;
+      gap: 8px;
+      margin: 18px 0;
+      padding: 10px;
+      border: 1px solid #d5dae0;
+      border-radius: 5px;
+      background: #f7f8fa;
+    }
 
-      .keyword-message {
-        min-height: 24px;
-        margin-top: 8px;
-        color: #b42318;
-      }
+    .keyword-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid #9db9dc;
+      border-radius: 16px;
+      background: #eaf2fb;
+      color: #173f6d;
+    }
 
-      .keyword-count {
-        color: #606b77;
-        font-size: 14px;
-      }
-    </style>
-  </head>
+    .keyword-remove {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #52677d;
+      font-size: 17px;
+      cursor: pointer;
+    }
 
-  <body></body>
+    .keyword-message {
+      min-height: 24px;
+      margin-top: 8px;
+      color: #b42318;
+    }
 
-  <script>
-    "use strict";
+    .keyword-count {
+      color: #606b77;
+      font-size: 14px;
+    }
+  </style>
+</head>
 
-    /* ------------------------------------------------------------------
-       1. INITIALIZE JSPSYCH
-       ------------------------------------------------------------------ */
+<body></body>
 
-    const jsPsych = initJsPsych({
-      // Use WebAudio for more precise audio presentation.
-      use_webaudio: true,
+<script>
+  "use strict";
 
-      // Display overall experiment progress.
-      show_progress_bar: true,
-      auto_update_progress_bar: true,
-      message_progress_bar: "진행률",
+  /* ------------------------------------------------------------------
+     1. INITIALIZE JSPSYCH
+     ------------------------------------------------------------------ */
 
-      // Do not add an automatic delay between trials.
-      // Timing gaps should be defined explicitly within the timeline.
-      default_iti: 0,
+  const jsPsych = initJsPsych({
+    // Use WebAudio for more precise audio presentation.
+    use_webaudio: true,
 
-      // Treat uppercase and lowercase keyboard responses identically.
-      case_sensitive_responses: false,
+    // Display overall experiment progress.
+    show_progress_bar: true,
+    auto_update_progress_bar: true,
+    message_progress_bar: "진행률",
 
-      // Runs when the complete experiment ends.
-      on_finish: function () {
-        // DEVELOPMENT ONLY:
-        // Display the collected data in the browser.
-        jsPsych.data.displayData();
+    // Do not add an automatic delay between trials.
+    // Timing gaps should be defined explicitly within the timeline.
+    default_iti: 0,
 
-        // TODO: Replace displayData() with the final server-upload
-        // procedure before collecting real participant data.
-      }
-    });
+    // Treat uppercase and lowercase keyboard responses identically.
+    case_sensitive_responses: false,
 
-    const timeline = [];
+    // Runs when the complete experiment ends.
+    on_finish: function () {
+      // DEVELOPMENT ONLY:
+      // Display the collected data in the browser.
+      jsPsych.data.displayData();
 
-    /* ------------------------------------------------------------------
-       2. EXPERIMENT CONFIGURATION
-       ------------------------------------------------------------------ */
+      // TODO: Replace displayData() with the final server-upload
+      // procedure before collecting real participant data.
+    }
+  });
 
-    const experimentConfig = {
-      // Change manually when testing the other condition.
-      condition: "condition_1",
+  const timeline = [];
 
-      audioFiles: [
-        "audio/0001.mp3",
-        "audio/0002.mp3",
-        "audio/0003.mp3"
-      ],  
-      calibrationAudioFile: "audio/calibration.mp3",
-      practiceAudioFile: "audio/practice.mp3"
-    };
+  /* ------------------------------------------------------------------
+     2. EXPERIMENT CONFIGURATION
+     ------------------------------------------------------------------ */
 
-    /* ------------------------------------------------------------------
-       3. WORKFLOW SECTIONS
+  const experimentConfig = {
+    // Change manually when testing the other condition.
+    condition: "condition_1",
 
-       Each function returns an array of jsPsych trials. Add the relevant
-       trial objects after the participant-facing text has been finalized.
-       ------------------------------------------------------------------ */
+    audioFiles: [
+      "audio/0001.mp3",
+      "audio/0002.mp3",
+      "audio/0003.mp3"
+    ],
+    calibrationAudioFile: "audio/calibration.mp3",
+    practiceAudioFile: "audio/practice.mp3"
+  };
 
-    function buildConsentAndEligibility() {
-      // Suggested plugin: jsPsychSurveyHtmlForm
-      const consent = {
+  /* ------------------------------------------------------------------
+     3. WORKFLOW SECTIONS
+
+     Each function returns an array of jsPsych trials. Add the relevant
+     trial objects after the participant-facing text has been finalized.
+     ------------------------------------------------------------------ */
+
+  function buildConsentAndEligibility() {
+    // Suggested plugin: jsPsychSurveyHtmlForm
+    const consent = {
       type: jsPsychSurveyHtmlForm,
 
       preamble: `
@@ -223,7 +222,7 @@
       }
     };
 
-      const eligibility = {
+    const eligibility = {
       type: jsPsychSurveyHtmlForm,
 
       preamble: `
@@ -304,25 +303,25 @@
       }
     };
 
-      return [consent, eligibility];
+    return [consent, eligibility];
 
-    }
+  }
 
-    function buildHeadphoneCheckAndCalibration() {
-      // Suggested plugins:
-      // jsPsychHtmlButtonResponse, jsPsychAudioKeyboardResponse,
-      // jsPsychSurveyHtmlForm
-      const headphoneConfirmation = {
-        type: jsPsychSurveyHtmlForm,
+  function buildHeadphoneCheckAndCalibration() {
+    // Suggested plugins:
+    // jsPsychHtmlButtonResponse, jsPsychAudioKeyboardResponse,
+    // jsPsychSurveyHtmlForm
+    const headphoneConfirmation = {
+      type: jsPsychSurveyHtmlForm,
 
-        preamble: `
+      preamble: `
           <div class="survey-section">
             <h2>[헤드폰 착용 확인 제목]</h2>
             <p>[헤드폰 또는 이어폰을 착용하도록 안내하세요.]</p>
           </div>
         `,
 
-        html: `
+      html: `
           <fieldset>
             <legend>[현재 헤드폰 또는 이어폰을 착용하고 있나요?]</legend>
 
@@ -348,70 +347,70 @@
           </fieldset>
         `,
 
-        button_label: "[다음]",
+      button_label: "[다음]",
 
-        data: {
-          task: "headphone_confirmation"
-        },
+      data: {
+        task: "headphone_confirmation"
+      },
 
-        on_finish: function (data) {
-          const wearingHeadphones =
-            data.response.headphones === "yes";
+      on_finish: function (data) {
+        const wearingHeadphones =
+          data.response.headphones === "yes";
 
-          data.wearing_headphones = wearingHeadphones;
+        data.wearing_headphones = wearingHeadphones;
 
-          if (!wearingHeadphones) {
-            jsPsych.abortExperiment(
-              "[헤드폰 또는 이어폰이 필요하여 실험이 종료되었습니다.]"
-            );
-          }
+        if (!wearingHeadphones) {
+          jsPsych.abortExperiment(
+            "[헤드폰 또는 이어폰이 필요하여 실험이 종료되었습니다.]"
+          );
         }
-      };
+      }
+    };
 
-      const calibrationInstructions = {
-        type: jsPsychHtmlButtonResponse,
+    const calibrationInstructions = {
+      type: jsPsychHtmlButtonResponse,
 
-        stimulus: `
+      stimulus: `
           <div class="survey-section">
             <h2>[음량 조절 제목]</h2>
             <p>[재생될 소리를 듣고 편안한 크기로 음량을 조절하도록 안내하세요.]</p>
           </div>
         `,
 
-        choices: ["[음량 조절 시작]"],
+      choices: ["[음량 조절 시작]"],
 
-        data: {
-          task: "calibration_instructions"
-        }
-      };
+      data: {
+        task: "calibration_instructions"
+      }
+    };
 
-      const calibrationAudio = {
-        type: jsPsychAudioKeyboardResponse,
+    const calibrationAudio = {
+      type: jsPsychAudioKeyboardResponse,
 
-        stimulus: experimentConfig.calibrationAudioFile,
+      stimulus: experimentConfig.calibrationAudioFile,
 
-        choices: "NO_KEYS",
+      choices: "NO_KEYS",
 
-        trial_ends_after_audio: true,
+      trial_ends_after_audio: true,
 
-        prompt: `
+      prompt: `
           <p>[소리를 듣고 기기의 음량을 조절해 주세요.]</p>
         `,
 
-        data: {
-          task: "calibration_audio",
-          audio_file: experimentConfig.calibrationAudioFile
-        }
-      };
+      data: {
+        task: "calibration_audio",
+        audio_file: experimentConfig.calibrationAudioFile
+      }
+    };
 
-      const calibrationConfirmation = {
-        type: jsPsychSurveyHtmlForm,
+    const calibrationConfirmation = {
+      type: jsPsychSurveyHtmlForm,
 
-        preamble: `
+      preamble: `
           <p>[현재 음량이 편안한 수준인지 확인해 주세요.]</p>
         `,
 
-        html: `
+      html: `
           <label>
             <input
               type="radio"
@@ -433,18 +432,18 @@
           </label>
         `,
 
-        button_label: "[확인]",
+      button_label: "[확인]",
 
-        data: {
-          task: "calibration_confirmation"
-        }
-      };
+      data: {
+        task: "calibration_confirmation"
+      }
+    };
 
-      const calibrationLoop = {
-        timeline: [
-          calibrationAudio,
-          calibrationConfirmation
-        ],
+    const calibrationLoop = {
+      timeline: [
+        calibrationAudio,
+        calibrationConfirmation
+      ],
 
       loop_function: function (data) {
         const finalTrial = data.last(1).values()[0];
@@ -460,374 +459,374 @@
       calibrationInstructions,
       calibrationLoop
     ];
+  }
+
+  function buildIntroductionAndPractice() {
+    // 1. VALIDATE THE ASSIGNED CONDITION AND PRACTICE FILE
+    // The condition must already be assigned before timeline assembly.
+    const condition = experimentConfig.condition;
+    const practiceFile = experimentConfig.practiceAudioFile;
+
+    if (!["condition_1", "condition_2"].includes(condition)) {
+      throw new Error(
+        "Assign condition_1 or condition_2 before building practice."
+      );
     }
 
-    function buildIntroductionAndPractice() {
-      // 1. VALIDATE THE ASSIGNED CONDITION AND PRACTICE FILE
-      // The condition must already be assigned before timeline assembly.
-      const condition = experimentConfig.condition;
-      const practiceFile = experimentConfig.practiceAudioFile;
+    if (typeof practiceFile !== "string" || !practiceFile.trim()) {
+      throw new Error("Set experimentConfig.practiceAudioFile.");
+    }
 
-      if (!["condition_1", "condition_2"].includes(condition)) {
-        throw new Error(
-          "Assign condition_1 or condition_2 before building practice."
-        );
-      }
+    if (experimentConfig.audioFiles.includes(practiceFile)) {
+      throw new Error(
+        "Use a practice file outside the main audioFiles list."
+      );
+    }
 
-      if (typeof practiceFile !== "string" || !practiceFile.trim()) {
-        throw new Error("Set experimentConfig.practiceAudioFile.");
-      }
-
-      if (experimentConfig.audioFiles.includes(practiceFile)) {
-        throw new Error(
-          "Use a practice file outside the main audioFiles list."
-        );
-      }
-
-      // 2. SHOW INSTRUCTIONS ONLY FOR THE ASSIGNED RESPONSE FORMAT
-      // All Korean text below is editable draft wording.
-      // No emotion examples are supplied to the free-response group.
-      const conditionPages = {
-        condition_1: [
-          `
+    // 2. SHOW INSTRUCTIONS ONLY FOR THE ASSIGNED RESPONSE FORMAT
+    // All Korean text below is editable draft wording.
+    // No emotion examples are supplied to the free-response group.
+    const conditionPages = {
+      condition_1: [
+        `
             <h2>감정 단어 입력</h2>
             <p>음악을 듣는 동안 실제로 느낀 감정을 한 단어씩 입력해 주세요.</p>
             <p>단어를 입력한 뒤 Enter를 누르면 화면에 추가됩니다.</p>
             <p>다른 감정도 같은 방법으로 입력할 수 있습니다.</p>
           `,
-          `
+        `
             <h2>입력한 단어 확인</h2>
             <p>입력한 단어는 화면에서 확인할 수 있습니다.</p>
             <p>지우려면 단어 옆의 ×를 눌러 주세요.</p>
             <p>한 개 이상의 단어를 추가하고 입력란을 비운 뒤 응답 완료를 눌러 주세요.</p>
           `
-        ],
+      ],
 
-        condition_2: [
-          `
+      condition_2: [
+        `
             <h2>느낌 평가</h2>
             <p>음악을 듣는 동안 실제로 느낀 상태를 각 문장에 대해 평가해 주세요.</p>
             <p>화면에 표시된 기준을 보고 1부터 7까지 중 하나를 선택해 주세요.</p>
           `,
-          `
+        `
             <h2>응답 확인</h2>
             <p>각 문장마다 하나의 응답을 선택해 주세요.</p>
             <p>제출 전에는 선택을 바꿀 수 있습니다.</p>
             <p>화면 아래에도 문항이 있으면 내려서 확인해 주세요.</p>
             <p>모든 문항에 답한 뒤 응답 완료를 눌러 주세요.</p>
           `
-        ]
-      };
+      ]
+    };
 
-      const instructions = {
-        type: jsPsychInstructions,
+    const instructions = {
+      type: jsPsychInstructions,
 
-        pages: [
-          `
+      pages: [
+        `
             <h2>실험 안내</h2>
             <p>5초 길이의 음악을 듣고 자신의 느낌에 답하는 실험입니다.</p>
             <p>음악 재생이 끝나면 응답 화면이 나타납니다.</p>
             <p>정답은 없으니 자신의 느낌대로 답해 주세요.</p>
           `,
 
-          // Insert only the assigned condition's instruction pages.
-          ...conditionPages[condition],
+        // Insert only the assigned condition's instruction pages.
+        ...conditionPages[condition],
 
-          `
+        `
             <h2>친숙도와 연습</h2>
             <p>느낌에 대한 응답을 마치면 음악이 얼마나 친숙했는지 답해 주세요.</p>
             <p>먼저 연습용 음악으로 이 과정을 연습합니다.</p>
             <p>연습이 끝나면 필요한 만큼 다시 연습하거나 본 실험을 시작할 수 있습니다.</p>
           `
-        ],
+      ],
 
-        show_clickable_nav: true,
-        allow_backward: true,
-        allow_keys: false,
+      show_clickable_nav: true,
+      allow_backward: true,
+      allow_keys: false,
 
-        button_label_previous: "이전",
-        button_label_next: "다음",
+      button_label_previous: "이전",
+      button_label_next: "다음",
 
-        post_trial_gap: 0,
+      post_trial_gap: 0,
 
-        data: {
-          task: "instructions",
-          phase: "practice",
-          condition: condition
-        }
-      };
-
-      // 3. REUSE THE ASSIGNED CONDITION'S ACTUAL TRIAL BUILDER
-      // A separate builder call creates fresh trial objects and response state.
-      const buildAssignedTrials = condition === "condition_1"
-        ? buildCondition1Trials
-        : buildCondition2Trials;
-
-      const [preloadPractice, ...practiceTrials] = buildAssignedTrials({
-        audioFiles: [practiceFile],
-        phase: "practice"
-      });
-
-      // Prevent an old builder that ignores these arguments from accidentally
-      // using the main-session audio files for practice.
-      if (
-        preloadPractice?.type !== jsPsychPreload ||
-        preloadPractice.audio?.length !== 1 ||
-        preloadPractice.audio[0] !== practiceFile ||
-        preloadPractice.data?.phase !== "practice" ||
-        !practiceTrials.length
-      ) {
-        throw new Error(
-          "Update the condition builders to accept audioFiles and phase."
-        );
+      data: {
+        task: "instructions",
+        phase: "practice",
+        condition: condition
       }
+    };
 
-      // 4. LABEL EACH ATTEMPT WHILE PRESERVING RESPONSE-SAVING CALLBACKS
-      let practiceAttempt = 0;
+    // 3. REUSE THE ASSIGNED CONDITION'S ACTUAL TRIAL BUILDER
+    // A separate builder call creates fresh trial objects and response state.
+    const buildAssignedTrials = condition === "condition_1"
+      ? buildCondition1Trials
+      : buildCondition2Trials;
 
-      function addAttemptNumber(node) {
-        // Condition 1 has a nested timeline.
-        // Condition 2 currently returns individual trials.
-        if (Array.isArray(node.timeline)) {
-          return {
-            ...node,
-            timeline: node.timeline.map(addAttemptNumber)
-          };
-        }
+    const [preloadPractice, ...practiceTrials] = buildAssignedTrials({
+      audioFiles: [practiceFile],
+      phase: "practice"
+    });
 
-        const originalOnFinish = node.on_finish;
+    // Prevent an old builder that ignores these arguments from accidentally
+    // using the main-session audio files for practice.
+    if (
+      preloadPractice?.type !== jsPsychPreload ||
+      preloadPractice.audio?.length !== 1 ||
+      preloadPractice.audio[0] !== practiceFile ||
+      preloadPractice.data?.phase !== "practice" ||
+      !practiceTrials.length
+    ) {
+      throw new Error(
+        "Update the condition builders to accept audioFiles and phase."
+      );
+    }
 
+    // 4. LABEL EACH ATTEMPT WHILE PRESERVING RESPONSE-SAVING CALLBACKS
+    let practiceAttempt = 0;
+
+    function addAttemptNumber(node) {
+      // Condition 1 has a nested timeline.
+      // Condition 2 currently returns individual trials.
+      if (Array.isArray(node.timeline)) {
         return {
           ...node,
-
-          on_finish: function (data) {
-            // Preserve keyword saving, rating conversion, and other existing work.
-            if (typeof originalOnFinish === "function") {
-              originalOnFinish.call(this, data);
-            }
-
-            data.practice_attempt = practiceAttempt;
-          }
+          timeline: node.timeline.map(addAttemptNumber)
         };
       }
 
-      const startAttempt = {
-        type: jsPsychHtmlButtonResponse,
+      const originalOnFinish = node.on_finish;
 
-        stimulus: `
+      return {
+        ...node,
+
+        on_finish: function (data) {
+          // Preserve keyword saving, rating conversion, and other existing work.
+          if (typeof originalOnFinish === "function") {
+            originalOnFinish.call(this, data);
+          }
+
+          data.practice_attempt = practiceAttempt;
+        }
+      };
+    }
+
+    const startAttempt = {
+      type: jsPsychHtmlButtonResponse,
+
+      stimulus: `
           <h2>연습</h2>
           <p>준비가 되면 연습 시작을 눌러 주세요.</p>
         `,
 
-        choices: ["연습 시작"],
-        post_trial_gap: 0,
+      choices: ["연습 시작"],
+      post_trial_gap: 0,
 
-        data: {
-          task: "practice_start",
-          phase: "practice",
-          condition: condition
-        },
+      data: {
+        task: "practice_start",
+        phase: "practice",
+        condition: condition
+      },
 
-        on_start: function () {
-          // A trial's on_start runs on every pass through the practice loop.
-          practiceAttempt += 1;
-        },
+      on_start: function () {
+        // A trial's on_start runs on every pass through the practice loop.
+        practiceAttempt += 1;
+      },
 
-        on_finish: function (data) {
-          data.practice_attempt = practiceAttempt;
-        }
-      };
+      on_finish: function (data) {
+        data.practice_attempt = practiceAttempt;
+      }
+    };
 
-      const repeatDecision = {
-        type: jsPsychHtmlButtonResponse,
+    const repeatDecision = {
+      type: jsPsychHtmlButtonResponse,
 
-        stimulus: `
+      stimulus: `
           <h2>연습을 마쳤습니다.</h2>
           <p>같은 음악으로 다시 연습하거나 본 실험을 시작할 수 있습니다.</p>
         `,
 
-        choices: ["다시 연습하기", "본 실험 시작"],
-        post_trial_gap: 0,
+      choices: ["다시 연습하기", "본 실험 시작"],
+      post_trial_gap: 0,
 
-        data: {
-          task: "practice_decision",
-          phase: "practice",
-          condition: condition
-        },
+      data: {
+        task: "practice_decision",
+        phase: "practice",
+        condition: condition
+      },
 
-        on_finish: function (data) {
-          data.practice_attempt = practiceAttempt;
+      on_finish: function (data) {
+        data.practice_attempt = practiceAttempt;
 
-          // jsPsych numbers buttons from zero: the first button requests a repeat.
-          data.repeat_practice = data.response === 0;
-        }
-      };
+        // jsPsych numbers buttons from zero: the first button requests a repeat.
+        data.repeat_practice = data.response === 0;
+      }
+    };
 
-      // 5. REPEAT THE COMPLETE PRACTICE TRIAL UNTIL THE PARTICIPANT IS READY
-      // At least one complete attempt is required. There is no repetition limit.
-      const practiceLoop = {
-        timeline: [
-          startAttempt,
-          ...practiceTrials.map(addAttemptNumber),
-          repeatDecision
-        ],
+    // 5. REPEAT THE COMPLETE PRACTICE TRIAL UNTIL THE PARTICIPANT IS READY
+    // At least one complete attempt is required. There is no repetition limit.
+    const practiceLoop = {
+      timeline: [
+        startAttempt,
+        ...practiceTrials.map(addAttemptNumber),
+        repeatDecision
+      ],
 
-        loop_function: function (data) {
-          // Examine the decision from this iteration only.
-          const decision = data
-            .filter({ task: "practice_decision" })
-            .last(1)
-            .values()[0];
+      loop_function: function (data) {
+        // Examine the decision from this iteration only.
+        const decision = data
+          .filter({ task: "practice_decision" })
+          .last(1)
+          .values()[0];
 
-          return decision.repeat_practice === true;
-        }
-      };
+        return decision.repeat_practice === true;
+      }
+    };
 
-      // Instructions and audio preloading run once.
-      // Only the complete practice cycle repeats.
-      // On exit, jsPsych continues into the existing main-session timeline.
-      return [instructions, preloadPractice, practiceLoop];
+    // Instructions and audio preloading run once.
+    // Only the complete practice cycle repeats.
+    // On exit, jsPsych continues into the existing main-session timeline.
+    return [instructions, preloadPractice, practiceLoop];
+  }
+
+  function buildCondition1Trials({
+    audioFiles = experimentConfig.audioFiles,
+    phase = "main"
+  } = {}) {
+    /* ---------------------------------------------------------------
+      1. CONFIGURATION VALIDATION
+      --------------------------------------------------------------- */
+
+    if (experimentConfig.condition !== "condition_1") {
+      throw new Error(
+        'buildCondition1Trials() can only be used with "condition_1".'
+      );
     }
 
-    function buildCondition1Trials({
-      audioFiles = experimentConfig.audioFiles,
-      phase = "main"
-    } = {}) {
-      /* ---------------------------------------------------------------
-        1. CONFIGURATION VALIDATION
-        --------------------------------------------------------------- */
+    if (
+      !Array.isArray(audioFiles) ||
+      audioFiles.length === 0
+    ) {
+      throw new Error(
+        "audioFiles must contain at least one audio file."
+      );
+    }
 
-      if (experimentConfig.condition !== "condition_1") {
-        throw new Error(
-          'buildCondition1Trials() can only be used with "condition_1".'
+    const invalidAudioFiles = audioFiles.filter(
+      function (audioFile) {
+        return (
+          typeof audioFile !== "string" ||
+          audioFile.trim() === ""
         );
       }
+    );
 
-      if (
-        !Array.isArray(audioFiles) ||
-        audioFiles.length === 0
-      ) {
-        throw new Error(
-          "audioFiles must contain at least one audio file."
-        );
-      }
+    if (invalidAudioFiles.length > 0) {
+      throw new Error(
+        "Every item in experimentConfig.audioFiles must be a valid string."
+      );
+    }
 
-      const invalidAudioFiles = audioFiles.filter(
-        function (audioFile) {
-          return (
-            typeof audioFile !== "string" ||
-            audioFile.trim() === ""
+
+    /* ---------------------------------------------------------------
+      2. CONSTRUCT TIMELINE VARIABLES
+      --------------------------------------------------------------- */
+
+    const condition1Stimuli =
+      audioFiles.map(
+        function (audioFile, index) {
+          const fileName = audioFile.split("/").pop();
+
+          const stimulusId = fileName.replace(
+            /\.[^/.]+$/,
+            ""
           );
+
+          return {
+            audioFile: audioFile,
+            stimulusId: stimulusId,
+            sourceIndex: index + 1
+          };
         }
       );
 
-      if (invalidAudioFiles.length > 0) {
-        throw new Error(
-          "Every item in experimentConfig.audioFiles must be a valid string."
-        );
-      }
 
+    /* ---------------------------------------------------------------
+      3. PRELOAD ALL CONDITION 1 AUDIO
+      --------------------------------------------------------------- */
 
-      /* ---------------------------------------------------------------
-        2. CONSTRUCT TIMELINE VARIABLES
-        --------------------------------------------------------------- */
+    const preloadCondition1Audio = {
+      type: jsPsychPreload,
 
-      const condition1Stimuli =
-        experimentConfig.audioFiles.map(
-          function (audioFile, index) {
-            const fileName = audioFile.split("/").pop();
+      audio: audioFiles,
 
-            const stimulusId = fileName.replace(
-              /\.[^/.]+$/,
-              ""
-            );
+      continue_after_error: false,
 
-            return {
-              audioFile: audioFile,
-              stimulusId: stimulusId,
-              sourceIndex: index + 1
-            };
-          }
-        );
-
-
-      /* ---------------------------------------------------------------
-        3. PRELOAD ALL CONDITION 1 AUDIO
-        --------------------------------------------------------------- */
-
-      const preloadCondition1Audio = {
-        type: jsPsychPreload,
-
-        audio: experimentConfig.audioFiles,
-
-        continue_after_error: false,
-
-        message: `
+      message: `
           <p>[음악 파일을 불러오는 동안 표시할 문구]</p>
         `,
 
-        error_message: `
+      error_message: `
           <p>[음악 파일을 불러오지 못했을 때 표시할 문구]</p>
         `,
 
-        data: {
-          task: "preload",
-          phase: phase,
-          condition: "condition_1"
-        }
-      };
+      data: {
+        task: "preload",
+        phase: phase,
+        condition: "condition_1"
+      }
+    };
 
 
-      /* ---------------------------------------------------------------
-        4. PRESENT THE FIVE-SECOND EXCERPT
-        --------------------------------------------------------------- */
+    /* ---------------------------------------------------------------
+      4. PRESENT THE FIVE-SECOND EXCERPT
+      --------------------------------------------------------------- */
 
-      const listenToExcerpt = {
-        type: jsPsychAudioKeyboardResponse,
+    const listenToExcerpt = {
+      type: jsPsychAudioKeyboardResponse,
 
-        stimulus: jsPsych.timelineVariable("audioFile"),
+      stimulus: jsPsych.timelineVariable("audioFile"),
 
-        choices: "NO_KEYS",
+      choices: "NO_KEYS",
 
-        response_allowed_while_playing: false,
+      response_allowed_while_playing: false,
 
-        trial_ends_after_audio: true,
+      trial_ends_after_audio: true,
 
-        prompt: `
+      prompt: `
           <div class="listening-screen">
             <p>[음악을 듣는 동안 표시할 문구]</p>
           </div>
         `,
 
-        data: {
-          task: "excerpt_listening",
-          phase: phase,
-          condition: "condition_1",
+      data: {
+        task: "excerpt_listening",
+        phase: phase,
+        condition: "condition_1",
 
-          stimulus_id:
-            jsPsych.timelineVariable("stimulusId"),
+        stimulus_id:
+          jsPsych.timelineVariable("stimulusId"),
 
-          source_index:
-            jsPsych.timelineVariable("sourceIndex"),
+        source_index:
+          jsPsych.timelineVariable("sourceIndex"),
 
-          audio_file:
-            jsPsych.timelineVariable("audioFile")
-        }
-      };
+        audio_file:
+          jsPsych.timelineVariable("audioFile")
+      }
+    };
 
 
-      /* ---------------------------------------------------------------
-        5. COLLECT EMOTION KEYWORDS
-        --------------------------------------------------------------- */
+    /* ---------------------------------------------------------------
+      5. COLLECT EMOTION KEYWORDS
+      --------------------------------------------------------------- */
 
-      let emotionKeywords = [];
-      let keywordEvents = [];
-      let responseScreenStart = null;
+    let emotionKeywords = [];
+    let keywordEvents = [];
+    let responseScreenStart = null;
 
-      const collectEmotionKeywords = {
-        type: jsPsychHtmlButtonResponse,
+    const collectEmotionKeywords = {
+      type: jsPsychHtmlButtonResponse,
 
-        stimulus: `
+      stimulus: `
           <div class="keyword-response">
             <h2>[감정 키워드 응답 제목]</h2>
 
@@ -869,658 +868,870 @@
           </div>
         `,
 
-        choices: ["[응답 완료]"],
+      choices: ["[응답 완료]"],
 
-        data: {
-          task: "free_response",
-          phase: phase,
-          condition: "condition_1",
+      data: {
+        task: "free_response",
+        phase: phase,
+        condition: "condition_1",
 
-          stimulus_id:
-            jsPsych.timelineVariable("stimulusId"),
+        stimulus_id:
+          jsPsych.timelineVariable("stimulusId"),
 
-          source_index:
-            jsPsych.timelineVariable("sourceIndex"),
+        source_index:
+          jsPsych.timelineVariable("sourceIndex"),
 
-          audio_file:
-            jsPsych.timelineVariable("audioFile")
-        },
+        audio_file:
+          jsPsych.timelineVariable("audioFile")
+      },
 
-        on_start: function () {
-          // Reset the response variables before every excerpt.
-          emotionKeywords = [];
-          keywordEvents = [];
-          responseScreenStart = null;
-        },
+      on_start: function () {
+        // Reset the response variables before every excerpt.
+        emotionKeywords = [];
+        keywordEvents = [];
+        responseScreenStart = null;
+      },
 
-        on_load: function () {
-          responseScreenStart = performance.now();
+      on_load: function () {
+        responseScreenStart = performance.now();
 
-          const display = jsPsych.getDisplayElement();
+        const display = jsPsych.getDisplayElement();
 
-          const input = display.querySelector(
-            "#emotion-keyword-input"
-          );
+        const input = display.querySelector(
+          "#emotion-keyword-input"
+        );
 
-          const tagsContainer = display.querySelector(
-            "#emotion-keyword-tags"
-          );
+        const tagsContainer = display.querySelector(
+          "#emotion-keyword-tags"
+        );
 
-          const countDisplay = display.querySelector(
-            "#emotion-keyword-count"
-          );
+        const countDisplay = display.querySelector(
+          "#emotion-keyword-count"
+        );
 
-          const messageDisplay = display.querySelector(
-            "#emotion-keyword-message"
-          );
+        const messageDisplay = display.querySelector(
+          "#emotion-keyword-message"
+        );
 
-          const continueButton = display.querySelector(
-            ".jspsych-btn"
-          );
-
-
-          function normalizeKeyword(value) {
-            return value
-              .trim()
-              .replace(/\s+/g, " ");
-          }
+        const continueButton = display.querySelector(
+          ".jspsych-btn"
+        );
 
 
-          function keywordsAreEqual(first, second) {
-            return first.localeCompare(
-              second,
-              "ko",
-              {
-                sensitivity: "base"
-              }
-            ) === 0;
-          }
+        function normalizeKeyword(value) {
+          return value
+            .trim()
+            .replace(/\s+/g, " ");
+        }
 
 
-          function updateContinueButton() {
-            const hasSubmittedKeyword =
-              emotionKeywords.length > 0;
-
-            const hasUnsubmittedText =
-              normalizeKeyword(input.value) !== "";
-
-            continueButton.disabled =
-              !hasSubmittedKeyword ||
-              hasUnsubmittedText;
-          }
-
-
-          function renderKeywords() {
-            tagsContainer.replaceChildren();
-
-            emotionKeywords.forEach(
-              function (keyword, index) {
-                const tag = document.createElement("span");
-                tag.className = "keyword-tag";
-                tag.setAttribute("role", "listitem");
-
-                const keywordText =
-                  document.createElement("span");
-
-                keywordText.textContent = keyword;
-
-                const removeButton =
-                  document.createElement("button");
-
-                removeButton.type = "button";
-                removeButton.className = "keyword-remove";
-                removeButton.textContent = "×";
-
-                removeButton.setAttribute(
-                  "aria-label",
-                  `${keyword} [삭제]`
-                );
-
-                removeButton.addEventListener(
-                  "click",
-                  function () {
-                    const removedKeyword =
-                      emotionKeywords[index];
-
-                    emotionKeywords.splice(index, 1);
-
-                    keywordEvents.push({
-                      action: "remove",
-                      keyword: removedKeyword,
-                      rt: Math.round(
-                        performance.now() -
-                        responseScreenStart
-                      )
-                    });
-
-                    messageDisplay.textContent = "";
-
-                    renderKeywords();
-                    input.focus();
-                  }
-                );
-
-                tag.append(
-                  keywordText,
-                  removeButton
-                );
-
-                tagsContainer.appendChild(tag);
-              }
-            );
-
-            countDisplay.textContent =
-              `[입력한 감정 수] ${emotionKeywords.length}`;
-
-            updateContinueButton();
-          }
-
-
-          function addKeyword() {
-            const keyword =
-              normalizeKeyword(input.value);
-
-            if (keyword === "") {
-              return;
+        function keywordsAreEqual(first, second) {
+          return first.localeCompare(
+            second,
+            "ko",
+            {
+              sensitivity: "base"
             }
+          ) === 0;
+        }
 
-            const duplicateExists =
-              emotionKeywords.some(
-                function (existingKeyword) {
-                  return keywordsAreEqual(
-                    existingKeyword,
-                    keyword
-                  );
+
+        function updateContinueButton() {
+          const hasSubmittedKeyword =
+            emotionKeywords.length > 0;
+
+          const hasUnsubmittedText =
+            normalizeKeyword(input.value) !== "";
+
+          continueButton.disabled =
+            !hasSubmittedKeyword ||
+            hasUnsubmittedText;
+        }
+
+
+        function renderKeywords() {
+          tagsContainer.replaceChildren();
+
+          emotionKeywords.forEach(
+            function (keyword, index) {
+              const tag = document.createElement("span");
+              tag.className = "keyword-tag";
+              tag.setAttribute("role", "listitem");
+
+              const keywordText =
+                document.createElement("span");
+
+              keywordText.textContent = keyword;
+
+              const removeButton =
+                document.createElement("button");
+
+              removeButton.type = "button";
+              removeButton.className = "keyword-remove";
+              removeButton.textContent = "×";
+
+              removeButton.setAttribute(
+                "aria-label",
+                `${keyword} [삭제]`
+              );
+
+              removeButton.addEventListener(
+                "click",
+                function () {
+                  const removedKeyword =
+                    emotionKeywords[index];
+
+                  emotionKeywords.splice(index, 1);
+
+                  keywordEvents.push({
+                    action: "remove",
+                    keyword: removedKeyword,
+                    rt: Math.round(
+                      performance.now() -
+                      responseScreenStart
+                    )
+                  });
+
+                  messageDisplay.textContent = "";
+
+                  renderKeywords();
+                  input.focus();
                 }
               );
 
-            if (duplicateExists) {
-              messageDisplay.textContent =
-                "[이미 입력한 감정이라는 안내 문구]";
+              tag.append(
+                keywordText,
+                removeButton
+              );
 
-              input.select();
-              return;
+              tagsContainer.appendChild(tag);
             }
+          );
 
-            emotionKeywords.push(keyword);
+          countDisplay.textContent =
+            `[입력한 감정 수] ${emotionKeywords.length}`;
 
-            keywordEvents.push({
-              action: "add",
-              keyword: keyword,
-              rt: Math.round(
-                performance.now() -
-                responseScreenStart
-              )
-            });
+          updateContinueButton();
+        }
 
-            input.value = "";
-            messageDisplay.textContent = "";
 
-            renderKeywords();
-            input.focus();
+        function addKeyword() {
+          const keyword =
+            normalizeKeyword(input.value);
+
+          if (keyword === "") {
+            return;
           }
 
-
-          input.addEventListener(
-            "keydown",
-            function (event) {
-              /*
-              * Do not treat Enter as submission while the Korean
-              * input method editor is still composing a syllable.
-              */
-              if (
-                event.key !== "Enter" ||
-                event.isComposing ||
-                event.keyCode === 229
-              ) {
-                return;
+          const duplicateExists =
+            emotionKeywords.some(
+              function (existingKeyword) {
+                return keywordsAreEqual(
+                  existingKeyword,
+                  keyword
+                );
               }
+            );
 
-              event.preventDefault();
-              addKeyword();
-            }
-          );
+          if (duplicateExists) {
+            messageDisplay.textContent =
+              "[이미 입력한 감정이라는 안내 문구]";
 
+            input.select();
+            return;
+          }
 
-          input.addEventListener(
-            "input",
-            function () {
-              messageDisplay.textContent = "";
-              updateContinueButton();
-            }
-          );
+          emotionKeywords.push(keyword);
+
+          keywordEvents.push({
+            action: "add",
+            keyword: keyword,
+            rt: Math.round(
+              performance.now() -
+              responseScreenStart
+            )
+          });
+
+          input.value = "";
+          messageDisplay.textContent = "";
 
           renderKeywords();
           input.focus();
-        },
-
-        on_finish: function (data) {
-          data.emotion_keywords =
-            emotionKeywords.slice();
-
-          data.keyword_count =
-            emotionKeywords.length;
-
-          data.keyword_events =
-            keywordEvents.slice();
         }
-      };
 
 
-      /* ---------------------------------------------------------------
-        6. COLLECT FAMILIARITY
-        --------------------------------------------------------------- */
+        input.addEventListener(
+          "keydown",
+          function (event) {
+            /*
+            * Do not treat Enter as submission while the Korean
+            * input method editor is still composing a syllable.
+            */
+            if (
+              event.key !== "Enter" ||
+              event.isComposing ||
+              event.keyCode === 229
+            ) {
+              return;
+            }
 
-      const collectFamiliarity = {
-        type: jsPsychSurveyLikert,
+            event.preventDefault();
+            addKeyword();
+          }
+        );
 
-        preamble: `
+
+        input.addEventListener(
+          "input",
+          function () {
+            messageDisplay.textContent = "";
+            updateContinueButton();
+          }
+        );
+
+        renderKeywords();
+        input.focus();
+      },
+
+      on_finish: function (data) {
+        data.emotion_keywords =
+          emotionKeywords.slice();
+
+        data.keyword_count =
+          emotionKeywords.length;
+
+        data.keyword_events =
+          keywordEvents.slice();
+      }
+    };
+
+
+    /* ---------------------------------------------------------------
+      6. COLLECT FAMILIARITY
+      --------------------------------------------------------------- */
+
+    const collectFamiliarity = {
+      type: jsPsychSurveyLikert,
+
+      preamble: `
           <div class="survey-section">
             <h2>[친숙도 평가 제목]</h2>
           </div>
         `,
 
-        questions: [
-          {
-            prompt: "[방금 들은 음악의 친숙도를 묻는 문항]",
+      questions: [
+        {
+          prompt: "[방금 들은 음악의 친숙도를 묻는 문항]",
 
-            name: "familiarity",
+          name: "familiarity",
 
-            labels: [
-              "[1점 기준]",
-              "",
-              "",
-              "[4점 기준]",
-              "",
-              "",
-              "[7점 기준]"
-            ],
-
-            required: true
-          }
-        ],
-
-        randomize_question_order: false,
-
-        button_label: "[다음]",
-
-        data: {
-          task: "familiarity",
-          phase: phase,
-          condition: "condition_1",
-
-          stimulus_id:
-            jsPsych.timelineVariable("stimulusId"),
-
-          source_index:
-            jsPsych.timelineVariable("sourceIndex"),
-
-          audio_file:
-            jsPsych.timelineVariable("audioFile")
-        },
-
-        on_finish: function (data) {
-          /*
-          * survey-likert stores the seven positions as 0–6.
-          * Save an additional variable expressed as 1–7.
-          */
-          data.familiarity_rating_1_to_7 =
-            Number(data.response.familiarity) + 1;
-        }
-      };
-
-
-      /* ---------------------------------------------------------------
-        7. COMBINE THE THREE STEPS
-        --------------------------------------------------------------- */
-
-      const condition1Procedure = {
-        timeline: [
-          listenToExcerpt,
-          collectEmotionKeywords,
-          collectFamiliarity
-        ],
-
-        timeline_variables: condition1Stimuli,
-
-        randomize_order: true,
-
-        repetitions: 1
-      };
-
-
-      /* ---------------------------------------------------------------
-        8. RETURN THE COMPLETE CONDITION
-        --------------------------------------------------------------- */
-
-      return [
-        preloadCondition1Audio,
-        condition1Procedure
-      ];
-    }
-
-    function buildCondition2Trials({
-      audioFiles = experimentConfig.audioFiles,
-      phase = "main"
-      } = {}) {
-      // 1. EDITABLE RATING SCHEME
-      // Increment this version whenever prompts, anchors, or dimensions change.
-      const settings = {
-        version: "dimensions_draft_01",
-        randomizeExcerptOrder: true,
-
-        // Default seven-point scale; an item's labels can override this.
-        // This draft measures degree: 1 = absence, 7 = high degree.
-        // 4 is moderate degree, not neutral affect on a bipolar scale.
-        defaultLabels: [
-          "1<br>전혀 그렇지 않다", "2", "3", "4<br>보통이다",
-          "5", "6", "7<br>매우 그렇다"
-        ],
-
-        // Edit this array to add, remove, or reorder dimensions.
-        // Keep IDs stable for wording edits; use a new ID for a new construct.
-        // Optional per-item override: labels: [seven label strings].
-        dimensions: [
-          { id: "pleasantness", prompt: "기분이 유쾌했다." },
-          { id: "stimulation", prompt: "자극을 받아 활성화되는 느낌이 들었다." },
-          { id: "dominance", prompt: "주도권을 가진 듯한 느낌이 들었다." },
-          { id: "focus", prompt: "집중하고 있었다." },
-
-          // Felt certainty, not confidence in the survey answer.
-          { id: "certainty", prompt: "확신이 들었다." },
-
-          { id: "obstruction", prompt: "무언가에 가로막힌 느낌이 들었다." },
-          { id: "safety", prompt: "안전하다고 느꼈다." },
-          { id: "group_identity", prompt: "어떤 집단의 일원이라는 소속감을 느꼈다." },
-          { id: "person_commitment", prompt: "특정한 사람에게 헌신하는 마음을 느꼈다." }
-        ],
-
-        // Familiarity remains a separate screen and data row.
-        familiarity: {
-          id: "familiarity",
-          prompt: "방금 들은 음악이 얼마나 친숙했나요?",
           labels: [
-            "1<br>전혀 친숙하지 않다", "2", "3", "4<br>보통이다",
-            "5", "6", "7<br>매우 친숙하다"
-          ]
-        },
+            "[1점 기준]",
+            "",
+            "",
+            "[4점 기준]",
+            "",
+            "",
+            "[7점 기준]"
+          ],
 
-        text: {
-          loading: "<p>음악 파일을 불러오고 있습니다.</p>",
-          loadError: "<p>음악 파일을 불러오지 못했습니다.</p>",
-          listening: "<p>음악을 주의 깊게 들어 주세요.</p>",
+          required: true
+        }
+      ],
 
-          ratingPreamble: `
+      randomize_question_order: false,
+
+      button_label: "[다음]",
+
+      data: {
+        task: "familiarity",
+        phase: phase,
+        condition: "condition_1",
+
+        stimulus_id:
+          jsPsych.timelineVariable("stimulusId"),
+
+        source_index:
+          jsPsych.timelineVariable("sourceIndex"),
+
+        audio_file:
+          jsPsych.timelineVariable("audioFile")
+      },
+
+      on_finish: function (data) {
+        /*
+        * survey-likert stores the seven positions as 0–6.
+        * Save an additional variable expressed as 1–7.
+        */
+        data.familiarity_rating_1_to_7 =
+          Number(data.response.familiarity) + 1;
+      }
+    };
+
+
+    /* ---------------------------------------------------------------
+      7. COMBINE THE THREE STEPS
+      --------------------------------------------------------------- */
+
+    const condition1Procedure = {
+      timeline: [
+        listenToExcerpt,
+        collectEmotionKeywords,
+        collectFamiliarity
+      ],
+
+      timeline_variables: condition1Stimuli,
+
+      randomize_order: true,
+
+      repetitions: 1
+    };
+
+
+    /* ---------------------------------------------------------------
+      8. RETURN THE COMPLETE CONDITION
+      --------------------------------------------------------------- */
+
+    return [
+      preloadCondition1Audio,
+      condition1Procedure
+    ];
+  }
+
+  function buildCondition2Trials({
+    audioFiles = experimentConfig.audioFiles,
+    phase = "main"
+  } = {}) {
+    // 1. EDITABLE RATING SCHEME
+    // Increment this version whenever prompts, anchors, or dimensions change.
+    const settings = {
+      version: "dimensions_draft_01",
+      randomizeExcerptOrder: true,
+
+      // Default seven-point scale; an item's labels can override this.
+      // This draft measures degree: 1 = absence, 7 = high degree.
+      // 4 is moderate degree, not neutral affect on a bipolar scale.
+      defaultLabels: [
+        "1<br>전혀 그렇지 않다", "2", "3", "4<br>보통이다",
+        "5", "6", "7<br>매우 그렇다"
+      ],
+
+      // Edit this array to add, remove, or reorder dimensions.
+      // Keep IDs stable for wording edits; use a new ID for a new construct.
+      // Optional per-item override: labels: [seven label strings].
+      dimensions: [
+        { id: "pleasantness", prompt: "기분이 유쾌했다." },
+        { id: "stimulation", prompt: "자극을 받아 활성화되는 느낌이 들었다." },
+        { id: "dominance", prompt: "주도권을 가진 듯한 느낌이 들었다." },
+        { id: "focus", prompt: "집중하고 있었다." },
+
+        // Felt certainty, not confidence in the survey answer.
+        { id: "certainty", prompt: "확신이 들었다." },
+
+        { id: "obstruction", prompt: "무언가에 가로막힌 느낌이 들었다." },
+        { id: "safety", prompt: "안전하다고 느꼈다." },
+        { id: "group_identity", prompt: "어떤 집단의 일원이라는 소속감을 느꼈다." },
+        { id: "person_commitment", prompt: "특정한 사람에게 헌신하는 마음을 느꼈다." }
+      ],
+
+      // Familiarity remains a separate screen and data row.
+      familiarity: {
+        id: "familiarity",
+        prompt: "방금 들은 음악이 얼마나 친숙했나요?",
+        labels: [
+          "1<br>전혀 친숙하지 않다", "2", "3", "4<br>보통이다",
+          "5", "6", "7<br>매우 친숙하다"
+        ]
+      },
+
+      text: {
+        loading: "<p>음악 파일을 불러오고 있습니다.</p>",
+        loadError: "<p>음악 파일을 불러오지 못했습니다.</p>",
+        listening: "<p>음악을 주의 깊게 들어 주세요.</p>",
+
+        ratingPreamble: `
             <h2>음악을 듣는 동안 실제로 느낀 상태를 답해 주세요.</h2>
             <p>각 문장이 자신의 느낌에 얼마나 해당하는지 선택해 주세요.</p>
           `,
 
-          familiarityPreamble: "<h2>음악의 친숙도</h2>",
-          submitRatings: "응답 완료",
-          submitFamiliarity: "다음"
+        familiarityPreamble: "<h2>음악의 친숙도</h2>",
+        submitRatings: "응답 완료",
+        submitFamiliarity: "다음"
+      }
+    };
+
+    // 2. READ AND VALIDATE THE EXISTING CONFIGURATION
+    const randomizeOrder = settings.randomizeExcerptOrder;
+
+    // Catch configuration mistakes before constructing any trials.
+    if (experimentConfig.condition !== "condition_2") {
+      throw new Error('Condition 2 requires condition: "condition_2".');
+    }
+
+    if (
+      !Array.isArray(audioFiles) ||
+      audioFiles.length === 0 ||
+      audioFiles.some(file => typeof file !== "string" || !file.trim())
+    ) {
+      throw new Error("audioFiles must contain non-empty audio paths.");
+    }
+
+    if (
+      !Array.isArray(settings.dimensions) ||
+      !settings.dimensions.length
+    ) {
+      throw new Error("Specify at least one dimension.");
+    }
+
+    // Copy item definitions so the constructed trials keep their own labels.
+    function prepareItems(items) {
+      const ids = new Set();
+
+      return items.map(item => {
+        if (
+          !item ||
+          typeof item.id !== "string" ||
+          !/^[a-z][a-z0-9_]*$/.test(item.id) ||
+          ids.has(item.id)
+        ) {
+          throw new Error(
+            "Each item needs a unique lowercase ID: " + item?.id
+          );
         }
-      };
 
-      // 2. READ AND VALIDATE THE EXISTING CONFIGURATION
-      const randomizeOrder = settings.randomizeExcerptOrder;
+        const labels = item.labels ?? settings.defaultLabels;
 
-      // Catch configuration mistakes before constructing any trials.
-      if (experimentConfig.condition !== "condition_2") {
-        throw new Error('Condition 2 requires condition: "condition_2".');
-      }
+        if (
+          typeof item.prompt !== "string" ||
+          !item.prompt.trim() ||
+          !Array.isArray(labels) ||
+          labels.length !== 7 ||
+          labels.some(label => typeof label !== "string")
+        ) {
+          throw new Error(
+            "Each item needs a prompt and seven labels: " + item.id
+          );
+        }
 
-      if (
-        !Array.isArray(audioFiles) ||
-        audioFiles.length === 0 ||
-        audioFiles.some(file => typeof file !== "string" || !file.trim())
-      ) {
-        throw new Error("audioFiles must contain non-empty audio paths.");
-      }
+        ids.add(item.id);
 
-      if (
-        !Array.isArray(settings.dimensions) ||
-        !settings.dimensions.length
-      ) {
-        throw new Error("Specify at least one dimension.");
-      }
-
-      // Copy item definitions so the constructed trials keep their own labels.
-      function prepareItems(items) {
-        const ids = new Set();
-
-        return items.map(item => {
-          if (
-            !item ||
-            typeof item.id !== "string" ||
-            !/^[a-z][a-z0-9_]*$/.test(item.id) ||
-            ids.has(item.id)
-          ) {
-            throw new Error(
-              "Each item needs a unique lowercase ID: " + item?.id
-            );
-          }
-
-          const labels = item.labels ?? settings.defaultLabels;
-
-          if (
-            typeof item.prompt !== "string" ||
-            !item.prompt.trim() ||
-            !Array.isArray(labels) ||
-            labels.length !== 7 ||
-            labels.some(label => typeof label !== "string")
-          ) {
-            throw new Error(
-              "Each item needs a prompt and seven labels: " + item.id
-            );
-          }
-
-          ids.add(item.id);
-
-          return {
-            id: item.id,
-            prompt: item.prompt,
-            labels: [...labels]
-          };
-        });
-      }
-
-      const dimensions = prepareItems(settings.dimensions);
-      const familiarity = prepareItems([settings.familiarity]);
-
-      // 3. REUSABLE RATING-PAGE BUILDER
-      // Used for both the dimension page and the separate familiarity page.
-      function makeRatingPage(items, preamble, buttonLabel, task, metadata) {
         return {
-          type: jsPsychSurveyLikert,
-
-          preamble: preamble,
-
-          questions: items.map(item => ({
-            name: item.id,
-            prompt: item.prompt,
-            labels: [...item.labels],
-            required: true,
-            default_response: null // No preselected answer.
-          })),
-
-          // Keep the array's order across excerpts.
-          randomize_question_order: false,
-
-          button_label: buttonLabel,
-          post_trial_gap: 0,
-
-          data: {
-            ...metadata,
-            task: task,
-
-            // Save the actual prompts and anchors to document this draft's meaning.
-            rating_schema: items.map(item => ({
-              id: item.id,
-              prompt: item.prompt,
-              labels: [...item.labels]
-            }))
-          },
-
-          on_finish: function (data) {
-            // jsPsych stores positions as 0–6. Retain those raw responses and
-            // also save named 1–7 columns that are convenient in a CSV export.
-            for (const item of items) {
-              const raw = data.response?.[item.id];
-
-              // Match Condition 1's familiarity column for comparison later.
-              const column = task === "familiarity"
-                ? "familiarity_rating_1_to_7"
-                : "rating_" + item.id;
-
-              data[column] =
-                Number.isInteger(raw) && raw >= 0 && raw <= 6
-                  ? raw + 1
-                  : null;
-            }
-
-            // The plugin's rt is submission time for the entire page, not per item.
-          }
+          id: item.id,
+          prompt: item.prompt,
+          labels: [...labels]
         };
-      }
+      });
+    }
 
-      // 4. PRELOAD AND DETERMINE EXCERPT ORDER
-      const preload = {
-        type: jsPsychPreload,
+    const dimensions = prepareItems(settings.dimensions);
+    const familiarity = prepareItems([settings.familiarity]);
 
-        audio: [...audioFiles],
-        continue_after_error: false,
+    // 3. REUSABLE RATING-PAGE BUILDER
+    // Used for both the dimension page and the separate familiarity page.
+    function makeRatingPage(items, preamble, buttonLabel, task, metadata) {
+      return {
+        type: jsPsychSurveyLikert,
 
-        // Loading timeout only; not listening duration.
-        max_load_time: 60000,
+        preamble: preamble,
 
-        message: settings.text.loading,
-        error_message: settings.text.loadError,
+        questions: items.map(item => ({
+          name: item.id,
+          prompt: item.prompt,
+          labels: [...item.labels],
+          required: true,
+          default_response: null // No preselected answer.
+        })),
+
+        // Keep the array's order across excerpts.
+        randomize_question_order: false,
+
+        button_label: buttonLabel,
         post_trial_gap: 0,
 
         data: {
-          task: "preload",
-          phase: phase,
-          condition: "condition_2"
-        }
-      };
+          ...metadata,
+          task: task,
 
-      const stimuli = audioFiles.map((audioFile, index) => ({
-        audioFile: audioFile,
+          // Save the actual prompts and anchors to document this draft's meaning.
+          rating_schema: items.map(item => ({
+            id: item.id,
+            prompt: item.prompt,
+            labels: [...item.labels]
+          }))
+        },
 
-        // Example: "audio/0001.mp3" becomes "0001".
-        stimulusId: audioFile
-          .split("/")
-          .pop()
-          .replace(/\.[^/.]+$/, ""),
+        on_finish: function (data) {
+          // jsPsych stores positions as 0–6. Retain those raw responses and
+          // also save named 1–7 columns that are convenient in a CSV export.
+          for (const item of items) {
+            const raw = data.response?.[item.id];
 
-        // Original position in audioFiles.
-        sourceIndex: index + 1
-      }));
+            // Match Condition 1's familiarity column for comparison later.
+            const column = task === "familiarity"
+              ? "familiarity_rating_1_to_7"
+              : "rating_" + item.id;
 
-      const orderedStimuli = randomizeOrder
-        ? jsPsych.randomization.shuffle(stimuli)
-        : stimuli;
-
-      // 5. REPEAT: LISTEN -> DIMENSIONS -> FAMILIARITY
-      // Each excerpt gets separate trial objects and matching identifiers.
-      const trials = [preload];
-
-      orderedStimuli.forEach((stimulus, index) => {
-        const metadata = {
-          condition: "condition_2",
-          phase: phase,
-          rating_scheme_version: settings.version,
-          stimulus_id: stimulus.stimulusId,
-          audio_file: stimulus.audioFile,
-          source_index: stimulus.sourceIndex,
-
-          // Actual presentation position after shuffling.
-          excerpt_number: index + 1
-        };
-
-        const listening = {
-          type: jsPsychAudioKeyboardResponse,
-
-          stimulus: stimulus.audioFile,
-          prompt: settings.text.listening,
-
-          choices: "NO_KEYS",
-          response_ends_trial: false,
-          trial_ends_after_audio: true,
-          post_trial_gap: 0,
-
-          data: {
-            ...metadata,
-            task: "excerpt_listening"
+            data[column] =
+              Number.isInteger(raw) && raw >= 0 && raw <= 6
+                ? raw + 1
+                : null;
           }
 
-          // Use prepared five-second files. This plays the entire file and then
-          // advances; it neither trims a longer file nor supplies replay controls.
-        };
-
-        const ratings = makeRatingPage(
-          dimensions,
-          settings.text.ratingPreamble,
-          settings.text.submitRatings,
-          "dimensional_rating",
-          metadata
-        );
-
-        const familiarityRating = makeRatingPage(
-          familiarity,
-          settings.text.familiarityPreamble,
-          settings.text.submitFamiliarity,
-          "familiarity",
-          metadata
-        );
-
-        // Edit this one line if the within-excerpt sequence changes later.
-        trials.push(listening, ratings, familiarityRating);
-      });
-
-      return trials;
+          // The plugin's rt is submission time for the entire page, not per item.
+        }
+      };
     }
 
-    function buildParticipantQuestionnaires() {
-      // Demographics -> musical sophistication -> personality traits
-      // Suggested plugins: jsPsychSurveyHtmlForm, jsPsychSurveyLikert
-      return [];
+    // 4. PRELOAD AND DETERMINE EXCERPT ORDER
+    const preload = {
+      type: jsPsychPreload,
+
+      audio: [...audioFiles],
+      continue_after_error: false,
+
+      // Loading timeout only; not listening duration.
+      max_load_time: 60000,
+
+      message: settings.text.loading,
+      error_message: settings.text.loadError,
+      post_trial_gap: 0,
+
+      data: {
+        task: "preload",
+        phase: phase,
+        condition: "condition_2"
+      }
+    };
+
+    const stimuli = audioFiles.map((audioFile, index) => ({
+      audioFile: audioFile,
+
+      // Example: "audio/0001.mp3" becomes "0001".
+      stimulusId: audioFile
+        .split("/")
+        .pop()
+        .replace(/\.[^/.]+$/, ""),
+
+      // Original position in audioFiles.
+      sourceIndex: index + 1
+    }));
+
+    const orderedStimuli = randomizeOrder
+      ? jsPsych.randomization.shuffle(stimuli)
+      : stimuli;
+
+    // 5. REPEAT: LISTEN -> DIMENSIONS -> FAMILIARITY
+    // Each excerpt gets separate trial objects and matching identifiers.
+    const trials = [preload];
+
+    orderedStimuli.forEach((stimulus, index) => {
+      const metadata = {
+        condition: "condition_2",
+        phase: phase,
+        rating_scheme_version: settings.version,
+        stimulus_id: stimulus.stimulusId,
+        audio_file: stimulus.audioFile,
+        source_index: stimulus.sourceIndex,
+
+        // Actual presentation position after shuffling.
+        excerpt_number: index + 1
+      };
+
+      const listening = {
+        type: jsPsychAudioKeyboardResponse,
+
+        stimulus: stimulus.audioFile,
+        prompt: settings.text.listening,
+
+        choices: "NO_KEYS",
+        response_ends_trial: false,
+        trial_ends_after_audio: true,
+        post_trial_gap: 0,
+
+        data: {
+          ...metadata,
+          task: "excerpt_listening"
+        }
+
+        // Use prepared five-second files. This plays the entire file and then
+        // advances; it neither trims a longer file nor supplies replay controls.
+      };
+
+      const ratings = makeRatingPage(
+        dimensions,
+        settings.text.ratingPreamble,
+        settings.text.submitRatings,
+        "dimensional_rating",
+        metadata
+      );
+
+      const familiarityRating = makeRatingPage(
+        familiarity,
+        settings.text.familiarityPreamble,
+        settings.text.submitFamiliarity,
+        "familiarity",
+        metadata
+      );
+
+      // Edit this one line if the within-excerpt sequence changes later.
+      trials.push(listening, ratings, familiarityRating);
+    });
+
+    return trials;
+  }
+
+  function buildParticipantQuestionnaires() {
+    // Both conditions complete these questionnaires after the listening trials.
+
+    // 1. DEMOGRAPHICS
+    // The plugin creates the form and submit button automatically.
+    const demographics = {
+      type: jsPsychSurveyHtmlForm,
+
+      preamble: "<h2>기본 정보</h2>",
+
+      html: `
+      <div style="max-width: 600px; margin: 0 auto; text-align: left;">
+        <p>
+          <label for="participant-age">나이 (만 나이)</label><br>
+          <input id="participant-age" name="age" type="number"
+                 min="0" step="1" required style="width: 100px;"> 세
+        </p>
+
+        <p>
+          <label for="participant-gender">성별</label><br>
+          <select id="participant-gender" name="gender" required>
+            <option value="" disabled selected>선택해 주세요</option>
+            <option value="female">여성</option>
+            <option value="male">남성</option>
+            <option value="nonbinary">논바이너리</option>
+            <option value="other">기타</option>
+            <option value="prefer_not_to_say">응답하지 않음</option>
+          </select>
+        </p>
+
+        <p id="education-help">
+          현재까지 졸업한 가장 높은 교육 단계를 선택해 주세요.<br>
+          재학 중이라면 이미 졸업한 단계를 선택해 주세요.
+        </p>
+
+        <p>
+          <label for="participant-education">최종학력</label><br>
+          <select id="participant-education" name="education"
+                  aria-describedby="education-help" required>
+            <option value="" disabled selected>선택해 주세요</option>
+            <option value="below_elementary">초등학교 졸업 미만</option>
+            <option value="elementary">초등학교 졸업</option>
+            <option value="middle_school">중학교 졸업</option>
+            <option value="high_school">고등학교 졸업</option>
+            <option value="associate">전문대학 졸업</option>
+            <option value="bachelor">대학교 졸업</option>
+            <option value="master">대학원 졸업 (석사)</option>
+            <option value="doctorate">대학원 졸업 (박사)</option>
+            <option value="other">기타</option>
+            <option value="prefer_not_to_say">응답하지 않음</option>
+          </select>
+        </p>
+      </div>
+    `,
+
+      button_label: "다음",
+      dataAsArray: false,
+      autocomplete: false,
+
+      data: {
+        task: "demographics",
+        phase: "questionnaire",
+        condition: experimentConfig.condition,
+        questionnaire_version: "draft_1"
+      },
+
+      on_finish: function (data) {
+        // Preserve the original response object.
+        // Add separate columns that are convenient when exporting to CSV.
+        const rawAge = String(data.response.age ?? "").trim();
+        const age = rawAge === "" ? null : Number(rawAge);
+
+        data.age_years =
+          Number.isInteger(age) && age >= 0 ? age : null;
+
+        data.gender = data.response.gender;
+        data.education = data.response.education;
+
+        // This records age; eligibility is handled earlier in the experiment.
+      }
+    };
+
+    // 2. SHARED SEVEN-POINT SCALE
+    // Edit these labels when replacing the dummy questions.
+    const agreementLabels = [
+      "1<br>전혀 그렇지 않다",
+      "2",
+      "3",
+      "4<br>보통이다",
+      "5",
+      "6",
+      "7<br>매우 그렇다"
+    ];
+
+    // This helper creates one questionnaire page containing one dummy item.
+    // These items are placeholders, not Gold-MSI or Big Five scores.
+    function makeDummyQuestionnaire(task, name, title, prompt) {
+      return {
+        type: jsPsychSurveyLikert,
+
+        preamble: `
+        <h2>${title}</h2>
+        <p>평소의 자신을 기준으로 응답해 주세요.</p>
+      `,
+
+        questions: [
+          {
+            name: name,
+            prompt: prompt,
+            labels: [...agreementLabels],
+            required: true,
+            default_response: null // No answer is selected in advance.
+          }
+        ],
+
+        randomize_question_order: false,
+        button_label: "다음",
+
+        data: {
+          task: task,
+          phase: "questionnaire",
+          condition: experimentConfig.condition,
+          questionnaire_version: "draft_1",
+          is_placeholder: true,
+          item_name: name,
+          item_prompt: prompt,
+          scale_labels: [...agreementLabels]
+        },
+
+        on_finish: function (data) {
+          // jsPsych records the selected position as 0–6.
+          // Keep that original response and add a separate 1–7 score.
+          const index = data.response[name];
+
+          data[name + "_rating_1_to_7"] =
+            Number.isInteger(index) && index >= 0 && index <= 6
+              ? index + 1
+              : null;
+        }
+      };
     }
 
-    function buildDebrief() {
-      // Suggested plugin: jsPsychHtmlButtonResponse
-      return [];
-    }
-
-    /* ------------------------------------------------------------------
-       4. ASSEMBLE THE TIMELINE
-       ------------------------------------------------------------------ */
-
-    experimentConfig.practiceAudioFile = "audio/practice.mp3";
-
-    timeline.push(
-      ...buildConsentAndEligibility(),
-      ...buildHeadphoneCheckAndCalibration(),
-      ...buildIntroductionAndPractice()
+    // 3. MUSICAL SOPHISTICATION PLACEHOLDER
+    // Replace this item with the final questionnaire later.
+    const musicianIdentity = makeDummyQuestionnaire(
+      "musical_sophistication",
+      "musician_identity",
+      "음악에 대한 생각",
+      "나는 나 자신을 음악가라고 생각한다."
     );
 
-    if (experimentConfig.condition === "condition_1") {
-      timeline.push(...buildCondition1Trials());
-    } else if (experimentConfig.condition === "condition_2") {
-      timeline.push(...buildCondition2Trials());
-    }
-
-    timeline.push(
-      ...buildParticipantQuestionnaires(),
-      ...buildDebrief()
+    // 4. PERSONALITY PLACEHOLDER
+    // Replace this item with the final questionnaire later.
+    const openness = makeDummyQuestionnaire(
+      "personality_traits",
+      "openness",
+      "새로운 경험에 대한 생각",
+      "나는 새로운 경험을 열린 마음으로 받아들인다."
     );
 
-    /* ------------------------------------------------------------------
-       5. RUN THE EXPERIMENT
+    // The array order determines the order of the questionnaire pages.
+    return [demographics, musicianIdentity, openness];
+  }
 
-       Leave this disabled until at least one trial has been added.
-       ------------------------------------------------------------------ */
 
-    jsPsych.run(timeline);
-  </script>
+  function buildDebrief() {
+    // Replace the draft explanation and contact placeholders later.
+    const debrief = {
+      type: jsPsychHtmlButtonResponse,
+
+      stimulus: `
+      <div style="max-width: 700px; margin: 0 auto; text-align: left;">
+        <h2>연구 안내 및 마무리</h2>
+
+        <p>
+          모든 문항에 대한 응답을 마쳤습니다.
+          참여해 주셔서 감사합니다.
+        </p>
+
+        <p>
+          이 연구는 음악을 들을 때 느끼는 감정을 단어 또는 여러 평가 척도로
+          수집하고, 응답 방식과 개인적 특성에 따른 차이를
+          살펴보기 위한 연구입니다.
+        </p>
+
+        <p>
+          응답에는 정답이나 오답이 없으며,
+          사람마다 느끼는 감정은 다를 수 있습니다.
+        </p>
+
+        <p>
+          연구에 관한 질문이 있으시면 아래 연락처로 문의해 주세요.<br>
+          연구자: [연구자 이름]<br>
+          연락처: [이메일 주소]
+        </p>
+
+        <p>아래의 ‘마치기’ 버튼을 눌러 설문을 마무리해 주세요.</p>
+      </div>
+    `,
+
+      choices: ["마치기"],
+      response_ends_trial: true,
+
+      data: {
+        task: "debrief",
+        phase: "debrief",
+        condition: experimentConfig.condition,
+        debrief_version: "draft_1"
+      },
+
+      on_finish: function (data) {
+        // Records that the participant clicked the finishing button.
+        // This does not indicate whether data have been uploaded.
+        data.debrief_acknowledged = data.response === 0;
+      }
+    };
+
+    // As the final trial, this ends the timeline when its button is clicked.
+    // jsPsych then runs the on_finish callback defined in initJsPsych().
+    return [debrief];
+  }
+
+  /* ------------------------------------------------------------------
+     4. ASSEMBLE THE TIMELINE
+     ------------------------------------------------------------------ */
+
+  experimentConfig.practiceAudioFile = "audio/practice.mp3";
+
+  timeline.push(
+    ...buildConsentAndEligibility(),
+    ...buildHeadphoneCheckAndCalibration(),
+    ...buildIntroductionAndPractice()
+  );
+
+  if (experimentConfig.condition === "condition_1") {
+    timeline.push(...buildCondition1Trials());
+  } else if (experimentConfig.condition === "condition_2") {
+    timeline.push(...buildCondition2Trials());
+  }
+
+  timeline.push(
+    ...buildParticipantQuestionnaires(),
+    ...buildDebrief()
+  );
+
+  /* ------------------------------------------------------------------
+     5. RUN THE EXPERIMENT
+
+     Leave this disabled until at least one trial has been added.
+     ------------------------------------------------------------------ */
+
+  jsPsych.run(timeline);
+</script>
+
 </html>
