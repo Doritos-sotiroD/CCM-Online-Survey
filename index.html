@@ -757,17 +757,26 @@
     const preloadCondition1Audio = {
       type: jsPsychPreload,
 
-      audio: audioFiles,
+      // Use the files passed into this function.
+      // This works for both main trials and practice.
+      audio: [...audioFiles],
 
+      // Allow up to 60 seconds for loading.
+      // This does not change the excerpt playback duration.
+      max_load_time: 60000,
+
+      // Stop here if loading fails.
       continue_after_error: false,
+      show_detailed_errors: false,
 
       message: `
-          <p>[음악 파일을 불러오는 동안 표시할 문구]</p>
-        `,
+    <p>음악 파일을 불러오고 있습니다. 잠시 기다려 주세요.</p>
+  `,
 
       error_message: `
-          <p>[음악 파일을 불러오지 못했을 때 표시할 문구]</p>
-        `,
+    <p>음악 파일을 불러오지 못했습니다.</p>
+    <p>인터넷 연결을 확인한 뒤 연구자에게 문의해 주세요.</p>
+  `,
 
       data: {
         task: "preload",
@@ -775,8 +784,6 @@
         condition: "condition_1"
       }
     };
-
-
     /* ---------------------------------------------------------------
       4. PRESENT THE FIVE-SECOND EXCERPT
       --------------------------------------------------------------- */
@@ -827,48 +834,50 @@
       type: jsPsychHtmlButtonResponse,
 
       stimulus: `
-          <div class="keyword-response">
-            <h2>[감정 키워드 응답 제목]</h2>
+      <div class="keyword-response">
+    <h2>느낀 감정</h2>
 
-            <p>[실제로 느낀 감정을 한 단어씩 입력하도록 안내하는 문구]</p>
+    <p>
+      음악을 듣는 동안 실제로 느낀 감정을
+      한 단어씩 입력해 주세요.
+    </p>
 
-            <label for="emotion-keyword-input">
-              [감정 키워드 입력란 이름]
-            </label>
+    <label for="emotion-keyword-input">감정 단어</label>
 
-            <input
-              id="emotion-keyword-input"
-              class="keyword-input"
-              type="text"
-              maxlength="50"
-              autocomplete="off"
-              spellcheck="false"
-            >
+    <input
+      id="emotion-keyword-input"
+      class="keyword-input"
+      type="text"
+      maxlength="50"
+      autocomplete="off"
+      spellcheck="false"
+    >
 
-            <p>[한 단어를 입력한 뒤 Enter를 누르도록 안내하는 문구]</p>
+    <p>한 단어를 입력한 뒤 Enter를 눌러 주세요.</p>
+    <p>입력한 단어를 지우려면 옆의 ×를 눌러 주세요.</p>
 
-            <div
-              id="emotion-keyword-tags"
-              class="keyword-tags"
-              role="list"
-              aria-label="[입력된 감정 키워드]"
-            ></div>
+    <div
+      id="emotion-keyword-tags"
+      class="keyword-tags"
+      role="list"
+      aria-label="입력한 감정 단어"
+    ></div>
 
-            <div
-              id="emotion-keyword-count"
-              class="keyword-count"
-              aria-live="polite"
-            ></div>
+    <div
+      id="emotion-keyword-count"
+      class="keyword-count"
+      aria-live="polite"
+    ></div>
 
-            <div
-              id="emotion-keyword-message"
-              class="keyword-message"
-              aria-live="polite"
-            ></div>
-          </div>
-        `,
+    <div
+      id="emotion-keyword-message"
+      class="keyword-message"
+      aria-live="polite"
+    ></div>
+  </div>
+`,
 
-      choices: ["[응답 완료]"],
+      choices: ["응답 완료"],
 
       data: {
         task: "free_response",
@@ -1159,12 +1168,14 @@
       },
 
       on_finish: function (data) {
-        /*
-        * survey-likert stores the seven positions as 0–6.
-        * Save an additional variable expressed as 1–7.
-        */
+        const raw = data.response?.familiarity;
+
+        // Preserve the original response and save a separate 1–7 score.
+        // Missing or invalid responses remain null.
         data.familiarity_rating_1_to_7 =
-          Number(data.response.familiarity) + 1;
+          Number.isInteger(raw) && raw >= 0 && raw <= 6
+            ? raw + 1
+            : null;
       }
     };
 
@@ -1706,7 +1717,6 @@
      4. ASSEMBLE THE TIMELINE
      ------------------------------------------------------------------ */
 
-  experimentConfig.practiceAudioFile = "audio/practice.mp3";
 
   timeline.push(
     ...buildConsentAndEligibility(),
