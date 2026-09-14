@@ -130,7 +130,7 @@
       // DEVELOPMENT ONLY:
       // Display the collected data in the browser.
       jsPsych.data.displayData();
-
+      return finishSurveyAndSave();
       // TODO: Replace displayData() with the final server-upload
       // procedure before collecting real participant data.
     }
@@ -153,6 +153,28 @@
     ],
     calibrationAudioFile: "audio/calibration.mp3",
     practiceAudioFile: "audio/practice.mp3"
+  };
+
+  // Generate one identifier for this survey run.
+  const sessionId = jsPsych.randomization.randomID(16);
+
+  // Change this when you revise the experiment.
+  const experimentVersion = "ccm_draft_02";
+
+  // Attach these fields to every trial row.
+  jsPsych.data.addProperties({
+    session_id: sessionId,
+    condition: experimentConfig.condition,
+    experiment_version: experimentVersion,
+    session_started_at: new Date().toISOString()
+  });
+
+  const dataSavingConfig = {
+    // Enter the real POST endpoint once storage is configured.
+    endpoint: "",
+
+    // Maximum time to wait for each upload attempt.
+    timeoutMs: 30000
   };
 
   /* ------------------------------------------------------------------
@@ -1711,6 +1733,162 @@
     // As the final trial, this ends the timeline when its button is clicked.
     // jsPsych then runs the on_finish callback defined in initJsPsych().
     return [debrief];
+  }
+
+  async function uploadCompletedSession(payload) {
+    if (!dataSavingConfig.endpoint.trim()) {
+      throw new Error(
+        "Set dataSavingConfig.endpoint before uploading data."
+      );
+    }
+
+    // Cancel this request if the server takes too long.
+    const controller = new AbortController();
+
+    const timeout = setTimeout(
+      () => controller.abort(),
+      dataSavingConfig.timeoutMs
+    );
+
+    try {
+      const response = await fetch(dataSavingConfig.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: HTTP ${response.status}`);
+      }
+
+      const confirmation = await response.json();
+
+      // Require explicit confirmation for this particular session.
+      if (
+        confirmation.saved !== true ||
+        confirmation.session_id !== payload.session_id
+      ) {
+        throw new Error(
+          "The server did not confirm this session was saved."
+        );
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function finishSurveyAndSave() {
+    const rows = jsPsych.data.get().values();
+    const finalRow = rows[rows.length - 1];
+
+    // abortExperiment() also triggers initJsPsych's on_finish.
+    // Submit only consented sessions that completed the debrief.
+    const consented = rows.some(
+      row => row.task === "consent" && row.consented === true
+    );
+
+    if (
+      !consented ||
+      finalRow?.task !== "debrief" ||
+      finalRow.debrief_acknowledged !== true
+    ) {
+      return;
+    }
+
+    // Create one fixed payload.
+    // Every retry sends the same ID, timestamp, and answers.
+    const payload = JSON.parse(JSON.stringify({
+      session_id: sessionId,
+      experiment_version: experimentVersion,
+      condition: experimentConfig.condition,
+      completed_at: new Date().toISOString(),
+      trials: rows
+    }));
+
+    const display = jsPsych.getDisplayElement();
+
+    display.innerHTML = `
+    <h2>응답 제출</h2>
+
+    <p id="save-status" role="status" aria-live="polite"></p>
+
+    <button
+      id="save-retry"
+      class="jspsych-btn"
+      type="button"
+      hidden
+    >
+      다시 제출
+    </button>
+
+    <button
+      id="save-download"
+      class="jspsych-btn"
+      type="button"
+      hidden
+    >
+      응답 파일 다운로드
+    </button>
+  `;
+
+    const status = display.querySelector("#save-status");
+    const retry = display.querySelector("#save-retry");
+    const download = display.querySelector("#save-download");
+
+    download.addEventListener("click", () => {
+      // Backup on the participant's device.
+      // This does not submit data to the researcher.
+      jsPsych.data.get().localSave(
+        "json",
+        `CCM_${sessionId}.json`
+      );
+    });
+
+    // Keep completion pending until saving is confirmed.
+    return new Promise(resolve => {
+      let uploading = false;
+
+      async function submit() {
+        // Prevent simultaneous requests from repeated clicks.
+        if (uploading) return;
+
+        uploading = true;
+        retry.disabled = true;
+
+        status.textContent =
+          "응답을 제출하고 있습니다. 창을 닫지 말아 주세요.";
+
+        try {
+          await uploadCompletedSession(payload);
+
+          status.textContent =
+            "응답이 저장되었습니다. 참여해 주셔서 감사합니다.";
+
+          retry.hidden = true;
+          download.hidden = true;
+
+          resolve();
+        } catch (error) {
+          console.error(error);
+
+          status.textContent =
+            "저장을 확인하지 못했습니다. " +
+            "다시 제출하거나 응답 파일을 내려받아 주세요.";
+
+          retry.hidden = false;
+          download.hidden = false;
+        } finally {
+          uploading = false;
+          retry.disabled = false;
+        }
+      }
+
+      retry.addEventListener("click", submit);
+      submit();
+    });
   }
 
   /* ------------------------------------------------------------------
