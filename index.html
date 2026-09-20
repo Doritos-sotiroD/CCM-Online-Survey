@@ -33,6 +33,11 @@
       max-width: 900px;
     }
 
+    /* jsPsych's button display rule otherwise overrides the hidden attribute. */
+    #save-retry[hidden] {
+      display: none;
+    }
+
     /* Condition 1: emotion-keyword entry */
 
     .keyword-response {
@@ -127,12 +132,8 @@
 
     // Runs when the complete experiment ends.
     on_finish: function () {
-      // DEVELOPMENT ONLY:
-      // Display the collected data in the browser.
-      jsPsych.data.displayData();
+      // Keep submission pending until DataPipe confirms the OSF upload.
       return finishSurveyAndSave();
-      // TODO: Replace displayData() with the final server-upload
-      // procedure before collecting real participant data.
     }
   });
 
@@ -170,12 +171,48 @@
   });
 
   const dataSavingConfig = {
-    // Enter the real POST endpoint once storage is configured.
-    endpoint: "",
+    // This public experiment ID is not an OSF credential.
+    endpoint: "https://pipe.jspsych.org/api/data/",
+    experimentID: "FwC3YmrlfInI",
 
     // Maximum time to wait for each upload attempt.
-    timeoutMs: 30000
+    timeoutMs: 30000,
+    retryDelayMs: 5000
   };
+
+  // One completion operation per page session, including failed attempts.
+  let submissionPromise = null;
+
+  function validateDataSavingConfig() {
+    if (
+      dataSavingConfig.endpoint !== "https://pipe.jspsych.org/api/data/" ||
+      typeof dataSavingConfig.experimentID !== "string" ||
+      !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID) ||
+      !Number.isInteger(dataSavingConfig.timeoutMs) ||
+      dataSavingConfig.timeoutMs <= 0 ||
+      !Number.isInteger(dataSavingConfig.retryDelayMs) ||
+      dataSavingConfig.retryDelayMs < 5000
+    ) {
+      throw new Error("Invalid DataPipe saving configuration.");
+    }
+
+    if (
+      typeof fetch !== "function" ||
+      typeof AbortController !== "function" ||
+      typeof TextEncoder !== "function"
+    ) {
+      throw new Error("This browser cannot perform the required data upload.");
+    }
+  }
+
+  // Validate local settings before any trials. Remote setup requires a pilot.
+  try {
+    validateDataSavingConfig();
+  } catch (error) {
+    document.body.textContent =
+      "응답 저장 설정을 확인할 수 없어 실험을 시작할 수 없습니다. 연구자에게 문의해 주세요.";
+    throw error;
+  }
 
   /* ------------------------------------------------------------------
      3. WORKFLOW SECTIONS
@@ -476,8 +513,30 @@
       }
     };
 
+    const preloadCalibration = {
+      type: jsPsychPreload,
+
+      audio: [experimentConfig.calibrationAudioFile],
+
+      max_load_time: 60000,
+      continue_after_error: false,
+      show_detailed_errors: false,
+
+      message: "<p>음량 조절용 소리를 불러오고 있습니다.</p>",
+
+      error_message: `
+    <p>소리를 불러오지 못했습니다.</p>
+    <p>인터넷 연결을 확인한 뒤 연구자에게 문의해 주세요.</p>
+  `,
+
+      data: {
+        task: "calibration_preload"
+      }
+    };
+
     return [
       headphoneConfirmation,
+      preloadCalibration,
       calibrationInstructions,
       calibrationLoop
     ];
@@ -1735,14 +1794,14 @@
     return [debrief];
   }
 
-  async function uploadCompletedSession(payload) {
-    if (!dataSavingConfig.endpoint.trim()) {
-      throw new Error(
-        "Set dataSavingConfig.endpoint before uploading data."
-      );
+  async function uploadCompletedSession(requestBody) {
+    validateDataSavingConfig();
+
+    function uploadError(state, code) {
+      return Object.assign(new Error(code), { submissionState: state });
     }
 
-    // Cancel this request if the server takes too long.
+    // Aborting our wait does not cancel a file already received by DataPipe.
     const controller = new AbortController();
 
     const timeout = setTimeout(
@@ -1751,36 +1810,68 @@
     );
 
     try {
-      const response = await fetch(dataSavingConfig.endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: HTTP ${response.status}`);
+      let response;
+      try {
+        response = await fetch(dataSavingConfig.endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+          signal: controller.signal,
+          credentials: "omit",
+          redirect: "error"
+        });
+      } catch (error) {
+        throw uploadError("unconfirmed", "Upload response was not received.");
       }
 
-      const confirmation = await response.json();
+      // HTTP 202 is accepted/queued, not confirmation of storage on OSF.
+      if (response.status === 202) {
+        throw uploadError("queued", "OSF_UPLOAD_QUEUED");
+      }
 
-      // Require explicit confirmation for this particular session.
+      let confirmation;
+      try {
+        confirmation = await response.json();
+      } catch (error) {
+        const rejected = response.status >= 400 && response.status < 500 &&
+          ![408, 429].includes(response.status);
+        throw uploadError(rejected ? "rejected" : "unconfirmed", "Invalid upload response.");
+      }
+
+      if (confirmation?.error === "OSF_UPLOAD_QUEUED" || confirmation?.queued === true) {
+        throw uploadError("queued", "OSF_UPLOAD_QUEUED");
+      }
+      if (confirmation?.error === "OSF_FILE_EXISTS" || response.status === 409) {
+        throw uploadError("duplicate", "OSF_FILE_EXISTS");
+      }
+
+      // DataPipe's successful OSF write returns 201 and this exact message.
+      // It does not echo session_id. Never infer success from HTTP alone.
       if (
-        confirmation.saved !== true ||
-        confirmation.session_id !== payload.session_id
+        response.status === 201 &&
+        confirmation?.message === "Success" &&
+        !Object.prototype.hasOwnProperty.call(confirmation, "error")
       ) {
-        throw new Error(
-          "The server did not confirm this session was saved."
-        );
+        return;
       }
+
+      // Explicit configuration/validation errors need researcher intervention.
+      // Transient transport/service errors may be retried with the same body.
+      const transientError = ["OSF_UPLOAD_ERROR", "OSF_UPLOAD_EXCEPTION"]
+        .includes(confirmation?.error);
+      const explicitError = typeof confirmation?.error === "string";
+      const rejected = (explicitError && !transientError) ||
+        (!transientError && response.status >= 400 && response.status < 500 &&
+          ![408, 429].includes(response.status));
+      throw uploadError(rejected ? "rejected" : "unconfirmed", "OSF saving was not confirmed.");
     } finally {
       clearTimeout(timeout);
     }
   }
 
   function finishSurveyAndSave() {
+    if (submissionPromise !== null) return submissionPromise;
+
     const rows = jsPsych.data.get().values();
     const finalRow = rows[rows.length - 1];
 
@@ -1798,15 +1889,8 @@
       return;
     }
 
-    // Create one fixed payload.
-    // Every retry sends the same ID, timestamp, and answers.
-    const payload = JSON.parse(JSON.stringify({
-      session_id: sessionId,
-      experiment_version: experimentVersion,
-      condition: experimentConfig.condition,
-      completed_at: new Date().toISOString(),
-      trials: rows
-    }));
+    let resolveSubmission;
+    submissionPromise = new Promise(resolve => { resolveSubmission = resolve; });
 
     const display = jsPsych.getDisplayElement();
 
@@ -1814,6 +1898,7 @@
     <h2>응답 제출</h2>
 
     <p id="save-status" role="status" aria-live="polite"></p>
+    <p id="save-reference"></p>
 
     <button
       id="save-retry"
@@ -1823,72 +1908,82 @@
     >
       다시 제출
     </button>
-
-    <button
-      id="save-download"
-      class="jspsych-btn"
-      type="button"
-      hidden
-    >
-      응답 파일 다운로드
-    </button>
   `;
 
     const status = display.querySelector("#save-status");
     const retry = display.querySelector("#save-retry");
-    const download = display.querySelector("#save-download");
+    display.querySelector("#save-reference").textContent = `문의 시 알려 주실 참여 번호: ${sessionId}`;
 
-    download.addEventListener("click", () => {
-      // Backup on the participant's device.
-      // This does not submit data to the researcher.
-      jsPsych.data.get().localSave(
-        "json",
-        `CCM_${sessionId}.json`
-      );
-    });
+    let requestBody;
+    try {
+      // Preserve the existing envelope and every trial row, including Korean
+      // text and nested keyword arrays. Serialize only once for identical retries.
+      const dataString = JSON.stringify({
+        session_id: sessionId,
+        experiment_version: experimentVersion,
+        condition: experimentConfig.condition,
+        completed_at: new Date().toISOString(),
+        trials: rows
+      });
+      requestBody = JSON.stringify({
+        experimentID: dataSavingConfig.experimentID,
+        filename: `CCM_${experimentVersion}_${sessionId}.json`,
+        data: dataString
+      });
+      // Check the whole UTF-8 request, not JavaScript's character count.
+      if (new TextEncoder().encode(requestBody).byteLength >= 32000000) {
+        throw new Error("DataPipe request exceeds the 32 MB limit.");
+      }
+    } catch (error) {
+      status.textContent =
+        "응답 파일을 준비하지 못해 제출하지 못했습니다. 창을 닫거나 새로고침하지 말고 연구자에게 문의해 주세요.";
+      return submissionPromise;
+    }
 
-    // Keep completion pending until saving is confirmed.
-    return new Promise(resolve => {
-      let uploading = false;
+    let state = "ready";
 
-      async function submit() {
-        // Prevent simultaneous requests from repeated clicks.
-        if (uploading) return;
+    async function submit() {
+      // A single request at a time; terminal states cannot submit again.
+      if (state !== "ready") return;
+      state = "uploading";
+      retry.hidden = true;
+      retry.disabled = true;
+      status.textContent = "응답을 제출하고 있습니다. 창을 닫거나 새로고침하지 말아 주세요.";
 
-        uploading = true;
-        retry.disabled = true;
+      try {
+        await uploadCompletedSession(requestBody);
+        state = "saved";
+        status.textContent = "응답이 저장되었습니다. 참여해 주셔서 감사합니다.";
+        resolveSubmission();
+      } catch (error) {
+        state = error.submissionState || "rejected";
+        const keepOpen = " 창을 닫거나 새로고침하지 말고 위 참여 번호로 연구자에게 문의해 주세요.";
 
-        status.textContent =
-          "응답을 제출하고 있습니다. 창을 닫지 말아 주세요.";
-
-        try {
-          await uploadCompletedSession(payload);
-
+        if (state === "queued") {
           status.textContent =
-            "응답이 저장되었습니다. 참여해 주셔서 감사합니다.";
-
-          retry.hidden = true;
-          download.hidden = true;
-
-          resolve();
-        } catch (error) {
-          console.error(error);
-
+            "전송이 대기 중이며 OSF 저장은 아직 확인되지 않았습니다. 중복 제출하지 말아 주세요." + keepOpen;
+        } else if (state === "duplicate") {
           status.textContent =
-            "저장을 확인하지 못했습니다. " +
-            "다시 제출하거나 응답 파일을 내려받아 주세요.";
-
+            "같은 이름의 파일이 있지만 이번 응답과 일치하는지 확인하지 못했습니다. 추가 제출을 중단했습니다." + keepOpen;
+        } else if (state === "unconfirmed") {
+          status.textContent =
+            "저장을 확인하지 못했습니다. 이미 서버에 전달되었을 수도 있습니다. " +
+            `인터넷 연결을 확인하고 ${Math.ceil(dataSavingConfig.retryDelayMs / 1000)}초 후 같은 응답으로 다시 제출할 수 있습니다.` + keepOpen;
           retry.hidden = false;
-          download.hidden = false;
-        } finally {
-          uploading = false;
-          retry.disabled = false;
+          // This timer only enables a button; it never sends another request.
+          setTimeout(() => {
+            state = "ready";
+            retry.disabled = false;
+          }, dataSavingConfig.retryDelayMs);
+        } else {
+          status.textContent = "제출에 실패했습니다. 저장 설정 또는 응답 파일 확인이 필요합니다." + keepOpen;
         }
       }
+    }
 
-      retry.addEventListener("click", submit);
-      submit();
-    });
+    retry.addEventListener("click", submit);
+    submit();
+    return submissionPromise;
   }
 
   /* ------------------------------------------------------------------
