@@ -145,7 +145,7 @@
 
   const experimentConfig = {
     // Change manually when testing the other condition.
-    condition: "condition_1",
+    condition: "condition_2",
 
     audioFiles: [
       "audio/0001.mp3",
@@ -183,25 +183,59 @@
   // One completion operation per page session, including failed attempts.
   let submissionPromise = null;
 
-  function validateDataSavingConfig() {
-    if (
-      dataSavingConfig.endpoint !== "https://pipe.jspsych.org/api/data/" ||
-      typeof dataSavingConfig.experimentID !== "string" ||
-      !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID) ||
-      !Number.isInteger(dataSavingConfig.timeoutMs) ||
-      dataSavingConfig.timeoutMs <= 0 ||
-      !Number.isInteger(dataSavingConfig.retryDelayMs) ||
-      dataSavingConfig.retryDelayMs < 5000
-    ) {
-      throw new Error("Invalid DataPipe saving configuration.");
-    }
+  function submissionError(code, state = "rejected", httpStatus = null) {
+    return Object.assign(new Error(code), {
+      submissionCode: code,
+      submissionState: state,
+      httpStatus
+    });
+  }
 
+  function submissionErrorText(error) {
+    // Never display raw exception/server messages: they may contain response data.
+    const code = error?.submissionCode || "SAVE_UNEXPECTED";
+    const http = Number.isInteger(error?.httpStatus) ? ` (HTTP ${error.httpStatus})` : "";
+    return `오류 코드: ${code}${http}`;
+  }
+
+  // Only known, public API codes may appear on the participant's screen.
+  // Unrecognized server errors get SAVE_REMOTE_UNKNOWN, not raw response text.
+  const dataPipeErrorCodes = new Set([
+    "MISSING_PARAMETER", "EXPERIMENT_NOT_FOUND", "EXPERIMENT_DATA_NOT_FOUND",
+    "DATA_COLLECTION_NOT_ACTIVE", "BASE64DATA_COLLECTION_NOT_ACTIVE",
+    "CONDITION_ASSIGNMENT_NOT_ACTIVE", "SESSION_LIMIT_REACHED",
+    "INVALID_DATA", "INVALID_BASE64_DATA", "USER_DATA_NOT_FOUND", "INVALID_OWNER",
+    "INVALID_OSF_TOKEN", "INVALID_REFRESH_TOKEN", "NOT_USING_OAUTH",
+    "OAUTH_NOT_SETUP", "TOKEN_RESOLUTION_ERROR", "OSF_FILE_EXISTS",
+    "OSF_UPLOAD_ERROR", "OSF_UPLOAD_EXCEPTION", "INVALID_METADATA_ERROR",
+    "OSF_METADATA_UPLOAD_ERROR", "METADATA_ERROR", "DATA_PERSIST_ERROR",
+    "UNKNOWN_ERROR_GETTING_CONDITION"
+  ]);
+
+  function validateDataSavingConfig() {
+    if (dataSavingConfig.endpoint !== "https://pipe.jspsych.org/api/data/") {
+      throw submissionError("SAVE_CONFIG_ENDPOINT");
+    }
     if (
-      typeof fetch !== "function" ||
-      typeof AbortController !== "function" ||
-      typeof TextEncoder !== "function"
+      typeof dataSavingConfig.experimentID !== "string" ||
+      !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID)
     ) {
-      throw new Error("This browser cannot perform the required data upload.");
+      throw submissionError("SAVE_CONFIG_EXPERIMENT_ID");
+    }
+    if (!Number.isInteger(dataSavingConfig.timeoutMs) || dataSavingConfig.timeoutMs <= 0) {
+      throw submissionError("SAVE_CONFIG_TIMEOUT");
+    }
+    if (!Number.isInteger(dataSavingConfig.retryDelayMs) || dataSavingConfig.retryDelayMs < 5000) {
+      throw submissionError("SAVE_CONFIG_RETRY_DELAY");
+    }
+    if (typeof fetch !== "function") {
+      throw submissionError("SAVE_BROWSER_FETCH");
+    }
+    if (typeof AbortController !== "function") {
+      throw submissionError("SAVE_BROWSER_ABORT");
+    }
+    if (typeof TextEncoder !== "function") {
+      throw submissionError("SAVE_BROWSER_ENCODING");
     }
   }
 
@@ -210,7 +244,8 @@
     validateDataSavingConfig();
   } catch (error) {
     document.body.textContent =
-      "응답 저장 설정을 확인할 수 없어 실험을 시작할 수 없습니다. 연구자에게 문의해 주세요.";
+      "응답 저장 설정을 확인할 수 없어 실험을 시작할 수 없습니다. 연구자에게 문의해 주세요. " +
+      submissionErrorText(error);
     throw error;
   }
 
@@ -1797,10 +1832,6 @@
   async function uploadCompletedSession(requestBody) {
     validateDataSavingConfig();
 
-    function uploadError(state, code) {
-      return Object.assign(new Error(code), { submissionState: state });
-    }
-
     // Aborting our wait does not cancel a file already received by DataPipe.
     const controller = new AbortController();
 
@@ -1821,12 +1852,20 @@
           redirect: "error"
         });
       } catch (error) {
-        throw uploadError("unconfirmed", "Upload response was not received.");
+        // Fetch cannot distinguish offline, DNS, CORS, or blocked redirects.
+        throw submissionError(
+          controller.signal.aborted ? "SAVE_REQUEST_TIMEOUT" : "SAVE_CONNECTION",
+          "unconfirmed"
+        );
       }
 
       // HTTP 202 is accepted/queued, not confirmation of storage on OSF.
       if (response.status === 202) {
-        throw uploadError("queued", "OSF_UPLOAD_QUEUED");
+        throw submissionError("SAVE_QUEUED", "queued", response.status);
+      }
+      // A conflict must block retries even if the response body is unreadable.
+      if (response.status === 409) {
+        throw submissionError("SAVE_HTTP_CONFLICT", "duplicate", response.status);
       }
 
       let confirmation;
@@ -1835,14 +1874,16 @@
       } catch (error) {
         const rejected = response.status >= 400 && response.status < 500 &&
           ![408, 429].includes(response.status);
-        throw uploadError(rejected ? "rejected" : "unconfirmed", "Invalid upload response.");
+        const code = controller.signal.aborted ? "SAVE_RESPONSE_TIMEOUT" :
+          error?.name === "SyntaxError" ? "SAVE_RESPONSE_JSON" : "SAVE_RESPONSE_READ";
+        throw submissionError(code, rejected ? "rejected" : "unconfirmed", response.status);
       }
 
       if (confirmation?.error === "OSF_UPLOAD_QUEUED" || confirmation?.queued === true) {
-        throw uploadError("queued", "OSF_UPLOAD_QUEUED");
+        throw submissionError("SAVE_QUEUED", "queued", response.status);
       }
-      if (confirmation?.error === "OSF_FILE_EXISTS" || response.status === 409) {
-        throw uploadError("duplicate", "OSF_FILE_EXISTS");
+      if (confirmation?.error === "OSF_FILE_EXISTS") {
+        throw submissionError("DP_OSF_FILE_EXISTS", "duplicate", response.status);
       }
 
       // DataPipe's successful OSF write returns 201 and this exact message.
@@ -1863,7 +1904,15 @@
       const rejected = (explicitError && !transientError) ||
         (!transientError && response.status >= 400 && response.status < 500 &&
           ![408, 429].includes(response.status));
-      throw uploadError(rejected ? "rejected" : "unconfirmed", "OSF saving was not confirmed.");
+      if (explicitError) {
+        const code = dataPipeErrorCodes.has(confirmation.error) ?
+          `DP_${confirmation.error}` : "SAVE_REMOTE_UNKNOWN";
+        throw submissionError(code, rejected ? "rejected" : "unconfirmed", response.status);
+      }
+      if (response.status >= 400) {
+        throw submissionError("SAVE_HTTP_ERROR", rejected ? "rejected" : "unconfirmed", response.status);
+      }
+      throw submissionError("SAVE_CONFIRMATION", "unconfirmed", response.status);
     } finally {
       clearTimeout(timeout);
     }
@@ -1872,7 +1921,20 @@
   function finishSurveyAndSave() {
     if (submissionPromise !== null) return submissionPromise;
 
-    const rows = jsPsych.data.get().values();
+    let rows;
+    try {
+      rows = jsPsych.data.get().values();
+      if (!Array.isArray(rows) || rows.some(row => row === null || typeof row !== "object")) {
+        throw submissionError("SAVE_DATA_READ");
+      }
+    } catch (error) {
+      jsPsych.getDisplayElement().textContent =
+        "응답을 읽지 못해 제출하지 못했습니다. 창을 닫거나 새로고침하지 말고 연구자에게 문의해 주세요. " +
+        submissionErrorText(submissionError("SAVE_DATA_READ")) +
+        ` / 참여 번호: ${sessionId}`;
+      submissionPromise = new Promise(() => {});
+      return submissionPromise;
+    }
     const finalRow = rows[rows.length - 1];
 
     // abortExperiment() also triggers initJsPsych's on_finish.
@@ -1898,6 +1960,8 @@
     <h2>응답 제출</h2>
 
     <p id="save-status" role="status" aria-live="polite"></p>
+    <p id="save-error" role="status" aria-live="polite"></p>
+    <p id="save-files" role="status" aria-live="polite"></p>
     <p id="save-reference"></p>
 
     <button
@@ -1911,36 +1975,67 @@
   `;
 
     const status = display.querySelector("#save-status");
+    const diagnostic = display.querySelector("#save-error");
     const retry = display.querySelector("#save-retry");
     display.querySelector("#save-reference").textContent = `문의 시 알려 주실 참여 번호: ${sessionId}`;
 
-    let requestBody;
+    const files = [];
+    let preparationFormat = "JSON";
+    let preparationCode = "SAVE_DATA_SERIALIZE";
     try {
-      // Preserve the existing envelope and every trial row, including Korean
-      // text and nested keyword arrays. Serialize only once for identical retries.
+      // Both formats use one snapshot; exporting must not modify collected rows.
+      const snapshot = jsPsych.data.get().readOnly();
+      const completedAt = new Date().toISOString();
       const dataString = JSON.stringify({
         session_id: sessionId,
         experiment_version: experimentVersion,
         condition: experimentConfig.condition,
-        completed_at: new Date().toISOString(),
-        trials: rows
+        completed_at: completedAt,
+        trials: snapshot.values()
       });
-      requestBody = JSON.stringify({
-        experimentID: dataSavingConfig.experimentID,
-        filename: `CCM_${experimentVersion}_${sessionId}.json`,
-        data: dataString
-      });
-      // Check the whole UTF-8 request, not JavaScript's character count.
-      if (new TextEncoder().encode(requestBody).byteLength >= 32000000) {
-        throw new Error("DataPipe request exceeds the 32 MB limit.");
+
+      preparationFormat = "CSV";
+      preparationCode = "SAVE_CSV_SERIALIZE";
+      // Nested responses/keyword arrays remain JSON text inside CSV cells.
+      // Only the export copy receives the completion-time column.
+      snapshot.addToAll({ completed_at: completedAt });
+      const csvString = snapshot.csv();
+
+      // Prepare and size-check BOTH immutable requests before sending either.
+      for (const [format, data] of [["JSON", dataString], ["CSV", csvString]]) {
+        preparationFormat = format;
+        preparationCode = "SAVE_REQUEST_SERIALIZE";
+        const requestBody = JSON.stringify({
+          experimentID: dataSavingConfig.experimentID,
+          filename: `CCM_${experimentVersion}_${sessionId}.${format.toLowerCase()}`,
+          data
+        });
+        preparationCode = "SAVE_REQUEST_ENCODING";
+        if (new TextEncoder().encode(requestBody).byteLength >= 32000000) {
+          throw submissionError("SAVE_REQUEST_TOO_LARGE");
+        }
+        files.push({ format, requestBody, state: "pending" });
       }
     } catch (error) {
       status.textContent =
         "응답 파일을 준비하지 못해 제출하지 못했습니다. 창을 닫거나 새로고침하지 말고 연구자에게 문의해 주세요.";
+      diagnostic.textContent = `${preparationFormat} / ` + submissionErrorText(
+        error?.submissionCode ? error : submissionError(preparationCode)
+      );
       return submissionPromise;
     }
 
     let state = "ready";
+    function updateFileStatus() {
+      const labels = {
+        pending: "전송 전", uploading: "전송 중", saved: "저장 확인됨",
+        queued: "대기 중 · 저장 미확인", duplicate: "파일 충돌 · 확인 필요",
+        unconfirmed: "저장 미확인", rejected: "제출 실패"
+      };
+      display.querySelector("#save-files").textContent = files
+        .map(file => `${file.format}: ${labels[file.state]}`).join(" / ");
+    }
+    updateFileStatus();
 
     async function submit() {
       // A single request at a time; terminal states cannot submit again.
@@ -1948,15 +2043,29 @@
       state = "uploading";
       retry.hidden = true;
       retry.disabled = true;
+      diagnostic.textContent = "";
       status.textContent = "응답을 제출하고 있습니다. 창을 닫거나 새로고침하지 말아 주세요.";
 
+      let activeFile;
       try {
-        await uploadCompletedSession(requestBody);
+        // Stop at the first failure. A manual retry skips confirmed files.
+        for (const file of files) {
+          if (file.state === "saved") continue;
+          activeFile = file;
+          file.state = "uploading";
+          updateFileStatus();
+          await uploadCompletedSession(file.requestBody);
+          file.state = "saved";
+          updateFileStatus();
+        }
         state = "saved";
-        status.textContent = "응답이 저장되었습니다. 참여해 주셔서 감사합니다.";
+        status.textContent = "응답이 JSON 및 CSV 파일로 모두 저장되었습니다. 참여해 주셔서 감사합니다.";
         resolveSubmission();
       } catch (error) {
-        state = error.submissionState || "rejected";
+        state = error?.submissionState || "rejected";
+        if (activeFile) activeFile.state = state;
+        updateFileStatus();
+        diagnostic.textContent = `${activeFile?.format || "UPLOAD"} / ` + submissionErrorText(error);
         const keepOpen = " 창을 닫거나 새로고침하지 말고 위 참여 번호로 연구자에게 문의해 주세요.";
 
         if (state === "queued") {
