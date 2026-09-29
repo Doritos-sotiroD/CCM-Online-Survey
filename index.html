@@ -102,6 +102,47 @@
       color: #606b77;
       font-size: 14px;
     }
+
+    /* Larger familiarity controls in both conditions, including practice. */
+    .familiarity-rating {
+      width: min(760px, calc(100vw - 40px));
+    }
+
+    .familiarity-rating .jspsych-survey-likert-statement {
+      font-size: 20px;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .familiarity-rating .jspsych-survey-likert-opts {
+      position: relative;
+      display: flex;
+      width: 100%;
+      padding-bottom: 40px;
+    }
+
+    /* Keep the connecting line centered behind the enlarged circles. */
+    .familiarity-rating .jspsych-survey-likert-opts::before {
+      position: absolute;
+      top: 12px;
+      left: calc(100% / 14);
+      width: calc(100% * 6 / 7);
+    }
+
+    .familiarity-rating .jspsych-survey-likert-opt-label {
+      display: block;
+      font-size: 16px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .familiarity-rating .jspsych-survey-likert-opts li input[type="radio"] {
+      width: 28px;
+      height: 28px;
+      left: auto;
+      margin: 0 auto 12px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -1202,6 +1243,7 @@
 
     const collectFamiliarity = {
       type: jsPsychSurveyLikert,
+      css_classes: ["familiarity-rating"],
 
       preamble: `
           <div class="survey-section">
@@ -1216,13 +1258,13 @@
           name: "familiarity",
 
           labels: [
-            "[1점 기준]",
+            "전혀 친숙하지 않음",
             "",
             "",
-            "[4점 기준]",
             "",
             "",
-            "[7점 기준]"
+            "",
+            "매우 친숙함"
           ],
 
           required: true
@@ -1331,8 +1373,8 @@
         id: "familiarity",
         prompt: "방금 들은 음악이 얼마나 친숙했나요?",
         labels: [
-          "1<br>전혀 친숙하지 않다", "2", "3", "4<br>보통이다",
-          "5", "6", "7<br>매우 친숙하다"
+          "1<br>전혀 친숙하지 않음", "2", "3", "4",
+          "5", "6", "7<br>매우 친숙함"
         ]
       },
 
@@ -1423,6 +1465,8 @@
     function makeRatingPage(items, preamble, buttonLabel, task, metadata) {
       return {
         type: jsPsychSurveyLikert,
+        // Apply the larger layout only to the familiarity screen.
+        css_classes: task === "familiarity" ? ["familiarity-rating"] : [],
 
         preamble: preamble,
 
