@@ -186,7 +186,7 @@
 
   const experimentConfig = {
     // Change manually when testing the other condition.
-    condition: "condition_2",
+    condition: "condition_1",
 
     audioFiles: [
       "audio/0001.mp3",
@@ -519,73 +519,57 @@
       }
     };
 
-    const calibrationAudio = {
-      type: jsPsychAudioKeyboardResponse,
-
-      stimulus: experimentConfig.calibrationAudioFile,
-
-      choices: "NO_KEYS",
-
-      trial_ends_after_audio: true,
-
-      prompt: `
-          <p>[소리를 듣고 기기의 음량을 조절해 주세요.]</p>
-        `,
-
-      data: {
-        task: "calibration_audio",
-        audio_file: experimentConfig.calibrationAudioFile
-      }
-    };
-
+    let calibrationPlayer = null;
+    let calibrationActive = false;
     const calibrationConfirmation = {
       type: jsPsychSurveyHtmlForm,
 
       preamble: `
-          <p>[현재 음량이 편안한 수준인지 확인해 주세요.]</p>
+          <p id="calibration-playing" hidden>음악이 재생중입니다</p>
+          <p>듣기 편한 음량으로 조절해주세요</p>
+          <p>음량 조절이 완료되었으면 확인을 눌러 다음으로 넘어가세요</p>
         `,
 
       html: `
-          <label>
-            <input
-              type="radio"
-              name="calibration_decision"
-              value="continue"
-              required
-            >
-            [현재 음량으로 계속 진행]
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="calibration_decision"
-              value="repeat"
-              required
-            >
-            [음량을 다시 조절]
-          </label>
+          <audio id="calibration-audio" loop preload="auto"></audio>
+          <input type="hidden" name="calibration_decision" value="continue">
         `,
 
-      button_label: "[확인]",
+      button_label: "확인",
 
       data: {
-        task: "calibration_confirmation"
-      }
-    };
+        task: "calibration_confirmation",
+        audio_file: experimentConfig.calibrationAudioFile
+      },
 
-    const calibrationLoop = {
-      timeline: [
-        calibrationAudio,
-        calibrationConfirmation
-      ],
+      on_load: function () {
+        const display = jsPsych.getDisplayElement();
+        const confirm = display.querySelector("input[type='submit']");
+        const playing = display.querySelector("#calibration-playing");
+        calibrationPlayer = display.querySelector("#calibration-audio");
+        calibrationActive = true;
+        confirm.disabled = true;
 
-      loop_function: function (data) {
-        const finalTrial = data.last(1).values()[0];
+        function failCalibration() {
+          if (!calibrationActive) return;
+          calibrationActive = false;
+          calibrationPlayer.pause();
+          // Reuse the existing audio-loading error; never proceed without sound.
+          jsPsych.abortExperiment(preloadCalibration.error_message);
+        }
 
-        return (
-          finalTrial.response.calibration_decision === "repeat"
-        );
+        calibrationPlayer.addEventListener("error", failCalibration, { once: true });
+        calibrationPlayer.src = experimentConfig.calibrationAudioFile;
+        calibrationPlayer.play().then(() => {
+          if (!calibrationActive) return;
+          playing.hidden = false;
+          confirm.disabled = false;
+        }).catch(failCalibration);
+      },
+
+      on_finish: function () {
+        calibrationActive = false;
+        calibrationPlayer.pause();
       }
     };
 
@@ -614,7 +598,7 @@
       headphoneConfirmation,
       preloadCalibration,
       calibrationInstructions,
-      calibrationLoop
+      calibrationConfirmation
     ];
   }
 
