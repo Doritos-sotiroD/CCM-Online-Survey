@@ -451,54 +451,19 @@
 
       preamble: `
           <div class="survey-section">
-            <h2>[헤드폰 착용 확인 제목]</h2>
-            <p>[헤드폰 또는 이어폰을 착용하도록 안내하세요.]</p>
+            <h2>헤드폰 착용 확인</h2>
+            <p>본 실험은 음악을 듣고 느껴지는 감정을 보고하는 실험으로, 실험 진행을 위해 헤드폰 혹은 이어폰 착용이 필요합니다.</p>
           </div>
         `,
 
       html: `
-          <fieldset>
-            <legend>[현재 헤드폰 또는 이어폰을 착용하고 있나요?]</legend>
-
-            <label>
-              <input
-                type="radio"
-                name="headphones"
-                value="yes"
-                required
-              >
-              [예]
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="headphones"
-                value="no"
-                required
-              >
-              [아니요]
-            </label>
-          </fieldset>
+          <p>헤드폰 혹은 이어폰을 착용하였다면 [다음]을 눌러 진행해주세요</p>
         `,
 
-      button_label: "[다음]",
+      button_label: "다음",
 
       data: {
         task: "headphone_confirmation"
-      },
-
-      on_finish: function (data) {
-        const wearingHeadphones =
-          data.response.headphones === "yes";
-
-        data.wearing_headphones = wearingHeadphones;
-
-        if (!wearingHeadphones) {
-          jsPsych.abortExperiment(
-            "[헤드폰 또는 이어폰이 필요하여 실험이 종료되었습니다.]"
-          );
-        }
       }
     };
 
@@ -507,12 +472,12 @@
 
       stimulus: `
           <div class="survey-section">
-            <h2>[음량 조절 제목]</h2>
-            <p>[재생될 소리를 듣고 편안한 크기로 음량을 조절하도록 안내하세요.]</p>
+            <h2>음량 조절</h2>
+            <p>[시작하기]를 눌러 음악이 재생되면 장치의 볼륨을 적절한 수준으로 조절해주세요</p>
           </div>
         `,
 
-      choices: ["[음량 조절 시작]"],
+      choices: ["시작하기"],
 
       data: {
         task: "calibration_instructions"
@@ -527,7 +492,7 @@
       preamble: `
           <p id="calibration-playing" hidden>음악이 재생중입니다</p>
           <p>듣기 편한 음량으로 조절해주세요</p>
-          <p>음량 조절이 완료되었으면 확인을 눌러 다음으로 넘어가세요</p>
+          <p>음량 조절이 완료되었으면 [확인]을 눌러 다음으로 넘어가세요</p>
         `,
 
       html: `
@@ -942,7 +907,7 @@
 
       prompt: `
           <div class="listening-screen">
-            <p>[음악을 듣는 동안 표시할 문구]</p>
+            <p>음악이 재생중입니다</p>
           </div>
         `,
 
@@ -1122,7 +1087,7 @@
 
               removeButton.setAttribute(
                 "aria-label",
-                `${keyword} [삭제]`
+                `${keyword} 삭제`
               );
 
               removeButton.addEventListener(
@@ -1159,7 +1124,7 @@
           );
 
           countDisplay.textContent =
-            `[입력한 감정 수] ${emotionKeywords.length}`;
+            `입력한 감정 수 ${emotionKeywords.length}`;
 
           updateContinueButton();
         }
@@ -1185,7 +1150,7 @@
 
           if (duplicateExists) {
             messageDisplay.textContent =
-              "[이미 입력한 감정이라는 안내 문구]";
+              "이미 입력한 감정입니다";
 
             input.select();
             return;
@@ -1266,13 +1231,13 @@
 
       preamble: `
           <div class="survey-section">
-            <h2>[친숙도 평가 제목]</h2>
+            <h2>음악의 친숙도</h2>
           </div>
         `,
 
       questions: [
         {
-          prompt: "[방금 들은 음악의 친숙도를 묻는 문항]",
+          prompt: "방금 들은 음악이 얼마나 친숙했나요?",
 
           name: "familiarity",
 
@@ -1292,7 +1257,7 @@
 
       randomize_question_order: false,
 
-      button_label: "[다음]",
+      button_label: "다음",
 
       data: {
         task: "familiarity",
@@ -1827,8 +1792,8 @@
 
         <p>
           연구에 관한 질문이 있으시면 아래 연락처로 문의해 주세요.<br>
-          연구자: [연구자 이름]<br>
-          연락처: [이메일 주소]
+          연구자: 이현용<br>
+          연락처: ben701@kaist.ac.kr
         </p>
 
         <p>아래의 ‘마치기’ 버튼을 눌러 설문을 마무리해 주세요.</p>
