@@ -125,8 +125,8 @@
     .familiarity-rating .jspsych-survey-likert-opts::before {
       position: absolute;
       top: 12px;
-      left: calc(100% / 14);
-      width: calc(100% * 6 / 7);
+      left: calc(100% / 18);
+      width: calc(100% * 8 / 9);
     }
 
     .familiarity-rating .jspsych-survey-likert-opt-label {
@@ -201,7 +201,7 @@
   const sessionId = jsPsych.randomization.randomID(16);
 
   // Change this when you revise the experiment.
-  const experimentVersion = "ccm_draft_02";
+  const experimentVersion = "ccm_draft_03";
 
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
@@ -612,7 +612,7 @@
         `
             <h2>느낌 평가</h2>
             <p>음악을 듣는 동안 실제로 느낀 상태를 각 문장에 대해 평가해 주세요.</p>
-            <p>화면에 표시된 기준을 보고 1부터 7까지 중 하나를 선택해 주세요.</p>
+            <p>화면에 표시된 기준을 보고 1부터 9까지 중 하나를 선택해 주세요.</p>
           `,
         `
             <h2>응답 확인</h2>
@@ -1248,6 +1248,8 @@
             "",
             "",
             "",
+            "",
+            "",
             "매우 친숙함"
           ],
 
@@ -1277,10 +1279,10 @@
       on_finish: function (data) {
         const raw = data.response?.familiarity;
 
-        // Preserve the original response and save a separate 1–7 score.
+        // Preserve the original response and save a separate 1–9 score.
         // Missing or invalid responses remain null.
-        data.familiarity_rating_1_to_7 =
-          Number.isInteger(raw) && raw >= 0 && raw <= 6
+        data.familiarity_rating_1_to_9 =
+          Number.isInteger(raw) && raw >= 0 && raw <= 8
             ? raw + 1
             : null;
       }
@@ -1323,20 +1325,20 @@
     // 1. EDITABLE RATING SCHEME
     // Increment this version whenever prompts, anchors, or dimensions change.
     const settings = {
-      version: "dimensions_draft_01",
+      version: "dimensions_draft_02",
       randomizeExcerptOrder: true,
 
-      // Default seven-point scale; an item's labels can override this.
-      // This draft measures degree: 1 = absence, 7 = high degree.
-      // 4 is moderate degree, not neutral affect on a bipolar scale.
+      // Default nine-point scale; an item's labels can override this.
+      // This draft measures degree: 1 = absence, 9 = high degree.
+      // 5 is moderate degree, not neutral affect on a bipolar scale.
       defaultLabels: [
-        "1<br>전혀 그렇지 않다", "2", "3", "4<br>보통이다",
-        "5", "6", "7<br>매우 그렇다"
+        "1<br>전혀 그렇지 않다", "2", "3", "4", "5<br>보통이다",
+        "6", "7", "8", "9<br>매우 그렇다"
       ],
 
       // Edit this array to add, remove, or reorder dimensions.
       // Keep IDs stable for wording edits; use a new ID for a new construct.
-      // Optional per-item override: labels: [seven label strings].
+      // Optional per-item override: labels: [nine label strings].
       dimensions: [
         { id: "pleasantness", prompt: "기분이 유쾌했다." },
         { id: "stimulation", prompt: "자극을 받아 활성화되는 느낌이 들었다." },
@@ -1358,7 +1360,7 @@
         prompt: "방금 들은 음악이 얼마나 친숙했나요?",
         labels: [
           "1<br>전혀 친숙하지 않음", "2", "3", "4",
-          "5", "6", "7<br>매우 친숙함"
+          "5", "6", "7", "8", "9<br>매우 친숙함"
         ]
       },
 
@@ -1423,11 +1425,11 @@
           typeof item.prompt !== "string" ||
           !item.prompt.trim() ||
           !Array.isArray(labels) ||
-          labels.length !== 7 ||
+          labels.length !== 9 ||
           labels.some(label => typeof label !== "string")
         ) {
           throw new Error(
-            "Each item needs a prompt and seven labels: " + item.id
+            "Each item needs a prompt and nine labels: " + item.id
           );
         }
 
@@ -1481,18 +1483,18 @@
         },
 
         on_finish: function (data) {
-          // jsPsych stores positions as 0–6. Retain those raw responses and
-          // also save named 1–7 columns that are convenient in a CSV export.
+          // jsPsych stores positions as 0–8. Retain those raw responses and
+          // also save named 1–9 columns that are convenient in a CSV export.
           for (const item of items) {
             const raw = data.response?.[item.id];
 
             // Match Condition 1's familiarity column for comparison later.
             const column = task === "familiarity"
-              ? "familiarity_rating_1_to_7"
+              ? "familiarity_rating_1_to_9"
               : "rating_" + item.id;
 
             data[column] =
-              Number.isInteger(raw) && raw >= 0 && raw <= 6
+              Number.isInteger(raw) && raw >= 0 && raw <= 8
                 ? raw + 1
                 : null;
           }
@@ -1682,16 +1684,18 @@
       }
     };
 
-    // 2. SHARED SEVEN-POINT SCALE
+    // 2. SHARED NINE-POINT SCALE
     // Edit these labels when replacing the dummy questions.
     const agreementLabels = [
       "1<br>전혀 그렇지 않다",
       "2",
       "3",
-      "4<br>보통이다",
-      "5",
+      "4",
+      "5<br>보통이다",
       "6",
-      "7<br>매우 그렇다"
+      "7",
+      "8",
+      "9<br>매우 그렇다"
     ];
 
     // This helper creates one questionnaire page containing one dummy item.
@@ -1722,7 +1726,7 @@
           task: task,
           phase: "questionnaire",
           condition: experimentConfig.condition,
-          questionnaire_version: "draft_1",
+          questionnaire_version: "draft_2",
           is_placeholder: true,
           item_name: name,
           item_prompt: prompt,
@@ -1730,12 +1734,12 @@
         },
 
         on_finish: function (data) {
-          // jsPsych records the selected position as 0–6.
-          // Keep that original response and add a separate 1–7 score.
+          // jsPsych records the selected position as 0–8.
+          // Keep that original response and add a separate 1–9 score.
           const index = data.response[name];
 
-          data[name + "_rating_1_to_7"] =
-            Number.isInteger(index) && index >= 0 && index <= 6
+          data[name + "_rating_1_to_9"] =
+            Number.isInteger(index) && index >= 0 && index <= 8
               ? index + 1
               : null;
         }
