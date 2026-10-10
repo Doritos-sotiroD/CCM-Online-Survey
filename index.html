@@ -235,6 +235,9 @@
     // Assigned from DataPipe before instructions, practice, or main trials.
     condition: null,
 
+    // TEMPORARY: set true to skip session 1 and verify the second-session choice.
+    skipFirstSessionForVerification: false,
+
     // Fixed, disjoint batches; stimulus randomization is a separate step.
     audioFiles: Array.from({ length: 30 }, (_, index) =>
       `audio/${String(index + 1).padStart(4, "0")}.mp3`),
@@ -285,6 +288,7 @@
       CONDITION_TIMEOUT: "조건 번호 요청 시간이 초과되었습니다.",
       CONDITION_NETWORK_ERROR: "조건 배정 서버에 연결하지 못했습니다.",
       CONDITION_RESPONSE_INVALID: "서버가 유효한 조건 번호(0 또는 1)를 반환하지 않았습니다.",
+      SESSION_VERIFICATION_TOGGLE_INVALID: "세션 검증 토글은 true 또는 false로 설정해 주세요.",
       SESSION_LANGUAGE_INVALID: "실험 언어 설정이 올바르지 않습니다.",
       SESSION_BATCH_INVALID: "각 세션에 30개의 자극이 설정되어 있어야 합니다.",
       SESSION_STIMULI_INVALID: "두 세션의 자극 60개는 서로 다르고 연습 자극과 겹치지 않아야 합니다."
@@ -1878,6 +1882,10 @@
   }
 
   function validateSessionConfiguration() {
+    if (typeof experimentConfig.skipFirstSessionForVerification !== "boolean") {
+      throw startupError("SESSION_VERIFICATION_TOGGLE_INVALID");
+    }
+
     if (lang !== "eng" && lang !== "kor") {
       throw startupError("SESSION_LANGUAGE_INVALID");
     }
@@ -2471,8 +2479,13 @@
       ...buildIntroductionAndPractice()
     );
 
+    if (experimentConfig.skipFirstSessionForVerification) {
+      jsPsych.data.addProperties({ verification_skip_first_session: true });
+    } else {
+      timeline.push(buildMainSession(1, experimentConfig.audioFiles));
+    }
+
     timeline.push(
-      buildMainSession(1, experimentConfig.audioFiles),
       buildSecondSessionChoice(),
       {
         timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
