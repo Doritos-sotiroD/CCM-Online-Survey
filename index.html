@@ -228,24 +228,26 @@
      2. EXPERIMENT CONFIGURATION
      ------------------------------------------------------------------ */
 
-  // Language for Condition 2's dimensional questions and anchors only.
+  // Language for Condition 2's dimensions and the second-session choice.
   const lang = "kor"; // "eng" or "kor"
 
   const experimentConfig = {
     // Assigned from DataPipe before instructions, practice, or main trials.
     condition: null,
 
-    audioFiles: [
-      "audio/0001.mp3",
-      "audio/0002.mp3",
-      "audio/0003.mp3"
-    ],
+    // Fixed, disjoint batches; stimulus randomization is a separate step.
+    audioFiles: Array.from({ length: 30 }, (_, index) =>
+      `audio/${String(index + 1).padStart(4, "0")}.mp3`),
+    secondSessionAudioFiles: Array.from({ length: 30 }, (_, index) =>
+      `audio/${String(index + 31).padStart(4, "0")}.mp3`),
     calibrationAudioFile: "audio/calibration.mp3",
     practiceAudioFile: "audio/practice.mp3"
   };
 
   // Generate one identifier for this survey run.
   const sessionId = jsPsych.randomization.randomID(16);
+  let completedSessions = 0;
+  let continueToSecondSession = false;
 
   // Change this when you revise the experiment.
   const experimentVersion = "ccm_draft_04";
@@ -253,6 +255,7 @@
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
     session_id: sessionId,
+    sessions_completed: completedSessions,
     experiment_version: experimentVersion,
     session_started_at: new Date().toISOString()
   });
@@ -270,12 +273,36 @@
   // Retrieved once before assigning the condition and assembling the timeline.
   let retrievedConditionNumber;
 
+  function startupError(code, httpStatus = null) {
+    return Object.assign(new Error(code), { startupCode: code, httpStatus });
+  }
+
+  function startupErrorText(error) {
+    const messages = {
+      CONDITION_ASSIGNMENT_NOT_ACTIVE:
+        "DataPipe에서 조건 배정이 꺼져 있습니다. 연구자는 조건 배정을 켜고 조건 수를 2로 설정해 주세요.",
+      CONDITION_EXPERIMENT_ID_INVALID: "실험 ID 설정이 올바르지 않습니다.",
+      CONDITION_TIMEOUT: "조건 번호 요청 시간이 초과되었습니다.",
+      CONDITION_NETWORK_ERROR: "조건 배정 서버에 연결하지 못했습니다.",
+      CONDITION_RESPONSE_INVALID: "서버가 유효한 조건 번호(0 또는 1)를 반환하지 않았습니다.",
+      SESSION_LANGUAGE_INVALID: "실험 언어 설정이 올바르지 않습니다.",
+      SESSION_BATCH_INVALID: "각 세션에 30개의 자극이 설정되어 있어야 합니다.",
+      SESSION_STIMULI_INVALID: "두 세션의 자극 60개는 서로 다르고 연습 자극과 겹치지 않아야 합니다."
+    };
+    const code = error?.startupCode || "STARTUP_UNEXPECTED";
+    const message = messages[code] ||
+      "실험 조건 또는 세션 설정을 확인하지 못했습니다. 연구자에게 문의해 주세요.";
+    const http = Number.isInteger(error?.httpStatus) ? ` (HTTP ${error.httpStatus})` : "";
+    // Only local codes and allowlisted public API codes reach this screen.
+    return `<p>${message}</p><p>오류 코드: ${code}${http}</p>`;
+  }
+
   async function retrieveConditionNumber() {
     if (
       typeof dataSavingConfig.experimentID !== "string" ||
       !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID)
     ) {
-      throw new Error("CONDITION_EXPERIMENT_ID_INVALID");
+      throw startupError("CONDITION_EXPERIMENT_ID_INVALID");
     }
 
     const controller = new AbortController();
@@ -284,20 +311,38 @@
     try {
       // DataPipe must have sequential assignment enabled with two conditions.
       // Request once: another request would consume the next assignment.
-      const response = await fetch("https://pipe.jspsych.org/api/condition/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ experimentID: dataSavingConfig.experimentID }),
-        signal: controller.signal
-      });
-
-      if (response.status !== 200) {
-        throw new Error("CONDITION_HTTP_ERROR");
+      let response;
+      try {
+        response = await fetch("https://pipe.jspsych.org/api/condition/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ experimentID: dataSavingConfig.experimentID }),
+          signal: controller.signal
+        });
+      } catch (error) {
+        throw startupError(controller.signal.aborted ? "CONDITION_TIMEOUT" : "CONDITION_NETWORK_ERROR");
       }
 
-      const result = await response.json();
-      if (result?.error != null || ![0, 1].includes(result?.condition)) {
-        throw new Error("CONDITION_RESPONSE_INVALID");
+      let result;
+      try {
+        result = await response.json();
+      } catch (error) {
+        const code = controller.signal.aborted ? "CONDITION_TIMEOUT" :
+          response.status === 200 ? "CONDITION_RESPONSE_INVALID" : "CONDITION_HTTP_ERROR";
+        throw startupError(code, response.status);
+      }
+
+      if (result?.error != null) {
+        const code = dataPipeErrorCodes.has(result.error) ? result.error : "CONDITION_REMOTE_UNKNOWN";
+        throw startupError(code, response.status);
+      }
+
+      if (response.status !== 200) {
+        throw startupError("CONDITION_HTTP_ERROR", response.status);
+      }
+
+      if (![0, 1].includes(result?.condition)) {
+        throw startupError("CONDITION_RESPONSE_INVALID", response.status);
       }
 
       return result.condition;
@@ -1385,7 +1430,11 @@
         collectFamiliarity
       ],
 
-      timeline_variables: condition1Stimuli,
+      // Repeat the configured clips to make 30 complete main trials.
+      timeline_variables: phase === "main"
+        ? Array.from({ length: 30 }, (_, index) =>
+          condition1Stimuli[index % condition1Stimuli.length])
+        : condition1Stimuli,
 
       randomize_order: true,
 
@@ -1770,7 +1819,9 @@
     // Each excerpt gets separate trial objects and matching identifiers.
     const trials = [preload];
 
-    orderedStimuli.forEach((stimulus, index) => {
+    const trialCount = phase === "main" ? 30 : orderedStimuli.length;
+    for (let index = 0; index < trialCount; index++) {
+      const stimulus = orderedStimuli[index % orderedStimuli.length];
       const metadata = {
         condition: "condition_2",
         phase: phase,
@@ -1821,9 +1872,84 @@
 
       // Edit this one line if the within-excerpt sequence changes later.
       trials.push(listening, ratings, familiarityRating);
-    });
+    }
 
     return trials;
+  }
+
+  function validateSessionConfiguration() {
+    if (lang !== "eng" && lang !== "kor") {
+      throw startupError("SESSION_LANGUAGE_INVALID");
+    }
+
+    const batches = [experimentConfig.audioFiles, experimentConfig.secondSessionAudioFiles];
+    if (batches.some(files =>
+      !Array.isArray(files) || files.length !== 30 ||
+      files.some(file => typeof file !== "string" || !file.trim())
+    )) {
+      throw startupError("SESSION_BATCH_INVALID");
+    }
+
+    const files = batches.flat();
+    if (new Set(files).size !== 60 || files.includes(experimentConfig.practiceAudioFile)) {
+      throw startupError("SESSION_STIMULI_INVALID");
+    }
+  }
+
+  function buildMainSession(sessionNumber, audioFiles) {
+    const buildTrials = experimentConfig.condition === "condition_1"
+      ? buildCondition1Trials
+      : buildCondition2Trials;
+
+    return {
+      timeline: buildTrials({ audioFiles, phase: "main" }),
+      data: { session_number: sessionNumber },
+      on_timeline_finish: function () {
+        completedSessions += 1;
+        jsPsych.data.addProperties({ sessions_completed: completedSessions });
+      }
+    };
+  }
+
+  function buildSecondSessionChoice() {
+    const text = {
+      eng: {
+        stimulus: `
+          <p>You have finished the first session.<br>
+          Would you like to do a second session?</p>
+          <p>If you choose <strong>'Yes'</strong>, you will repeat another 30 trials, and will be rewarded accordingly</p>
+          <p>If you choose <strong>'No'</strong>, the experiment wil end after a short survey</p>
+        `,
+        choices: ["Yes", "No"]
+      },
+      kor: {
+        stimulus: `
+          <p>첫번째 세션을 마치셨습니다.<br>
+          두번째 세션을 진행하시겠습니까?</p>
+          <p><strong>'아니오'</strong>를 선택하신다면 짧은 설문 후 실험이 종료됩니다</p>
+          <p><strong>'예'</strong>를 선택하신다면 지금 진행한 30번의 시행을 한번 더 반복하며, 보수가 추가적으로 지급됩니다</p>
+        `,
+        choices: ["예", "아니오"]
+      }
+    }[lang];
+
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: text.stimulus,
+      choices: text.choices,
+      data: {
+        task: "second_session_choice",
+        phase: "session_choice",
+        condition: experimentConfig.condition
+      },
+      on_finish: function (data) {
+        if (![0, 1].includes(data.response)) {
+          throw new Error("SECOND_SESSION_RESPONSE_INVALID");
+        }
+        continueToSecondSession = data.response === 0;
+        data.continue_to_second_session = continueToSecondSession;
+      }
+    };
   }
 
   function buildParticipantQuestionnaires() {
@@ -2211,6 +2337,7 @@
         session_id: sessionId,
         experiment_version: experimentVersion,
         condition: experimentConfig.condition,
+        sessions_completed: completedSessions,
         completed_at: completedAt,
         trials: snapshot.values()
       });
@@ -2323,11 +2450,12 @@
 
   async function startExperiment() {
     try {
+      validateSessionConfiguration();
       retrievedConditionNumber = await retrieveConditionNumber();
     } catch (error) {
       document.body.innerHTML = `
         <h2>실험을 시작할 수 없습니다.</h2>
-        <p>실험 조건 번호를 가져오지 못했습니다. 연구자에게 문의해 주세요.</p>
+        ${startupErrorText(error)}
       `;
       throw error;
     }
@@ -2343,11 +2471,16 @@
       ...buildIntroductionAndPractice()
     );
 
-    if (experimentConfig.condition === "condition_1") {
-      timeline.push(...buildCondition1Trials());
-    } else if (experimentConfig.condition === "condition_2") {
-      timeline.push(...buildCondition2Trials());
-    }
+    timeline.push(
+      buildMainSession(1, experimentConfig.audioFiles),
+      buildSecondSessionChoice(),
+      {
+        timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
+        conditional_function: function () {
+          return continueToSecondSession;
+        }
+      }
+    );
 
     timeline.push(
       ...buildParticipantQuestionnaires(),
