@@ -232,8 +232,8 @@
   const lang = "kor"; // "eng" or "kor"
 
   const experimentConfig = {
-    // Change manually when testing the other condition.
-    condition: "condition_2",
+    // Assigned from DataPipe before instructions, practice, or main trials.
+    condition: null,
 
     audioFiles: [
       "audio/0001.mp3",
@@ -253,7 +253,6 @@
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
     session_id: sessionId,
-    condition: experimentConfig.condition,
     experiment_version: experimentVersion,
     session_started_at: new Date().toISOString()
   });
@@ -268,7 +267,7 @@
     retryDelayMs: 5000
   };
 
-  // Retrieved before timeline assembly; not applied to the experiment yet.
+  // Retrieved once before assigning the condition and assembling the timeline.
   let retrievedConditionNumber;
 
   async function retrieveConditionNumber() {
@@ -2332,6 +2331,11 @@
       `;
       throw error;
     }
+
+    experimentConfig.condition = retrievedConditionNumber === 0
+      ? "condition_1"
+      : "condition_2";
+    jsPsych.data.addProperties({ condition: experimentConfig.condition });
 
     timeline.push(
       ...buildConsentAndEligibility(),
