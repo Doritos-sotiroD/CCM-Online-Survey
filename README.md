@@ -1,10 +1,50 @@
 # CCM-Online-Survey
 Website made with jsPsych for emotion evaluation of CCM
 
+## Local preview
+
+Open the experiment through HTTP/HTTPS. Opening `index.html` directly with a
+`file://` address prevents the browser from fetching `metadata.csv`.
+
+For a local preview, run this from the repository directory using the existing
+Python installation:
+
+```powershell
+python -m http.server 8765 --bind 127.0.0.1
+```
+
+Keep the server running and open <http://127.0.0.1:8765/> in the browser.
+This serves the existing static files locally; data saving still uses DataPipe.
+
+## Stimulus selection
+
+In `index.html`, `experimentConfig.stimulusPoolSize` controls the number of
+eligible numbered clips (currently 4831). `stimulusFirstNumber` controls the
+starting filename number (initially 1). Thus the initial pool is
+`audio/0001.mp3` through `audio/4831.mp3`; a zero-based pool of 500 clips would
+use a size of 500 and a first number of 0, covering `0000.mp3` through `0499.mp3`.
+The pool must contain at least 60 clips and exclude practice/calibration audio.
+
+At startup, the experiment loads the published `metadata.csv`, validates each
+configured clip's `clip_filename` / `work_id` mapping, and samples 60 distinct
+clips without replacement. The first 30 form session 1 and the remaining 30
+form the optional session 2. Each session preloads only its own batch. Selection
+is independent across participants, so different participants may hear the
+same clip. All main listening, emotion, and familiarity rows carry `work_id`
+in both JSON and CSV exports; shared rows also record `stimulus_pool_size` and
+`stimulus_first_number`.
+
+Publish matching audio files and metadata before using a pool. Missing or
+invalid metadata stops startup; audio-loading failures stop the affected
+session. The temporary `skipFirstSessionForVerification` setting currently
+remains enabled. It reserves the first random batch, skips presenting it,
+and opens the second-session choice after practice. Skipped sessions are not
+counted as completed, and verification rows are marked accordingly.
+
 ## Data storage
 
 `index.html` runs jsPsych 8.3.0 from pinned CDN URLs. Completed, consented
-sessions are sent directly to DataPipe experiment `FwC3YmrlfInI`, which forwards
+sessions are sent directly to DataPipe experiment `RWxInotIIqbc`, which forwards
 them to its configured OSF Component. No additional plugin or backend is used.
 The experiment ID is public; never put OSF tokens or other credentials in this
 repository or in browser code.
@@ -26,8 +66,9 @@ repository or in browser code.
   pairs, fewer if other uploads have consumed the allowance. Adjust the dashboard
   limit for planned participants, existing usage, and test uploads. The browser
   cannot reserve two slots or guarantee an atomic pair of uploads.
-- This survey does not call DataPipe's condition-assignment or base64 endpoints.
-  Its existing condition assignment and trial sequence remain in the survey.
+- This survey requests its response-format condition from DataPipe before
+  instructions and trials. Sequential assignment must be enabled with two
+  conditions. It does not call the base64 endpoint.
 - Approve the destination and filenames for synthetic pilot uploads first.
   Verify one complete session from each condition by inspecting the actual OSF
   JSON/CSV file pairs, not just the completion screen. Use a separate test experiment or

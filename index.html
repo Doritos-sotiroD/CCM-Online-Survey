@@ -238,11 +238,14 @@
     // TEMPORARY: set true to skip session 1 and verify the second-session choice.
     skipFirstSessionForVerification: true,
 
-    // Fixed, disjoint batches; stimulus randomization is a separate step.
-    audioFiles: Array.from({ length: 30 }, (_, index) =>
-      `audio/${String(index + 1).padStart(4, "0")}.mp3`),
-    secondSessionAudioFiles: Array.from({ length: 30 }, (_, index) =>
-      `audio/${String(index + 31).padStart(4, "0")}.mp3`),
+    // Pool size is a file count: 4831 files starting at 1 means 0001–4831.
+    // Set the first number to 0 if filenames begin with 0000.mp3.
+    stimulusPoolSize: 4831,
+    stimulusFirstNumber: 1,
+
+    // Filled once at startup with two disjoint random batches of 30.
+    audioFiles: [],
+    secondSessionAudioFiles: [],
     calibrationAudioFile: "audio/calibration.mp3",
     practiceAudioFile: "audio/practice.mp3"
   };
@@ -251,6 +254,7 @@
   const sessionId = jsPsych.randomization.randomID(16);
   let completedSessions = 0;
   let continueToSecondSession = false;
+  const stimulusWorkIds = new Map();
 
   // Change this when you revise the experiment.
   const experimentVersion = "ccm_draft_04";
@@ -275,6 +279,109 @@
 
   // Retrieved once before assigning the condition and assembling the timeline.
   let retrievedConditionNumber;
+
+  function parseStimulusMetadata(csv) {
+    // Read CSV quoting, including commas, escaped quotes, and line breaks.
+    const rows = [];
+    let row = [], field = "", quoted = false, closedQuote = false;
+    const input = csv.replace(/^\uFEFF/, "");
+
+    for (let index = 0; index < input.length; index++) {
+      const character = input[index];
+      if (quoted) {
+        if (character === '"') {
+          if (input[index + 1] === '"') {
+            field += '"';
+            index++;
+          } else {
+            quoted = false;
+            closedQuote = true;
+          }
+        } else {
+          field += character;
+        }
+      } else if (character === '"') {
+        if (field !== "" || closedQuote) throw new Error("STIMULUS_METADATA_CSV_INVALID");
+        quoted = true;
+      } else if ([",", "\n", "\r"].includes(character)) {
+        row.push(field);
+        field = "";
+        closedQuote = false;
+        if (character !== ",") {
+          rows.push(row);
+          row = [];
+          if (character === "\r" && input[index + 1] === "\n") index++;
+        }
+      } else {
+        if (closedQuote) throw new Error("STIMULUS_METADATA_CSV_INVALID");
+        field += character;
+      }
+    }
+
+    if (quoted) throw new Error("STIMULUS_METADATA_CSV_INVALID");
+    if (row.length || field !== "" || closedQuote) {
+      row.push(field);
+      rows.push(row);
+    }
+
+    const header = rows.shift();
+    if (!header || new Set(header).size !== header.length ||
+        !header.includes("clip_filename") || !header.includes("work_id")) {
+      throw new Error("STIMULUS_METADATA_HEADER_INVALID");
+    }
+
+    const clipColumn = header.indexOf("clip_filename");
+    const workColumn = header.indexOf("work_id");
+    const workIds = new Map();
+    for (const values of rows) {
+      if (values.length === 1 && values[0] === "") continue;
+      const filename = values[clipColumn];
+      const workId = values[workColumn];
+      if (values.length !== header.length || !/^\d{4,}\.mp3$/.test(filename) ||
+          typeof workId !== "string" || !workId.trim() || workIds.has(filename)) {
+        throw new Error("STIMULUS_METADATA_ROW_INVALID");
+      }
+      workIds.set(filename, workId);
+    }
+    return workIds;
+  }
+
+  async function selectSessionStimuli() {
+    const pool = Array.from({ length: experimentConfig.stimulusPoolSize }, (_, index) =>
+      `audio/${String(experimentConfig.stimulusFirstNumber + index).padStart(4, "0")}.mp3`);
+    if (pool.includes(experimentConfig.practiceAudioFile) ||
+        pool.includes(experimentConfig.calibrationAudioFile)) {
+      throw new Error("STIMULUS_POOL_INCLUDES_SETUP_AUDIO");
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch("metadata.csv", { signal: controller.signal, cache: "no-store" });
+      if (!response.ok) throw new Error("STIMULUS_METADATA_HTTP_ERROR");
+      const workIds = parseStimulusMetadata(await response.text());
+      for (const audioFile of pool) {
+        const workId = workIds.get(audioFile.split("/").pop());
+        if (workId === undefined) throw new Error("STIMULUS_METADATA_MISSING_CLIP");
+        stimulusWorkIds.set(audioFile, workId);
+      }
+
+      const selected = jsPsych.randomization.sampleWithoutReplacement(pool, 60);
+      experimentConfig.audioFiles = selected.slice(0, 30);
+      experimentConfig.secondSessionAudioFiles = selected.slice(30);
+      jsPsych.data.addProperties({
+        stimulus_pool_size: experimentConfig.stimulusPoolSize,
+        stimulus_first_number: experimentConfig.stimulusFirstNumber
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function getStimulusWorkId(audioFile) {
+    if (!stimulusWorkIds.has(audioFile)) throw new Error("STIMULUS_WORK_ID_MISSING");
+    return stimulusWorkIds.get(audioFile);
+  }
 
   async function retrieveConditionNumber() {
     if (
@@ -941,7 +1048,8 @@
           return {
             audioFile: audioFile,
             stimulusId: stimulusId,
-            sourceIndex: index + 1
+            sourceIndex: index + 1,
+            ...(phase === "main" ? { workId: getStimulusWorkId(audioFile) } : {})
           };
         }
       );
@@ -1006,6 +1114,7 @@
         task: "excerpt_listening",
         phase: phase,
         condition: "condition_1",
+        ...(phase === "main" ? { work_id: jsPsych.timelineVariable("workId") } : {}),
 
         stimulus_id:
           jsPsych.timelineVariable("stimulusId"),
@@ -1080,6 +1189,7 @@
         task: "free_response",
         phase: phase,
         condition: "condition_1",
+        ...(phase === "main" ? { work_id: jsPsych.timelineVariable("workId") } : {}),
 
         stimulus_id:
           jsPsych.timelineVariable("stimulusId"),
@@ -1356,6 +1466,7 @@
         task: "familiarity",
         phase: phase,
         condition: "condition_1",
+        ...(phase === "main" ? { work_id: jsPsych.timelineVariable("workId") } : {}),
 
         stimulus_id:
           jsPsych.timelineVariable("stimulusId"),
@@ -1769,7 +1880,8 @@
         .replace(/\.[^/.]+$/, ""),
 
       // Original position in audioFiles.
-      sourceIndex: index + 1
+      sourceIndex: index + 1,
+      ...(phase === "main" ? { workId: getStimulusWorkId(audioFile) } : {})
     }));
 
     const orderedStimuli = randomizeOrder
@@ -1788,6 +1900,7 @@
         phase: phase,
         rating_scheme_version: settings.version,
         stimulus_id: stimulus.stimulusId,
+        ...(phase === "main" ? { work_id: stimulus.workId } : {}),
         audio_file: stimulus.audioFile,
         source_index: stimulus.sourceIndex,
 
@@ -1847,17 +1960,12 @@
       throw new Error("SESSION_LANGUAGE_INVALID");
     }
 
-    const batches = [experimentConfig.audioFiles, experimentConfig.secondSessionAudioFiles];
-    if (batches.some(files =>
-      !Array.isArray(files) || files.length !== 30 ||
-      files.some(file => typeof file !== "string" || !file.trim())
-    )) {
-      throw new Error("SESSION_BATCH_INVALID");
-    }
-
-    const files = batches.flat();
-    if (new Set(files).size !== 60 || files.includes(experimentConfig.practiceAudioFile)) {
-      throw new Error("SESSION_STIMULI_INVALID");
+    if (!Number.isSafeInteger(experimentConfig.stimulusPoolSize) ||
+        experimentConfig.stimulusPoolSize < 60 ||
+        !Number.isSafeInteger(experimentConfig.stimulusFirstNumber) ||
+        experimentConfig.stimulusFirstNumber < 0 ||
+        !Number.isSafeInteger(experimentConfig.stimulusFirstNumber + experimentConfig.stimulusPoolSize - 1)) {
+      throw new Error("STIMULUS_POOL_CONFIG_INVALID");
     }
   }
 
@@ -2414,13 +2522,23 @@
 
 
   async function startExperiment() {
+    let startupStage = "stimuli";
     try {
+      if (location.protocol === "file:") {
+        throw new Error("LOCAL_WEB_SERVER_REQUIRED");
+      }
       validateSessionConfiguration();
+      await selectSessionStimuli();
+      startupStage = "condition";
       retrievedConditionNumber = await retrieveConditionNumber();
     } catch (error) {
       document.body.innerHTML = `
         <h2>실험을 시작할 수 없습니다.</h2>
-        <p>실험 조건 번호를 가져오지 못했습니다. 연구자에게 문의해 주세요.</p>
+        <p>${error.message === "LOCAL_WEB_SERVER_REQUIRED"
+          ? "HTML 파일을 직접 열면 metadata.csv를 불러올 수 없습니다. 로컬 웹 서버를 실행한 후 HTTP 주소로 실험을 열어 주세요."
+          : startupStage === "stimuli"
+          ? "자극 풀 또는 work_id 정보를 확인하지 못했습니다. 연구자에게 문의해 주세요."
+          : "실험 조건 번호를 가져오지 못했습니다. 연구자에게 문의해 주세요."}</p>
       `;
       throw error;
     }
