@@ -236,7 +236,7 @@
     condition: null,
 
     // TEMPORARY: set true to skip session 1 and verify the second-session choice.
-    skipFirstSessionForVerification: false,
+    skipFirstSessionForVerification: true,
 
     // Fixed, disjoint batches; stimulus randomization is a separate step.
     audioFiles: Array.from({ length: 30 }, (_, index) =>
@@ -276,37 +276,12 @@
   // Retrieved once before assigning the condition and assembling the timeline.
   let retrievedConditionNumber;
 
-  function startupError(code, httpStatus = null) {
-    return Object.assign(new Error(code), { startupCode: code, httpStatus });
-  }
-
-  function startupErrorText(error) {
-    const messages = {
-      CONDITION_ASSIGNMENT_NOT_ACTIVE:
-        "DataPipe에서 조건 배정이 꺼져 있습니다. 연구자는 조건 배정을 켜고 조건 수를 2로 설정해 주세요.",
-      CONDITION_EXPERIMENT_ID_INVALID: "실험 ID 설정이 올바르지 않습니다.",
-      CONDITION_TIMEOUT: "조건 번호 요청 시간이 초과되었습니다.",
-      CONDITION_NETWORK_ERROR: "조건 배정 서버에 연결하지 못했습니다.",
-      CONDITION_RESPONSE_INVALID: "서버가 유효한 조건 번호(0 또는 1)를 반환하지 않았습니다.",
-      SESSION_VERIFICATION_TOGGLE_INVALID: "세션 검증 토글은 true 또는 false로 설정해 주세요.",
-      SESSION_LANGUAGE_INVALID: "실험 언어 설정이 올바르지 않습니다.",
-      SESSION_BATCH_INVALID: "각 세션에 30개의 자극이 설정되어 있어야 합니다.",
-      SESSION_STIMULI_INVALID: "두 세션의 자극 60개는 서로 다르고 연습 자극과 겹치지 않아야 합니다."
-    };
-    const code = error?.startupCode || "STARTUP_UNEXPECTED";
-    const message = messages[code] ||
-      "실험 조건 또는 세션 설정을 확인하지 못했습니다. 연구자에게 문의해 주세요.";
-    const http = Number.isInteger(error?.httpStatus) ? ` (HTTP ${error.httpStatus})` : "";
-    // Only local codes and allowlisted public API codes reach this screen.
-    return `<p>${message}</p><p>오류 코드: ${code}${http}</p>`;
-  }
-
   async function retrieveConditionNumber() {
     if (
       typeof dataSavingConfig.experimentID !== "string" ||
       !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID)
     ) {
-      throw startupError("CONDITION_EXPERIMENT_ID_INVALID");
+      throw new Error("CONDITION_EXPERIMENT_ID_INVALID");
     }
 
     const controller = new AbortController();
@@ -315,38 +290,20 @@
     try {
       // DataPipe must have sequential assignment enabled with two conditions.
       // Request once: another request would consume the next assignment.
-      let response;
-      try {
-        response = await fetch("https://pipe.jspsych.org/api/condition/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ experimentID: dataSavingConfig.experimentID }),
-          signal: controller.signal
-        });
-      } catch (error) {
-        throw startupError(controller.signal.aborted ? "CONDITION_TIMEOUT" : "CONDITION_NETWORK_ERROR");
-      }
-
-      let result;
-      try {
-        result = await response.json();
-      } catch (error) {
-        const code = controller.signal.aborted ? "CONDITION_TIMEOUT" :
-          response.status === 200 ? "CONDITION_RESPONSE_INVALID" : "CONDITION_HTTP_ERROR";
-        throw startupError(code, response.status);
-      }
-
-      if (result?.error != null) {
-        const code = dataPipeErrorCodes.has(result.error) ? result.error : "CONDITION_REMOTE_UNKNOWN";
-        throw startupError(code, response.status);
-      }
+      const response = await fetch("https://pipe.jspsych.org/api/condition/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ experimentID: dataSavingConfig.experimentID }),
+        signal: controller.signal
+      });
 
       if (response.status !== 200) {
-        throw startupError("CONDITION_HTTP_ERROR", response.status);
+        throw new Error("CONDITION_HTTP_ERROR");
       }
 
-      if (![0, 1].includes(result?.condition)) {
-        throw startupError("CONDITION_RESPONSE_INVALID", response.status);
+      const result = await response.json();
+      if (result?.error != null || ![0, 1].includes(result?.condition)) {
+        throw new Error("CONDITION_RESPONSE_INVALID");
       }
 
       return result.condition;
@@ -1883,11 +1840,11 @@
 
   function validateSessionConfiguration() {
     if (typeof experimentConfig.skipFirstSessionForVerification !== "boolean") {
-      throw startupError("SESSION_VERIFICATION_TOGGLE_INVALID");
+      throw new Error("SESSION_VERIFICATION_TOGGLE_INVALID");
     }
 
     if (lang !== "eng" && lang !== "kor") {
-      throw startupError("SESSION_LANGUAGE_INVALID");
+      throw new Error("SESSION_LANGUAGE_INVALID");
     }
 
     const batches = [experimentConfig.audioFiles, experimentConfig.secondSessionAudioFiles];
@@ -1895,12 +1852,12 @@
       !Array.isArray(files) || files.length !== 30 ||
       files.some(file => typeof file !== "string" || !file.trim())
     )) {
-      throw startupError("SESSION_BATCH_INVALID");
+      throw new Error("SESSION_BATCH_INVALID");
     }
 
     const files = batches.flat();
     if (new Set(files).size !== 60 || files.includes(experimentConfig.practiceAudioFile)) {
-      throw startupError("SESSION_STIMULI_INVALID");
+      throw new Error("SESSION_STIMULI_INVALID");
     }
   }
 
@@ -2463,7 +2420,7 @@
     } catch (error) {
       document.body.innerHTML = `
         <h2>실험을 시작할 수 없습니다.</h2>
-        ${startupErrorText(error)}
+        <p>실험 조건 번호를 가져오지 못했습니다. 연구자에게 문의해 주세요.</p>
       `;
       throw error;
     }
