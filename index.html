@@ -268,6 +268,45 @@
     retryDelayMs: 5000
   };
 
+  // Retrieved before timeline assembly; not applied to the experiment yet.
+  let retrievedConditionNumber;
+
+  async function retrieveConditionNumber() {
+    if (
+      typeof dataSavingConfig.experimentID !== "string" ||
+      !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID)
+    ) {
+      throw new Error("CONDITION_EXPERIMENT_ID_INVALID");
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      // DataPipe must have sequential assignment enabled with two conditions.
+      // Request once: another request would consume the next assignment.
+      const response = await fetch("https://pipe.jspsych.org/api/condition/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ experimentID: dataSavingConfig.experimentID }),
+        signal: controller.signal
+      });
+
+      if (response.status !== 200) {
+        throw new Error("CONDITION_HTTP_ERROR");
+      }
+
+      const result = await response.json();
+      if (result?.error != null || ![0, 1].includes(result?.condition)) {
+        throw new Error("CONDITION_RESPONSE_INVALID");
+      }
+
+      return result.condition;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   // One completion operation per page session, including failed attempts.
   let submissionPromise = null;
 
@@ -2283,30 +2322,44 @@
      ------------------------------------------------------------------ */
 
 
-  timeline.push(
-    ...buildConsentAndEligibility(),
-    ...buildHeadphoneCheckAndCalibration(),
-    ...buildIntroductionAndPractice()
-  );
+  async function startExperiment() {
+    try {
+      retrievedConditionNumber = await retrieveConditionNumber();
+    } catch (error) {
+      document.body.innerHTML = `
+        <h2>실험을 시작할 수 없습니다.</h2>
+        <p>실험 조건 번호를 가져오지 못했습니다. 연구자에게 문의해 주세요.</p>
+      `;
+      throw error;
+    }
 
-  if (experimentConfig.condition === "condition_1") {
-    timeline.push(...buildCondition1Trials());
-  } else if (experimentConfig.condition === "condition_2") {
-    timeline.push(...buildCondition2Trials());
+    timeline.push(
+      ...buildConsentAndEligibility(),
+      ...buildHeadphoneCheckAndCalibration(),
+      ...buildIntroductionAndPractice()
+    );
+
+    if (experimentConfig.condition === "condition_1") {
+      timeline.push(...buildCondition1Trials());
+    } else if (experimentConfig.condition === "condition_2") {
+      timeline.push(...buildCondition2Trials());
+    }
+
+    timeline.push(
+      ...buildParticipantQuestionnaires(),
+      ...buildDebrief()
+    );
+
+    /* ------------------------------------------------------------------
+       5. RUN THE EXPERIMENT
+
+       Leave this disabled until at least one trial has been added.
+       ------------------------------------------------------------------ */
+
+    jsPsych.run(timeline);
   }
 
-  timeline.push(
-    ...buildParticipantQuestionnaires(),
-    ...buildDebrief()
-  );
-
-  /* ------------------------------------------------------------------
-     5. RUN THE EXPERIMENT
-
-     Leave this disabled until at least one trial has been added.
-     ------------------------------------------------------------------ */
-
-  jsPsych.run(timeline);
+  startExperiment();
 </script>
 
 </html>
