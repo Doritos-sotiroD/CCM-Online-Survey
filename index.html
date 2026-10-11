@@ -38,6 +38,46 @@
       display: none;
     }
 
+    .bigfive-questionnaire {
+      width: min(900px, calc(100vw - 40px));
+    }
+
+    .bigfive-questionnaire .jspsych-survey-likert-statement {
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .bigfive-questionnaire .jspsych-survey-likert-opt-label {
+      line-height: 1.5;
+      word-break: keep-all;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .bigfive-questionnaire .jspsych-survey-likert-opts::before {
+        display: none;
+      }
+
+      .bigfive-questionnaire .jspsych-survey-likert-opts li {
+        display: block;
+        width: 100% !important;
+        margin-bottom: 12px;
+      }
+
+      .bigfive-questionnaire .jspsych-survey-likert-opt-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+      }
+
+      .bigfive-questionnaire .jspsych-survey-likert-opts li input[type="radio"] {
+        position: static;
+        flex-shrink: 0;
+        margin: 0;
+      }
+    }
+
     /* Condition 1: emotion-keyword entry */
 
     .keyword-response {
@@ -192,8 +232,27 @@
 
 <body></body>
 
-<script>
+<!-- This must run before module imports: file:// blocks those imports entirely. -->
+<script id="local-preview-check">
+  if (location.protocol === "file:") {
+    document.body.innerHTML = `
+      <div style="max-width: 700px; margin: 60px auto; padding: 20px; font-family: sans-serif; line-height: 1.6;">
+        <h2>로컬 웹 서버로 설문을 열어 주세요.</h2>
+        <p>HTML 파일을 직접 열면 브라우저가 설문 파일을 불러오지 못합니다.</p>
+        <p>설문 폴더에서 로컬 웹 서버를 실행한 뒤 아래 주소를 열어 주세요.</p>
+        <pre>python -m http.server 8765 --bind 127.0.0.1</pre>
+        <p><a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a></p>
+        <p>Open the survey through the local web server above, rather than opening the HTML file directly.</p>
+      </div>
+    `;
+  }
+</script>
+
+<script type="module">
   "use strict";
+
+  import { loadBigFive, buildBigFiveTrials, isBigFiveRow } from "./questionnaires/bigfive/questionnaire.js";
+  import { createBigFiveCsv } from "./questionnaires/bigfive/export.js";
 
   /* ------------------------------------------------------------------
      1. INITIALIZE JSPSYCH
@@ -228,15 +287,16 @@
      2. EXPERIMENT CONFIGURATION
      ------------------------------------------------------------------ */
 
-  // Language for Condition 2's dimensions and the second-session choice.
+  // Language for Condition 2, the second-session choice, Big Five, and saving.
   const lang = "kor"; // "eng" or "kor"
 
   const experimentConfig = {
     // Assigned from DataPipe before instructions, practice, or main trials.
     condition: null,
 
-    // TEMPORARY: set true to skip session 1 and verify the second-session choice.
-    skipFirstSessionForVerification: true,
+    // TEMPORARY: keep consent/demographics, then go directly to questionnaires.
+    // Set false to run calibration, practice, and the normal listening sessions.
+    skipSessionsForVerification: true,
 
     // Pool size is a file count: 4831 files starting at 1 means 0001–4831.
     // Set the first number to 0 if filenames begin with 0000.mp3.
@@ -255,9 +315,10 @@
   let completedSessions = 0;
   let continueToSecondSession = false;
   const stimulusWorkIds = new Map();
+  let bigFiveDataset;
 
   // Change this when you revise the experiment.
-  const experimentVersion = "ccm_draft_04";
+  const experimentVersion = "ccm_draft_05";
 
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
@@ -430,14 +491,7 @@
     });
   }
 
-  function submissionErrorText(error) {
-    // Never display raw exception/server messages: they may contain response data.
-    const code = error?.submissionCode || "SAVE_UNEXPECTED";
-    const http = Number.isInteger(error?.httpStatus) ? ` (HTTP ${error.httpStatus})` : "";
-    return `오류 코드: ${code}${http}`;
-  }
-
-  // Only known, public API codes may appear on the participant's screen.
+  // Internal diagnostic codes never appear on the participant's screen.
   // Unrecognized server errors get SAVE_REMOTE_UNKNOWN, not raw response text.
   const dataPipeErrorCodes = new Set([
     "MISSING_PARAMETER", "EXPERIMENT_NOT_FOUND", "EXPERIMENT_DATA_NOT_FOUND",
@@ -483,8 +537,9 @@
     validateDataSavingConfig();
   } catch (error) {
     document.body.textContent =
-      "응답 저장 설정을 확인할 수 없어 실험을 시작할 수 없습니다. 연구자에게 문의해 주세요. " +
-      submissionErrorText(error);
+      (lang === "eng"
+        ? "The survey cannot start. Please record this session ID and contact the researcher. Session ID: "
+        : "실험을 시작할 수 없습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 세션 ID: ") + sessionId;
     throw error;
   }
 
@@ -1952,7 +2007,7 @@
   }
 
   function validateSessionConfiguration() {
-    if (typeof experimentConfig.skipFirstSessionForVerification !== "boolean") {
+    if (typeof experimentConfig.skipSessionsForVerification !== "boolean") {
       throw new Error("SESSION_VERIFICATION_TOGGLE_INVALID");
     }
 
@@ -2025,10 +2080,8 @@
     };
   }
 
-  function buildParticipantQuestionnaires() {
-    // Both conditions complete these questionnaires after the listening trials.
-
-    // 1. DEMOGRAPHICS
+  function buildDemographics() {
+    // Both conditions complete demographics after consent and eligibility.
     // The plugin creates the form and submit button automatically.
     const demographics = {
       type: jsPsychSurveyHtmlForm,
@@ -2107,7 +2160,13 @@
       }
     };
 
-    // 2. SHARED NINE-POINT SCALE
+    return [demographics];
+  }
+
+  function buildParticipantQuestionnaires() {
+    // Both conditions complete these questionnaires after the listening trials.
+
+    // 1. SHARED NINE-POINT SCALE
     // Edit these labels when replacing the dummy questions.
     const agreementLabels = [
       "1<br>전혀 그렇지 않다",
@@ -2122,7 +2181,7 @@
     ];
 
     // This helper creates one questionnaire page containing one dummy item.
-    // These items are placeholders, not Gold-MSI or Big Five scores.
+    // This item remains a placeholder, not a Gold-MSI score.
     function makeDummyQuestionnaire(task, name, title, prompt) {
       return {
         type: jsPsychSurveyLikert,
@@ -2169,7 +2228,7 @@
       };
     }
 
-    // 3. MUSICAL SOPHISTICATION PLACEHOLDER
+    // 2. MUSICAL SOPHISTICATION PLACEHOLDER
     // Replace this item with the final questionnaire later.
     const musicianIdentity = makeDummyQuestionnaire(
       "musical_sophistication",
@@ -2178,17 +2237,12 @@
       "나는 나 자신을 음악가라고 생각한다."
     );
 
-    // 4. PERSONALITY PLACEHOLDER
-    // Replace this item with the final questionnaire later.
-    const openness = makeDummyQuestionnaire(
-      "personality_traits",
-      "openness",
-      "새로운 경험에 대한 생각",
-      "나는 새로운 경험을 열린 마음으로 받아들인다."
-    );
-
     // The array order determines the order of the questionnaire pages.
-    return [demographics, musicianIdentity, openness];
+    return [musicianIdentity, ...buildBigFiveTrials({
+      dataset: bigFiveDataset,
+      plugin: jsPsychSurveyLikert,
+      condition: experimentConfig.condition
+    })];
   }
 
 
@@ -2341,6 +2395,24 @@
   function finishSurveyAndSave() {
     if (submissionPromise !== null) return submissionPromise;
 
+    const text = lang === "eng" ? {
+      sending: "Sending results. Do not close the tab",
+      failure: "Submission could not be confirmed. Please record the session ID below and contact the researcher. Do not close or refresh this tab.",
+      blocked: "Submission could not be confirmed. Please record the session ID below and contact the researcher. Do not submit again or close or refresh this tab.",
+      retryHelp: "Check your connection. You may retry after five seconds.",
+      reference: "Session ID: ",
+      retry: "Retry submission",
+      success: "Your responses have been saved. Thank you for participating."
+    } : {
+      sending: "결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오",
+      failure: "제출을 확인하지 못했습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 창을 닫거나 새로고침하지 말아 주세요.",
+      blocked: "제출을 확인하지 못했습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 다시 제출하거나 창을 닫거나 새로고침하지 말아 주세요.",
+      retryHelp: "인터넷 연결을 확인해 주세요. 5초 후 다시 제출할 수 있습니다.",
+      reference: "세션 ID: ",
+      retry: "다시 제출",
+      success: "응답이 저장되었습니다. 참여해 주셔서 감사합니다."
+    };
+
     let rows;
     try {
       rows = jsPsych.data.get().values();
@@ -2349,9 +2421,7 @@
       }
     } catch (error) {
       jsPsych.getDisplayElement().textContent =
-        "응답을 읽지 못해 제출하지 못했습니다. 창을 닫거나 새로고침하지 말고 연구자에게 문의해 주세요. " +
-        submissionErrorText(submissionError("SAVE_DATA_READ")) +
-        ` / 참여 번호: ${sessionId}`;
+        text.failure + " " + text.reference + sessionId;
       submissionPromise = new Promise(() => {});
       return submissionPromise;
     }
@@ -2362,7 +2432,6 @@
     const consented = rows.some(
       row => row.task === "consent" && row.consented === true
     );
-
     if (
       !consented ||
       finalRow?.task !== "debrief" ||
@@ -2373,99 +2442,87 @@
 
     let resolveSubmission;
     submissionPromise = new Promise(resolve => { resolveSubmission = resolve; });
-
     const display = jsPsych.getDisplayElement();
-
+    // Only the sending message is visible during preparation/upload.
     display.innerHTML = `
-    <h2>응답 제출</h2>
-
-    <p id="save-status" role="status" aria-live="polite"></p>
-    <p id="save-error" role="status" aria-live="polite"></p>
-    <p id="save-files" role="status" aria-live="polite"></p>
-    <p id="save-reference"></p>
-
-    <button
-      id="save-retry"
-      class="jspsych-btn"
-      type="button"
-      hidden
-    >
-      다시 제출
-    </button>
-  `;
-
+      <p id="save-status" role="status" aria-live="polite"></p>
+      <p id="save-reference" hidden></p>
+      <button id="save-retry" class="jspsych-btn" type="button" hidden></button>
+    `;
     const status = display.querySelector("#save-status");
-    const diagnostic = display.querySelector("#save-error");
+    const reference = display.querySelector("#save-reference");
     const retry = display.querySelector("#save-retry");
-    display.querySelector("#save-reference").textContent = `문의 시 알려 주실 참여 번호: ${sessionId}`;
+    status.textContent = text.sending;
+    reference.textContent = text.reference + sessionId;
+    retry.textContent = text.retry;
 
     const files = [];
-    let preparationFormat = "JSON";
     let preparationCode = "SAVE_DATA_SERIALIZE";
     try {
-      // Both formats use one snapshot; exporting must not modify collected rows.
+      validateDataSavingConfig();
+      // All three files use one snapshot. Exporting never modifies live rows.
       const snapshot = jsPsych.data.get().readOnly();
       const completedAt = new Date().toISOString();
-      const dataString = JSON.stringify({
+      const metadata = {
         session_id: sessionId,
         experiment_version: experimentVersion,
         condition: experimentConfig.condition,
         sessions_completed: completedSessions,
-        completed_at: completedAt,
+        verification_skip_sessions: experimentConfig.skipSessionsForVerification,
+        completed_at: completedAt
+      };
+      const dataString = JSON.stringify({
+        ...metadata,
         trials: snapshot.values()
       });
 
-      preparationFormat = "CSV";
-      preparationCode = "SAVE_CSV_SERIALIZE";
-      // Nested responses/keyword arrays remain JSON text inside CSV cells.
-      // Only the export copy receives the completion-time column.
-      snapshot.addToAll({ completed_at: completedAt });
-      const csvString = snapshot.csv();
+      preparationCode = "SAVE_BIGFIVE_SERIALIZE";
+      const bigFiveCsv = createBigFiveCsv(snapshot.values(), bigFiveDataset, metadata);
 
-      // Prepare and size-check BOTH immutable requests before sending either.
-      for (const [format, data] of [["JSON", dataString], ["CSV", csvString]]) {
-        preparationFormat = format;
+      preparationCode = "SAVE_CSV_SERIALIZE";
+      // Keep Big Five pages in JSON, and exclude them only from the main CSV copy.
+      // Nested responses/keyword arrays remain JSON text inside CSV cells.
+      const mainSnapshot = snapshot.filterCustom(row => !isBigFiveRow(row));
+      mainSnapshot.addToAll({ completed_at: completedAt });
+      const csvString = mainSnapshot.csv();
+
+      // Prepare and size-check ALL immutable requests before sending any file.
+      const baseName = `CCM_${experimentVersion}_${sessionId}`;
+      for (const [key, filename, data] of [
+        ["JSON", baseName + ".json", dataString],
+        ["CSV", baseName + ".csv", csvString],
+        ["BIGFIVE_CSV", baseName + "_bigfive.csv", bigFiveCsv]
+      ]) {
         preparationCode = "SAVE_REQUEST_SERIALIZE";
         const requestBody = JSON.stringify({
-          experimentID: dataSavingConfig.experimentID,
-          filename: `CCM_${experimentVersion}_${sessionId}.${format.toLowerCase()}`,
-          data
+          experimentID: dataSavingConfig.experimentID, filename, data
         });
         preparationCode = "SAVE_REQUEST_ENCODING";
         if (new TextEncoder().encode(requestBody).byteLength >= 32000000) {
           throw submissionError("SAVE_REQUEST_TOO_LARGE");
         }
-        files.push({ format, requestBody, state: "pending" });
+        files.push({ key, requestBody, state: "pending" });
       }
     } catch (error) {
-      status.textContent =
-        "응답 파일을 준비하지 못해 제출하지 못했습니다. 창을 닫거나 새로고침하지 말고 연구자에게 문의해 주세요.";
-      diagnostic.textContent = `${preparationFormat} / ` + submissionErrorText(
-        error?.submissionCode ? error : submissionError(preparationCode)
-      );
+      status.textContent = text.failure;
+      reference.hidden = false;
+      // Preserve a fixed diagnostic for researcher inspection without rendering it.
+      display.dataset.submissionCode = error?.submissionCode || preparationCode;
       return submissionPromise;
     }
 
     let state = "ready";
-    function updateFileStatus() {
-      const labels = {
-        pending: "전송 전", uploading: "전송 중", saved: "저장 확인됨",
-        queued: "대기 중 · 저장 미확인", duplicate: "파일 충돌 · 확인 필요",
-        unconfirmed: "저장 미확인", rejected: "제출 실패"
-      };
-      display.querySelector("#save-files").textContent = files
-        .map(file => `${file.format}: ${labels[file.state]}`).join(" / ");
-    }
-    updateFileStatus();
-
     async function submit() {
       // A single request at a time; terminal states cannot submit again.
       if (state !== "ready") return;
       state = "uploading";
       retry.hidden = true;
       retry.disabled = true;
-      diagnostic.textContent = "";
-      status.textContent = "응답을 제출하고 있습니다. 창을 닫거나 새로고침하지 말아 주세요.";
+      reference.hidden = true;
+      delete display.dataset.submissionCode;
+      delete display.dataset.submissionFile;
+      delete display.dataset.submissionHttpStatus;
+      status.textContent = text.sending;
 
       let activeFile;
       try {
@@ -2474,39 +2531,31 @@
           if (file.state === "saved") continue;
           activeFile = file;
           file.state = "uploading";
-          updateFileStatus();
           await uploadCompletedSession(file.requestBody);
           file.state = "saved";
-          updateFileStatus();
         }
         state = "saved";
-        status.textContent = "응답이 JSON 및 CSV 파일로 모두 저장되었습니다. 참여해 주셔서 감사합니다.";
+        status.textContent = text.success;
         resolveSubmission();
       } catch (error) {
         state = error?.submissionState || "rejected";
         if (activeFile) activeFile.state = state;
-        updateFileStatus();
-        diagnostic.textContent = `${activeFile?.format || "UPLOAD"} / ` + submissionErrorText(error);
-        const keepOpen = " 창을 닫거나 새로고침하지 말고 위 참여 번호로 연구자에게 문의해 주세요.";
-
-        if (state === "queued") {
-          status.textContent =
-            "전송이 대기 중이며 OSF 저장은 아직 확인되지 않았습니다. 중복 제출하지 말아 주세요." + keepOpen;
-        } else if (state === "duplicate") {
-          status.textContent =
-            "같은 이름의 파일이 있지만 이번 응답과 일치하는지 확인하지 못했습니다. 추가 제출을 중단했습니다." + keepOpen;
-        } else if (state === "unconfirmed") {
-          status.textContent =
-            "저장을 확인하지 못했습니다. 이미 서버에 전달되었을 수도 있습니다. " +
-            `인터넷 연결을 확인하고 ${Math.ceil(dataSavingConfig.retryDelayMs / 1000)}초 후 같은 응답으로 다시 제출할 수 있습니다.` + keepOpen;
+        reference.hidden = false;
+        display.dataset.submissionCode = error?.submissionCode || "SAVE_UNEXPECTED";
+        display.dataset.submissionFile = activeFile?.key || "UPLOAD";
+        if (Number.isInteger(error?.httpStatus)) {
+          display.dataset.submissionHttpStatus = String(error.httpStatus);
+        }
+        status.textContent = state === "queued" || state === "duplicate"
+          ? text.blocked : text.failure;
+        if (state === "unconfirmed") {
+          status.textContent += " " + text.retryHelp;
           retry.hidden = false;
           // This timer only enables a button; it never sends another request.
           setTimeout(() => {
             state = "ready";
             retry.disabled = false;
           }, dataSavingConfig.retryDelayMs);
-        } else {
-          status.textContent = "제출에 실패했습니다. 저장 설정 또는 응답 파일 확인이 필요합니다." + keepOpen;
         }
       }
     }
@@ -2522,24 +2571,18 @@
 
 
   async function startExperiment() {
-    let startupStage = "stimuli";
     try {
       if (location.protocol === "file:") {
         throw new Error("LOCAL_WEB_SERVER_REQUIRED");
       }
       validateSessionConfiguration();
-      await selectSessionStimuli();
-      startupStage = "condition";
+      bigFiveDataset = await loadBigFive(lang);
+      if (!experimentConfig.skipSessionsForVerification) await selectSessionStimuli();
       retrievedConditionNumber = await retrieveConditionNumber();
     } catch (error) {
-      document.body.innerHTML = `
-        <h2>실험을 시작할 수 없습니다.</h2>
-        <p>${error.message === "LOCAL_WEB_SERVER_REQUIRED"
-          ? "HTML 파일을 직접 열면 metadata.csv를 불러올 수 없습니다. 로컬 웹 서버를 실행한 후 HTTP 주소로 실험을 열어 주세요."
-          : startupStage === "stimuli"
-          ? "자극 풀 또는 work_id 정보를 확인하지 못했습니다. 연구자에게 문의해 주세요."
-          : "실험 조건 번호를 가져오지 못했습니다. 연구자에게 문의해 주세요."}</p>
-      `;
+      document.body.textContent = (lang === "eng"
+        ? "The survey cannot start. Please record this session ID and contact the researcher. Session ID: "
+        : "실험을 시작할 수 없습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 세션 ID: ") + sessionId;
       throw error;
     }
 
@@ -2550,25 +2593,26 @@
 
     timeline.push(
       ...buildConsentAndEligibility(),
-      ...buildHeadphoneCheckAndCalibration(),
-      ...buildIntroductionAndPractice()
+      ...buildDemographics()
     );
 
-    if (experimentConfig.skipFirstSessionForVerification) {
-      jsPsych.data.addProperties({ verification_skip_first_session: true });
-    } else {
-      timeline.push(buildMainSession(1, experimentConfig.audioFiles));
-    }
-
-    timeline.push(
-      buildSecondSessionChoice(),
-      {
-        timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
-        conditional_function: function () {
-          return continueToSecondSession;
+    jsPsych.data.addProperties({
+      verification_skip_sessions: experimentConfig.skipSessionsForVerification
+    });
+    if (!experimentConfig.skipSessionsForVerification) {
+      timeline.push(
+        ...buildHeadphoneCheckAndCalibration(),
+        ...buildIntroductionAndPractice(),
+        buildMainSession(1, experimentConfig.audioFiles),
+        buildSecondSessionChoice(),
+        {
+          timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
+          conditional_function: function () {
+            return continueToSecondSession;
+          }
         }
-      }
-    );
+      );
+    }
 
     timeline.push(
       ...buildParticipantQuestionnaires(),

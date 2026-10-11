@@ -4,7 +4,9 @@ Website made with jsPsych for emotion evaluation of CCM
 ## Local preview
 
 Open the experiment through HTTP/HTTPS. Opening `index.html` directly with a
-`file://` address prevents the browser from fetching `metadata.csv`.
+`file://` address prevents loading the questionnaire data and stimulus metadata.
+Direct-file opening displays local-server instructions before any module imports,
+so the browser's module restriction cannot leave this case as a blank page.
 
 For a local preview, run this from the repository directory using the existing
 Python installation:
@@ -14,232 +16,191 @@ python -m http.server 8765 --bind 127.0.0.1
 ```
 
 Keep the server running and open <http://127.0.0.1:8765/> in the browser.
-This serves the existing static files locally; data saving still uses DataPipe.
+Data saving still uses the configured DataPipe experiment; do not complete a
+synthetic survey against production storage.
+
+## Workflow and verification toggle
+
+Both conditions follow consent, eligibility, demographics, headphone/calibration
+checks, instructions/practice, session 1, the optional session 2, musical
+sophistication, Big Five, and debrief. Big Five runs once after the listening
+sessions, whether the participant accepts or declines session 2.
+
+`experimentConfig.skipSessionsForVerification` in `index.html` replaces the
+old first-session-only toggle. It is currently `true`: after consent, eligibility,
+and demographics, participants go directly to musical sophistication and Big
+Five. Calibration, practice, both listening sessions, the second-session choice,
+audio preloads, and stimulus-metadata fetching are skipped. The normal DataPipe
+condition assignment still occurs. These runs have `sessions_completed: 0` and
+`verification_skip_sessions: true` in the saved data.
+
+Set the toggle to `false` to run the normal listening workflow. The marker is then
+`false`, and only completed listening sessions contribute to the session count.
+This developer setting is not a participant-facing option.
 
 ## Stimulus selection
 
 In `index.html`, `experimentConfig.stimulusPoolSize` controls the number of
 eligible numbered clips (currently 4831). `stimulusFirstNumber` controls the
-starting filename number (initially 1). Thus the initial pool is
-`audio/0001.mp3` through `audio/4831.mp3`; a zero-based pool of 500 clips would
-use a size of 500 and a first number of 0, covering `0000.mp3` through `0499.mp3`.
-The pool must contain at least 60 clips and exclude practice/calibration audio.
+starting filename number (initially 1). The pool is therefore
+`audio/0001.mp3` through `audio/4831.mp3`. The pool must contain at least
+60 clips and exclude practice/calibration audio.
 
-At startup, the experiment loads the published `metadata.csv`, validates each
-configured clip's `clip_filename` / `work_id` mapping, and samples 60 distinct
-clips without replacement. The first 30 form session 1 and the remaining 30
-form the optional session 2. Each session preloads only its own batch. Selection
-is independent across participants, so different participants may hear the
-same clip. All main listening, emotion, and familiarity rows carry `work_id`
-in both JSON and CSV exports; shared rows also record `stimulus_pool_size` and
-`stimulus_first_number`.
+In the normal workflow, startup loads `metadata.csv`, validates each configured
+clip's `clip_filename` / `work_id` mapping, and samples 60 distinct clips without
+replacement. The first 30 form session 1 and the remaining 30 form optional
+session 2. Each session preloads only its own batch. Selection is independent
+across participants. Main listening, emotion, and familiarity rows retain
+`work_id`; shared rows record `stimulus_pool_size` and `stimulus_first_number`.
+Missing/invalid metadata or audio stops the affected workflow.
 
-Publish matching audio files and metadata before using a pool. Missing or
-invalid metadata stops startup; audio-loading failures stop the affected
-session. The temporary `skipFirstSessionForVerification` setting currently
-remains enabled. It reserves the first random batch, skips presenting it,
-and opens the second-session choice after practice. Skipped sessions are not
-counted as completed, and verification rows are marked accordingly.
+## Questionnaires
+
+Musical sophistication remains the existing nine-point placeholder item.
+The personality placeholder has been replaced with the full 120-item
+Johnson IPIP-NEO questionnaire from
+[rubynor/bigfive-web](https://github.com/rubynor/bigfive-web).
+
+The existing `lang` setting controls Big Five: `"eng"` loads English and
+`"kor"` loads Korean. All question and choice wording, UUIDs, ordering,
+domain/facet mappings, and reverse keys are preserved from the pinned source.
+There are 12 pages of 10 required items, no default responses, and no results
+screen, interpretation, or participant download. Scores are calculated silently.
+
+The static module lives in `questionnaires/bigfive/`; no framework, build system,
+backend, or new runtime dependency is required. See
+[SOURCE.md](questionnaires/bigfive/SOURCE.md) for the source commit, scoring
+version, raw/derived field definitions, and [LICENSE](questionnaires/bigfive/LICENSE).
+Keep these files with the application when publishing the static site.
 
 ## Data storage
 
-`index.html` runs jsPsych 8.3.0 from pinned CDN URLs. Completed, consented
-sessions are sent directly to DataPipe experiment `RWxInotIIqbc`, which forwards
-them to its configured OSF Component. No additional plugin or backend is used.
-The experiment ID is public; never put OSF tokens or other credentials in this
-repository or in browser code.
+`index.html` uses jsPsych 8.3.0 and pinned plugins from CDN URLs. Completed,
+consented runs are sent directly to DataPipe experiment `RWxInotIIqbc` using the
+existing persistence flow. The public experiment ID is not a credential.
 
-### Before collecting data
+### What is saved
 
-- Inspect the experiment in the DataPipe dashboard. Verify the exact OSF Project
-  and receiving Component, its approved visibility, working OSF authorization,
-  active text-data collection, remaining session allowance, and storage capacity.
-  Supplying an experiment ID does not verify any of these settings.
-- If validation is enabled, allow BOTH JSON and CSV. The JSON file is an object whose
-  top-level fields are `session_id`, `experiment_version`, `condition`,
-  `completed_at`, and `trials`. Shared required-field rules must also match CSV
-  column names: `session_id` works for both; `trials` exists only in JSON and must
-  not be required. Check optional metadata-generation settings for compatibility
-  with both formats before a pilot.
-- DataPipe counts each successful/queued file request toward its session limit.
-  Budget two uploads per participant: a limit of 50 allows about 25 complete
-  pairs, fewer if other uploads have consumed the allowance. Adjust the dashboard
-  limit for planned participants, existing usage, and test uploads. The browser
-  cannot reserve two slots or guarantee an atomic pair of uploads.
-- This survey requests its response-format condition from DataPipe before
-  instructions and trials. Sequential assignment must be enabled with two
-  conditions. It does not call the base64 endpoint.
-- Approve the destination and filenames for synthetic pilot uploads first.
-  Verify one complete session from each condition by inspecting the actual OSF
-  JSON/CSV file pairs, not just the completion screen. Use a separate test experiment or
-  clearly identified `TEST_` filenames in an isolated test harness; the production
-  survey has no test-mode URL switch.
-- OSF states that new Projects/Components cannot be created from November 16,
-  2026 and existing Projects become read-only on February 19, 2027. Confirm that
-  the collection schedule fits this service limitation. Do not assume DataPipe
-  can continue uploading to OSF Projects after that date.
+After an acknowledged debrief, the application prepares three UTF-8 files from
+one snapshot before sending any request:
 
-### What is saved and when
+- `CCM_<experiment_version>_<session_id>.json`: the full structured record,
+  including every trial, all Big Five raw responses, scored items, and results.
+- `CCM_<experiment_version>_<session_id>.csv`: the main response CSV, excluding
+  only Big Five questionnaire pages. Other trial data and raw responses remain.
+- `CCM_<experiment_version>_<session_id>_bigfive.csv`: one row containing all
+  Big Five raw responses and results.
 
-After the participant acknowledges the debrief, `finishSurveyAndSave()` creates
-one snapshot and prepares two UTF-8 files before uploading either:
-`CCM_<experiment_version>_<session_id>.json` and
-`CCM_<experiment_version>_<session_id>.csv`. The existing random 16-character
-session ID is generated once per page load and remains attached to every trial.
-Filename collisions are errors, never permission to overwrite a file.
+The same existing random 16-character `session_id` links all three files. It is
+generated once per page load, shared across listening sessions, and never
+replaced with a second participant identifier. All exports share one
+`completed_at` timestamp. The experiment version is now `ccm_draft_05`.
 
-The JSON file retains the existing envelope listed above and every collected trial
-row, including practice attempts, Korean text, multiple emotion keywords,
-keyword add/remove events, raw responses, derived ratings, stimulus identifiers,
-questionnaire data, and timestamps. CSV has one row per trial, using jsPsych's
-built-in exporter on a copy of the same snapshot. Each CSV row also receives the
-same `completed_at` value from the JSON envelope. Original trial data are not
-modified. Nested objects and arrays (responses, keyword lists/events, rating
-schemas) remain JSON text inside quoted CSV cells. CSV preserves their contents
-but does not retain all scalar type distinctions; the JSON file is the full
-structured record. Import CSV as UTF-8 when opening it in a spreadsheet program.
+The dedicated Big Five CSV contains:
 
-Only consented sessions ending with an acknowledged debrief upload. Early exits
-and unfinished sessions are not uploaded. There is no ongoing autosave, browser
-storage, local-download fallback, or reload recovery. Closing or reloading before
-confirmed submission can lose unsaved responses. Data remain in memory while the
-page stays open. Each complete encoded request is checked against a conservative
-32,000,000-byte limit. If either file cannot be prepared, neither is uploaded.
+- Raw 0–4 response indexes, selected 1–5 positions, and separate reverse-keyed
+  scores for each of the 120 UUIDs.
+- Five domain and 30 facet scores, counts, and classifications, using the
+  web app's pinned `@bigfive-org/score@1.2.2` calculation.
+- Language, source/scoring versions, condition, completion/verification metadata.
+- Quoted JSON cells retaining exact item/choice wording, metadata, and page
+  responses/timing.
+
+Only export copies are filtered or extended. Live jsPsych rows are never removed
+or overwritten. Nested arrays/objects remain JSON inside quoted CSV cells;
+import CSV as UTF-8. The complete JSON retains structured scalar types.
+
+Only consented runs ending with an acknowledged debrief upload. Unfinished runs
+and early exits do not upload. There is no ongoing autosave, browser storage,
+download fallback, or reload recovery. Responses stay in memory while the tab
+is open. Closing/reloading before confirmed submission can lose unsaved data.
+
+Every questionnaire must be complete and internally consistent before upload.
+Each encoded request must be smaller than 32,000,000 bytes. Preparation failure
+in any file prevents all uploads.
 
 ### Confirmation, errors, and retries
 
-`uploadCompletedSession()` sends a JSON request to
-`https://pipe.jspsych.org/api/data/` with `experimentID`, `filename`, and `data`
-(the JSON or CSV file contents as a string). JSON is uploaded first, then CSV,
-with up to 30 seconds per request, including reading the response. Both requests
-still use `Content-Type: application/json`. Only HTTP 201 with `message: "Success"`, no `error` field, and no
-queued indication is accepted as confirmation. HTTP success alone is insufficient.
-Overall completion requires confirmation for BOTH files. The screen shows each
-file's state and includes the failing format alongside its diagnostic code.
-If JSON saves but CSV fails, JSON stays saved and the page reports the partial
-result; it does not delete the first file or claim full submission success.
+Requests go to `https://pipe.jspsych.org/api/data/` with `experimentID`,
+`filename`, and `data`. The order is JSON, main CSV, then Big Five CSV.
+Each request has a 30-second timeout. Only HTTP 201 with
+`message: "Success"`, no error field, and no queue indication confirms storage.
+Completion requires explicit confirmation for all three files.
 
-- During upload, further submissions are blocked. After confirmed success,
-  neither another click nor another completion callback can send the file again.
-- Network errors, timeouts, transient service failures, or unexpected confirmation
-  responses show that saving is unconfirmed. The participant can deliberately
-  retry after a five-second cooldown. The timer only enables the button; there
-  is no automatic browser retry. Every attempt uses the identical request body,
-  filename, session ID, and completion timestamp for that file. Confirmed files
-  are skipped on retry. Uploads stop at the first failure; if JSON fails, CSV has
-  not yet been sent. A lost confirmation can still produce a duplicate on retry,
-  requiring researcher inspection rather than a new filename.
-- Configuration/validation rejections require researcher intervention; the page
-  does not repeatedly retry invalid data or settings.
-- HTTP 202 or an explicit queued response is not confirmed OSF storage. DataPipe
-  may retry queued files itself. The page blocks competing submissions and asks
-  the participant to contact the researcher using the displayed session reference.
-- `OSF_FILE_EXISTS` also blocks further submission. An existing filename does
-  not prove that its contents match this session. Never rename the file merely
-  to bypass the duplicate check.
+During preparation/transmission, the only status text is:
 
-A browser timeout does not undo a request the server already received. For an
-ambiguous result, inspect the DataPipe queue/logs and the OSF file identified by
-the session ID. Compare its contents before classifying the session as saved.
-This client cannot guarantee exactly-once delivery or independently verify an
-existing private OSF file. It does not poll the queue or mark a queued/duplicate
-result successful. DataPipe's service-managed retries are distinct from the
-browser retry button and may continue after the participant leaves.
+- Korean: 결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오
+- English: Sending results. Do not close the tab
 
-### Submission diagnostic codes
+On failure, participants see a brief message and their `session_id`, with
+instructions to record it and contact the researcher. No scores, filenames,
+per-file status, HTTP status, or diagnostic codes appear on screen. Fixed
+diagnostic code/file/HTTP fields are available on the display element's
+`dataset` for researcher inspection; raw server bodies and exception messages are
+never rendered or logged.
 
-Every handled saving failure now displays `오류 코드:` (error code). If a response
-arrived, the code includes its HTTP status, for example
-`DP_INVALID_DATA (HTTP 400)`. Ask for this code and the displayed session reference.
-The reference identifies the expected file; it is not proof that the file exists.
-Codes identify the failing step or DataPipe's reported error, not necessarily the
-underlying cause. An error before any HTTP response has no HTTP status to show.
+- Confirmed files remain saved and are skipped on retry. Uploads stop at the
+  first failure; partial completion never counts as overall success.
+- Network/time-out/transient or ambiguous confirmation failures permit a manual
+  retry after five seconds. The timer only enables the button; it never uploads.
+  Retries use identical filenames, bodies, IDs, and completion timestamps.
+- Rejections requiring configuration/data correction stop further submission.
+- Queued responses (HTTP 202 or an explicit queue indication) and duplicate
+  conflicts (HTTP 409 or `OSF_FILE_EXISTS`) block competing retries and require
+  researcher inspection. Neither means confirmed storage.
+- Simultaneous clicks and repeated completion callbacks cannot start another
+  submission. Filename collisions never authorize overwriting or renaming.
 
-| Code | Failing step / next check |
-| --- | --- |
-| `SAVE_CONFIG_ENDPOINT` | The configured DataPipe URL is incorrect. |
-| `SAVE_CONFIG_EXPERIMENT_ID` | The local experiment ID is missing or malformed. A valid-looking ID still requires remote verification. |
-| `SAVE_CONFIG_TIMEOUT` | The upload timeout is not a positive integer. |
-| `SAVE_CONFIG_RETRY_DELAY` | The retry delay is not an integer of at least 5,000 ms. |
-| `SAVE_BROWSER_FETCH` | The browser lacks the request API. |
-| `SAVE_BROWSER_ABORT` | The browser lacks the request cancellation API. |
-| `SAVE_BROWSER_ENCODING` | The browser lacks the UTF-8 encoding API. |
-| `SAVE_DATA_READ` | The survey could not read its collected trial rows. No upload starts. |
-| `SAVE_DATA_SERIALIZE` | The survey could not turn the completed data into JSON. |
-| `SAVE_CSV_SERIALIZE` | The survey could not generate the CSV copy. Neither file was uploaded. |
-| `SAVE_REQUEST_SERIALIZE` | The survey could not package the file and request fields into JSON. |
-| `SAVE_REQUEST_ENCODING` | The request's UTF-8 byte-size check failed. |
-| `SAVE_REQUEST_TOO_LARGE` | The encoded request reaches the 32,000,000-byte limit. |
-| `SAVE_CONNECTION` | No response was received. Check connectivity and the browser Network panel; JavaScript cannot reliably separate offline, DNS, CORS, TLS, and blocked-redirect failures. |
-| `SAVE_REQUEST_TIMEOUT` | The 30-second deadline expired before response headers arrived. The server may already have the file. |
-| `SAVE_RESPONSE_TIMEOUT` | The deadline expired while reading the response body. The server may already have the file. |
-| `SAVE_RESPONSE_READ` | Response headers arrived but reading the body failed. |
-| `SAVE_RESPONSE_JSON` | The response body is not valid JSON. Inspect the actual POST response privately. |
-| `SAVE_QUEUED` | HTTP 202 or an explicit queue indication: DataPipe has not confirmed OSF storage. Do not submit again; check its queue and OSF. |
-| `SAVE_HTTP_CONFLICT` | HTTP 409: a conflict blocks retries, even if the response body is unreadable. Check the expected OSF file. |
-| `SAVE_HTTP_ERROR` | HTTP failure without a recognized string error field; the displayed status helps locate the problem. |
-| `SAVE_REMOTE_UNKNOWN` | DataPipe returned a string error outside the known-code list. Inspect the actual POST response privately. |
-| `SAVE_CONFIRMATION` | A readable response did not meet the exact success requirements. Storage remains unconfirmed. |
-| `SAVE_UNEXPECTED` | An otherwise unclassified exception interrupted submission. Investigate the saving code. |
+A lost confirmation can become a duplicate on retry. Use the displayed
+`session_id` to inspect DataPipe logs/queue and destination files, compare their
+contents, and retain the matching records. Multi-file submission is not atomic;
+the browser cannot independently verify private files or guarantee exactly-once
+delivery. Existing DataPipe service-managed retries remain separate.
 
-Known public DataPipe errors have their own branch using the prefix `DP_`:
+### DataPipe configuration
 
-| Code(s), all prefixed with `DP_` | Next check |
-| --- | --- |
-| `MISSING_PARAMETER` | Inspect the survey's actual POST for `experimentID`, `filename`, and `data`. Opening the endpoint URL directly sends an empty GET and does not diagnose the survey's POST. |
-| `EXPERIMENT_NOT_FOUND`, `EXPERIMENT_DATA_NOT_FOUND` | Verify the experiment ID and experiment record in DataPipe. |
-| `DATA_COLLECTION_NOT_ACTIVE` | Enable text-data collection in the intended DataPipe experiment. |
-| `SESSION_LIMIT_REACHED` | Check the experiment's remaining allowance. |
-| `INVALID_DATA` | Check that both formats are allowed and required fields match both the JSON envelope and CSV headers. |
-| `USER_DATA_NOT_FOUND`, `INVALID_OWNER` | Check the DataPipe owner's account and experiment ownership. |
-| `INVALID_OSF_TOKEN`, `INVALID_REFRESH_TOKEN`, `NOT_USING_OAUTH`, `OAUTH_NOT_SETUP`, `TOKEN_RESOLUTION_ERROR` | Check/reconnect OSF authorization in DataPipe; never add a token to this HTML. |
-| `OSF_FILE_EXISTS` | Inspect the existing file and compare contents; another upload is blocked. |
-| `OSF_UPLOAD_ERROR`, `OSF_UPLOAD_EXCEPTION` | DataPipe reported trouble writing to OSF. Check destination permissions, capacity, and service status; storage is unconfirmed. |
-| `INVALID_METADATA_ERROR`, `OSF_METADATA_UPLOAD_ERROR`, `METADATA_ERROR` | Check optional metadata settings and whether the main file was already stored. |
-| `DATA_PERSIST_ERROR` | DataPipe reported a failure to persist data; researcher investigation is required. |
-| `BASE64DATA_COLLECTION_NOT_ACTIVE`, `CONDITION_ASSIGNMENT_NOT_ACTIVE`, `INVALID_BASE64_DATA`, `UNKNOWN_ERROR_GETTING_CONDITION` | Unexpected for this text-upload endpoint; verify the endpoint and service response. |
+The configured experiment has no session limit, per the study owner's setting.
+No quota change is needed for the additional CSV.
 
-The screen uses fixed codes and HTTP status, never raw exception messages,
-server messages, or response bodies that might include sensitive information.
-Unknown server strings deliberately use `SAVE_REMOTE_UNKNOWN`. Diagnostics are
-not added to participant data or saved elsewhere. A retry clears the previous
-code while waiting and shows a new code if it fails. All existing retry rules
-above still apply; diagnostics do not trigger requests or turn failure into success.
+Before collection, verify the intended receiving destination, approved
+visibility, working authorization, active text-data collection, and storage.
+Allow both JSON and CSV if validation is enabled. Required-field rules shared
+between formats must use common fields such as `session_id`,
+`experiment_version`, `condition`, or `completed_at`.
+`trials` exists only in the JSON envelope and must not be required for CSV.
+Verify that validation accepts the wide, single-row Big Five CSV.
 
-### Verification procedure
+Sequential condition assignment must remain enabled for two conditions.
+The survey does not use the base64 endpoint. Do not put tokens or other secrets
+in browser code.
 
-Serve the survey over local HTTP for browser checks. Automated checks must
-intercept all DataPipe requests and return simulated responses; never run an
-unintercepted completed survey as a test. Exercise both conditions and compare
-the full serialized trial collection with the original, including Unicode and
-nested arrays. Check consent/eligibility exits, repeated practice, concurrent
-clicks, stable retries, and success, rejection, queue, duplicate, malformed-response,
-network-error, and timeout paths. Confirm that the original questions, audio,
-timing, condition settings, and timeline have not changed.
-Check the specific diagnostic code and HTTP status for every branch, including
-each known DataPipe rejection, unavailable browser APIs, data preparation errors,
-timeouts before/after headers, non-JSON responses, and unexpected exceptions.
-Unknown/raw server messages must not appear on screen. After a successful retry,
-the old error code must be cleared. A malformed HTTP 409 response must still
-block another submission.
-Exercise failures at both file positions, especially JSON saved / CSV failed,
-and confirm retry never resends a confirmed JSON file. Parse CSV independently
-and compare every cell/row with the JSON snapshot, including nested values,
-Unicode, commas, quotes, line breaks, nulls, and empty values. Verify that a CSV
-preparation/size failure prevents both uploads and that no success appears while
-the second upload is pending, queued, rejected, or unconfirmed.
+[DataPipe's current notice](https://pipe.jspsych.org/) states that it will stop
+writing to OSF after November 16, 2026. The existing OSF destination and any
+necessary later migration must be handled separately; this change does not
+replace the persistence provider.
 
-Simulated responses validate client behavior only. With separate approval for
-real test submissions, inspect DataPipe settings, upload clearly identified
-synthetic sessions, and compare both downloaded OSF files with the expected data.
-Live confirmation, permissions, service recovery, and the destination cannot be
-verified solely by local tests. Never commit participant data or credentials.
+## Local verification
+
+With an existing Node.js installation, run:
+
+```powershell
+node --test tests/bigfive.mjs
+```
+
+These dependency-free checks cover source wording fingerprints, both languages,
+reverse scoring and results, normal/skip paths in both conditions, separate
+CSV contents, full JSON retention, exact sending messages, delayed third-file
+confirmation, failure at each file position, stable retries, queued/duplicate/
+rejected/malformed responses, timeouts, and incomplete data. All network
+boundaries are intercepted; they never submit to production DataPipe.
+
+The control-flow checks use a minimal jsPsych/DOM boundary and do not replace
+browser verification of actual rendering or live persistence. For a browser
+pilot, intercept all DataPipe requests or obtain separate approval for clearly
+identified synthetic submissions. Inspect actual destination files before
+claiming live storage is verified.
 
 Official references:
-
-- [DataPipe setup](https://pipe.jspsych.org/getting-started)
-- [DataPipe API](https://pipe.jspsych.org/api-docs)
-- [DataPipe limits and queued delivery](https://pipe.jspsych.org/faq)
-- [DataPipe upload implementation and HTTP statuses](https://github.com/jspsych/datapipe/blob/main/functions/src/api-data.ts)
-- [jsPsych data handling](https://www.jspsych.org/v8/overview/data/)
-- [OSF Project API transition](https://help.osf.io/article/744-osf-projects-api-impact)
+[DataPipe API](https://pipe.jspsych.org/docs/api),
+[jsPsych data](https://www.jspsych.org/v8/overview/data/),
+[survey-likert](https://www.jspsych.org/v8/plugins/survey-likert/).
