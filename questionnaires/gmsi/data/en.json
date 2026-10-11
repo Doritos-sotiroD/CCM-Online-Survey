@@ -1,0 +1,189 @@
+{
+  "questionnaire_id": "gold_msi_general_18",
+  "questionnaire_version": "gold_msi_general_18_v1",
+  "language": "en",
+  "choices": {
+    "agreement": [
+      "Completely disagree",
+      "Strongly disagree",
+      "disagree",
+      "Neither agree nor disagree",
+      "agree",
+      "Strongly agree",
+      "Completely agree"
+    ],
+    "practice_years": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4-5",
+      "6-9",
+      "10 or more"
+    ],
+    "daily_practice": [
+      "0",
+      "0.5",
+      "1",
+      "1.5",
+      "2",
+      "3-4",
+      "5 or more"
+    ],
+    "instruments": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6 or more"
+    ]
+  },
+  "items": [
+    {
+      "id": "AE_01",
+      "korean_item_number": 1,
+      "text": "I spend a lot of my free time doing music-related activities.",
+      "source_text": "I spend a lot of my free time doing music-related activities.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "AE_02",
+      "korean_item_number": 3,
+      "text": "I enjoy writing about music, for example on blogs and forums.",
+      "source_text": "I enjoy writing about music, for example on blogs and forums.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "AE_05",
+      "korean_item_number": 15,
+      "text": "I often read or search the internet for things related to music.",
+      "source_text": "I often read or search the internet for things related to music.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "AE_07",
+      "korean_item_number": 24,
+      "text": "Music is kind of an addiction for me - I couldn't live without it.",
+      "source_text": "Music is kind of an addiction for me - I couldn't live without it.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "EM_04",
+      "korean_item_number": 19,
+      "text": "I am able to identify what is special about a given musical piece.",
+      "source_text": "I am able to identify what is special about a given musical piece.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "MT_01",
+      "korean_item_number": 32,
+      "text": "I engaged in regular, daily practice of a musical instrument (including voice) for_ years.",
+      "source_text": "I engaged in regular, daily practice of a musical instrument (including voice) for_ years.",
+      "scale": "practice_years",
+      "negative": false
+    },
+    {
+      "id": "MT_02",
+      "korean_item_number": 33,
+      "text": "At the peak of my interest, I practised my primary instrument for _ hours per day.",
+      "source_text": "At the peak of my interest, I practised my primary instrument for _ hours per day.",
+      "scale": "daily_practice",
+      "negative": false
+    },
+    {
+      "id": "MT_03",
+      "korean_item_number": 14,
+      "text": "I have never been complimented for my talents as a musical performer.",
+      "source_text": "I have never been complimented for my talents as a musical performer.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "MT_06",
+      "korean_item_number": 37,
+      "text": "I can play _ musical instruments.",
+      "source_text": "I can play _ musical instruments.",
+      "scale": "instruments",
+      "negative": false
+    },
+    {
+      "id": "MT_07",
+      "korean_item_number": 27,
+      "text": "I would not consider myself a musician.",
+      "source_text": "I would not consider myself a musician.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "PA_04",
+      "korean_item_number": 12,
+      "text": "I can compare and discuss differences between two performances or versions of the same piece of music.",
+      "source_text": "I can compare and discuss differences between two performances or versions of the same piece of music.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "PA_08",
+      "korean_item_number": 23,
+      "text": "When I sing, I have no idea whether I'm in tune or not.",
+      "source_text": "When I sing, I have no idea whether I'm in tune or not.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "SA_01",
+      "korean_item_number": 4,
+      "text": "If somebody starts singing a song I don't know, I can usually join in.",
+      "source_text": "If somebody starts singing a song I don't know, I can usually join in.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "SA_02",
+      "korean_item_number": 7,
+      "text": "I can sing or play music from memory.",
+      "source_text": "I can sing or play music from memory.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "SA_03",
+      "korean_item_number": 10,
+      "text": "I am able to hit the right notes when I sing along with a recording.",
+      "source_text": "I am able to hit the right notes when I sing along with a recording.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "SA_04",
+      "korean_item_number": 17,
+      "text": "I am not able to sing in harmony when somebody is singing a familiar tune.",
+      "source_text": "I am not able to sing in harmony when somebody is singing a familiar tune.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "SA_05",
+      "korean_item_number": 25,
+      "text": "I don't like singing in public because I'm afraid that I would sing wrong notes.",
+      "source_text": "I don't like singing in public because I'm afraid that I would sing wrong notes.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "SA_06",
+      "korean_item_number": 29,
+      "text": "After hearing a new song two or three times, I can usually sing it by myself.",
+      "source_text": "After hearing a new song two or three times, I can usually sing it by myself.",
+      "scale": "agreement",
+      "negative": false
+    }
+  ]
+}

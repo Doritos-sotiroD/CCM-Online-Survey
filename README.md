@@ -56,19 +56,27 @@ Missing/invalid metadata or audio stops the affected workflow.
 
 ## Questionnaires
 
-Musical sophistication remains the existing nine-point placeholder item.
+Musical sophistication uses the 18-item General scale of Gold-MSI, excluding
+BI_01, ST_01, and AP_01. It has two pages of nine required questions, in the
+supplied English CSV order. English wording comes from that CSV; Korean wording
+comes from the corresponding Gold-MSI-K appendix items. Both use the same
+seven-choice positions and the same presentation styling as Big Five. See
+[GMSI source and coding](questionnaires/gmsi/SOURCE.md).
+
 The personality placeholder has been replaced with the full 120-item
 Johnson IPIP-NEO questionnaire from
 [rubynor/bigfive-web](https://github.com/rubynor/bigfive-web).
 
-The existing `lang` setting controls Big Five: `"eng"` loads English and
-`"kor"` loads Korean. All question and choice wording, UUIDs, ordering,
+The existing `lang` setting controls both GMSI and Big Five: `"eng"` loads
+English and `"kor"` loads Korean, including each questionnaire's instructions
+and navigation. Missing or invalid selected-language data stops startup.
+For Big Five, all question and choice wording, UUIDs, ordering,
 domain/facet mappings, and reverse keys are preserved from the pinned source.
 There are 12 pages of 10 required items, no default responses, and no results
 screen, interpretation, or participant download. Scores are calculated silently.
 
-The static module lives in `questionnaires/bigfive/`; no framework, build system,
-backend, or new runtime dependency is required. See
+The static modules live in `questionnaires/gmsi/` and `questionnaires/bigfive/`;
+no framework, build system, backend, or new runtime dependency is required. See
 [SOURCE.md](questionnaires/bigfive/SOURCE.md) for the source commit, scoring
 version, raw/derived field definitions, and [LICENSE](questionnaires/bigfive/LICENSE).
 Keep these files with the application when publishing the static site.
@@ -81,20 +89,27 @@ existing persistence flow. The public experiment ID is not a credential.
 
 ### What is saved
 
-After an acknowledged debrief, the application prepares three UTF-8 files from
+After an acknowledged debrief, the application prepares four UTF-8 files from
 one snapshot before sending any request:
 
 - `CCM_<experiment_version>_<session_id>.json`: the full structured record,
-  including every trial, all Big Five raw responses, scored items, and results.
+  including every trial, both GMSI pages, all Big Five raw responses, scored
+  items, and results.
 - `CCM_<experiment_version>_<session_id>.csv`: the main response CSV, excluding
   only Big Five questionnaire pages. Other trial data and raw responses remain.
 - `CCM_<experiment_version>_<session_id>_bigfive.csv`: one row containing all
   Big Five raw responses and results.
+- `CCM_<experiment_version>_<session_id>_gmsi.csv`: one scorer-ready row with
+  exactly `session_id` and the 18 canonical item columns. Values are unreversed
+  1–7 selected-position codes, including the three numerical-category items.
+  The raw 0–6 indexes, exact item/choice wording, language/version metadata,
+  and timing remain in the full JSON and GMSI rows of the main CSV.
 
-The same existing random 16-character `session_id` links all three files. It is
+The same existing random 16-character `session_id` links all four files. It is
 generated once per page load, shared across listening sessions, and never
-replaced with a second participant identifier. All exports share one
-`completed_at` timestamp. The experiment version is now `ccm_draft_05`.
+replaced with a second participant identifier. The full JSON, main CSV, and
+Big Five CSV share one `completed_at` timestamp. The minimal scorer CSV keeps
+only the ID and item columns. The experiment version is now `ccm_draft_06`.
 
 The dedicated Big Five CSV contains:
 
@@ -122,10 +137,10 @@ in any file prevents all uploads.
 ### Confirmation, errors, and retries
 
 Requests go to `https://pipe.jspsych.org/api/data/` with `experimentID`,
-`filename`, and `data`. The order is JSON, main CSV, then Big Five CSV.
+`filename`, and `data`. The order is JSON, main CSV, Big Five CSV, then GMSI CSV.
 Each request has a 30-second timeout. Only HTTP 201 with
 `message: "Success"`, no error field, and no queue indication confirms storage.
-Completion requires explicit confirmation for all three files.
+Completion requires explicit confirmation for all four files.
 
 During preparation/transmission, the only status text is:
 
@@ -164,11 +179,11 @@ No quota change is needed for the additional CSV.
 
 Before collection, verify the intended receiving destination, approved
 visibility, working authorization, active text-data collection, and storage.
-Allow both JSON and CSV if validation is enabled. Required-field rules shared
-between formats must use common fields such as `session_id`,
-`experiment_version`, `condition`, or `completed_at`.
+Allow both JSON and CSV if validation is enabled. Only `session_id` is common
+to every file: the minimal GMSI CSV has only that ID and its 18 item columns.
+Any required-field rule applied to all files must accept that schema.
 `trials` exists only in the JSON envelope and must not be required for CSV.
-Verify that validation accepts the wide, single-row Big Five CSV.
+Verify that validation also accepts the wide, single-row Big Five CSV.
 
 Sequential condition assignment must remain enabled for two conditions.
 The survey does not use the base64 endpoint. Do not put tokens or other secrets
@@ -184,15 +199,18 @@ replace the persistence provider.
 With an existing Node.js installation, run:
 
 ```powershell
-node --test tests/bigfive.mjs
+node --test tests/bigfive.mjs tests/gmsi.mjs
 ```
 
 These dependency-free checks cover source wording fingerprints, both languages,
 reverse scoring and results, normal/skip paths in both conditions, separate
-CSV contents, full JSON retention, exact sending messages, delayed third-file
+CSV contents, full JSON retention, exact sending messages, delayed fourth-file
 confirmation, failure at each file position, stable retries, queued/duplicate/
 rejected/malformed responses, timeouts, and incomplete data. All network
 boundaries are intercepted; they never submit to production DataPipe.
+GMSI checks also cover exactly two pages of nine, all seven category positions,
+unreversed exports, excluded items, incomplete/mismatched data, and selected
+language loading failures.
 
 The control-flow checks use a minimal jsPsych/DOM boundary and do not replace
 browser verification of actual rendering or live persistence. For a browser

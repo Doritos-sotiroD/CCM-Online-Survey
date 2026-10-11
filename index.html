@@ -38,40 +38,47 @@
       display: none;
     }
 
-    .bigfive-questionnaire {
+    .bigfive-questionnaire,
+    .gmsi-questionnaire {
       width: min(900px, calc(100vw - 40px));
     }
 
-    .bigfive-questionnaire .jspsych-survey-likert-statement {
+    .bigfive-questionnaire .jspsych-survey-likert-statement,
+    .gmsi-questionnaire .jspsych-survey-likert-statement {
       font-size: 20px;
       line-height: 1.5;
     }
 
-    .bigfive-questionnaire .jspsych-survey-likert-opt-label {
+    .bigfive-questionnaire .jspsych-survey-likert-opt-label,
+    .gmsi-questionnaire .jspsych-survey-likert-opt-label {
       line-height: 1.5;
       word-break: keep-all;
       cursor: pointer;
     }
 
     @media (max-width: 600px) {
-      .bigfive-questionnaire .jspsych-survey-likert-opts::before {
+      .bigfive-questionnaire .jspsych-survey-likert-opts::before,
+      .gmsi-questionnaire .jspsych-survey-likert-opts::before {
         display: none;
       }
 
-      .bigfive-questionnaire .jspsych-survey-likert-opts li {
+      .bigfive-questionnaire .jspsych-survey-likert-opts li,
+      .gmsi-questionnaire .jspsych-survey-likert-opts li {
         display: block;
         width: 100% !important;
         margin-bottom: 12px;
       }
 
-      .bigfive-questionnaire .jspsych-survey-likert-opt-label {
+      .bigfive-questionnaire .jspsych-survey-likert-opt-label,
+      .gmsi-questionnaire .jspsych-survey-likert-opt-label {
         display: flex;
         align-items: center;
         gap: 12px;
         text-align: left;
       }
 
-      .bigfive-questionnaire .jspsych-survey-likert-opts li input[type="radio"] {
+      .bigfive-questionnaire .jspsych-survey-likert-opts li input[type="radio"],
+      .gmsi-questionnaire .jspsych-survey-likert-opts li input[type="radio"] {
         position: static;
         flex-shrink: 0;
         margin: 0;
@@ -253,6 +260,8 @@
 
   import { loadBigFive, buildBigFiveTrials, isBigFiveRow } from "./questionnaires/bigfive/questionnaire.js";
   import { createBigFiveCsv } from "./questionnaires/bigfive/export.js";
+  import { loadGmsi, buildGmsiTrials } from "./questionnaires/gmsi/questionnaire.js";
+  import { createGmsiCsv } from "./questionnaires/gmsi/export.js";
 
   /* ------------------------------------------------------------------
      1. INITIALIZE JSPSYCH
@@ -287,7 +296,7 @@
      2. EXPERIMENT CONFIGURATION
      ------------------------------------------------------------------ */
 
-  // Language for Condition 2, the second-session choice, Big Five, and saving.
+  // Language for Condition 2, the second-session choice, GMSI, Big Five, and saving.
   const lang = "kor"; // "eng" or "kor"
 
   const experimentConfig = {
@@ -316,9 +325,10 @@
   let continueToSecondSession = false;
   const stimulusWorkIds = new Map();
   let bigFiveDataset;
+  let gmsiDataset;
 
   // Change this when you revise the experiment.
-  const experimentVersion = "ccm_draft_05";
+  const experimentVersion = "ccm_draft_06";
 
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
@@ -2165,84 +2175,19 @@
 
   function buildParticipantQuestionnaires() {
     // Both conditions complete these questionnaires after the listening trials.
-
-    // 1. SHARED NINE-POINT SCALE
-    // Edit these labels when replacing the dummy questions.
-    const agreementLabels = [
-      "1<br>전혀 그렇지 않다",
-      "2",
-      "3",
-      "4",
-      "5<br>보통이다",
-      "6",
-      "7",
-      "8",
-      "9<br>매우 그렇다"
-    ];
-
-    // This helper creates one questionnaire page containing one dummy item.
-    // This item remains a placeholder, not a Gold-MSI score.
-    function makeDummyQuestionnaire(task, name, title, prompt) {
-      return {
-        type: jsPsychSurveyLikert,
-
-        preamble: `
-        <h2>${title}</h2>
-        <p>평소의 자신을 기준으로 응답해 주세요.</p>
-      `,
-
-        questions: [
-          {
-            name: name,
-            prompt: prompt,
-            labels: [...agreementLabels],
-            required: true,
-            default_response: null // No answer is selected in advance.
-          }
-        ],
-
-        randomize_question_order: false,
-        button_label: "다음",
-
-        data: {
-          task: task,
-          phase: "questionnaire",
-          condition: experimentConfig.condition,
-          questionnaire_version: "draft_2",
-          is_placeholder: true,
-          item_name: name,
-          item_prompt: prompt,
-          scale_labels: [...agreementLabels]
-        },
-
-        on_finish: function (data) {
-          // jsPsych records the selected position as 0–8.
-          // Keep that original response and add a separate 1–9 score.
-          const index = data.response[name];
-
-          data[name + "_rating_1_to_9"] =
-            Number.isInteger(index) && index >= 0 && index <= 8
-              ? index + 1
-              : null;
-        }
-      };
-    }
-
-    // 2. MUSICAL SOPHISTICATION PLACEHOLDER
-    // Replace this item with the final questionnaire later.
-    const musicianIdentity = makeDummyQuestionnaire(
-      "musical_sophistication",
-      "musician_identity",
-      "음악에 대한 생각",
-      "나는 나 자신을 음악가라고 생각한다."
-    );
-
     // The array order determines the order of the questionnaire pages.
-    return [musicianIdentity, ...buildBigFiveTrials({
-      dataset: bigFiveDataset,
-      plugin: jsPsychSurveyLikert,
-      condition: experimentConfig.condition
-    })];
+    return [
+      ...buildGmsiTrials({
+        dataset: gmsiDataset,
+        plugin: jsPsychSurveyLikert,
+        condition: experimentConfig.condition
+      }),
+      ...buildBigFiveTrials({
+        dataset: bigFiveDataset,
+        plugin: jsPsychSurveyLikert,
+        condition: experimentConfig.condition
+      })
+    ];
   }
 
 
@@ -2460,7 +2405,7 @@
     let preparationCode = "SAVE_DATA_SERIALIZE";
     try {
       validateDataSavingConfig();
-      // All three files use one snapshot. Exporting never modifies live rows.
+      // All four files use one snapshot. Exporting never modifies live rows.
       const snapshot = jsPsych.data.get().readOnly();
       const completedAt = new Date().toISOString();
       const metadata = {
@@ -2479,6 +2424,9 @@
       preparationCode = "SAVE_BIGFIVE_SERIALIZE";
       const bigFiveCsv = createBigFiveCsv(snapshot.values(), bigFiveDataset, metadata);
 
+      preparationCode = "SAVE_GMSI_SERIALIZE";
+      const gmsiCsv = createGmsiCsv(snapshot.values(), gmsiDataset, metadata);
+
       preparationCode = "SAVE_CSV_SERIALIZE";
       // Keep Big Five pages in JSON, and exclude them only from the main CSV copy.
       // Nested responses/keyword arrays remain JSON text inside CSV cells.
@@ -2491,7 +2439,8 @@
       for (const [key, filename, data] of [
         ["JSON", baseName + ".json", dataString],
         ["CSV", baseName + ".csv", csvString],
-        ["BIGFIVE_CSV", baseName + "_bigfive.csv", bigFiveCsv]
+        ["BIGFIVE_CSV", baseName + "_bigfive.csv", bigFiveCsv],
+        ["GMSI_CSV", baseName + "_gmsi.csv", gmsiCsv]
       ]) {
         preparationCode = "SAVE_REQUEST_SERIALIZE";
         const requestBody = JSON.stringify({
@@ -2576,7 +2525,7 @@
         throw new Error("LOCAL_WEB_SERVER_REQUIRED");
       }
       validateSessionConfiguration();
-      bigFiveDataset = await loadBigFive(lang);
+      [bigFiveDataset, gmsiDataset] = await Promise.all([loadBigFive(lang), loadGmsi(lang)]);
       if (!experimentConfig.skipSessionsForVerification) await selectSessionStimuli();
       retrievedConditionNumber = await retrieveConditionNumber();
     } catch (error) {

@@ -4,7 +4,7 @@ import {
 import { DOMAINS, SCORING_VERSION, scoreBigFive } from "./scoring.js";
 
 // One participant row, keyed by the same session_id as the main response file.
-// This also verifies completeness before ANY of the three files are uploaded.
+// This also verifies completeness before any study files are uploaded.
 export function createBigFiveCsv(rows, dataset, metadata) {
   const pages = rows.filter(isBigFiveRow);
   const pageCount = dataset.items.length / PAGE_SIZE;

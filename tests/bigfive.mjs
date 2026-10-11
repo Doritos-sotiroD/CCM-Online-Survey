@@ -8,14 +8,19 @@ import {
 } from "../questionnaires/bigfive/questionnaire.js";
 import { scoreBigFive } from "../questionnaires/bigfive/scoring.js";
 import { createBigFiveCsv } from "../questionnaires/bigfive/export.js";
+import { buildGmsiTrials } from "../questionnaires/gmsi/questionnaire.js";
+import { createGmsiCsv } from "../questionnaires/gmsi/export.js";
 
 const datasets = Object.fromEntries(await Promise.all(["en", "ko"].map(async language => [
   language, JSON.parse(await readFile(new URL(`../questionnaires/bigfive/data/${language}.json`, import.meta.url), "utf8"))
 ])));
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const gmsiDatasets = Object.fromEntries(await Promise.all(["en", "ko"].map(async language => [
+  language, JSON.parse(await readFile(new URL(`../questionnaires/gmsi/data/${language}.json`, import.meta.url), "utf8"))
+])));
 const sessionId = "TEST_BIGFIVE_ONLY";
 const metadata = {
-  session_id: sessionId, experiment_version: "ccm_draft_05", condition: "condition_1",
+  session_id: sessionId, experiment_version: "ccm_draft_06", condition: "condition_1",
   sessions_completed: 0, verification_skip_sessions: true, completed_at: "2026-10-11T00:00:00.000Z"
 };
 
@@ -214,7 +219,9 @@ class DataCollection {
     return headers.map(cell).join(",") + "\r\n" + this.rows.map(row => headers.map(h => cell(row[h])).join(",")).join("\r\n") + "\r\n";
   }
 }
-function makeApp({language="kor", condition=0, skip=true, upload, load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"])} = {}) {
+function makeApp({language="kor", condition=0, skip=true, upload,
+  load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"]),
+  loadMusic=async language => structuredClone(gmsiDatasets[language === "eng" ? "en" : "ko"])} = {}) {
   const nodes = Object.fromEntries(["save-status","save-reference","save-retry"].map(id => [id, {
     textContent:"", hidden:true, disabled:false, listeners:{}, addEventListener(name, handler){this.listeners[name]=handler;}
   }]));
@@ -229,6 +236,7 @@ function makeApp({language="kor", condition=0, skip=true, upload, load=async lan
   const context = {
     initJsPsych:options => {state.options=options;return jsPsych;},
     loadBigFive:load, buildBigFiveTrials, isBigFiveRow:row => row.questionnaire_id === "ipip_neo_120", createBigFiveCsv,
+    loadGmsi:loadMusic, buildGmsiTrials, createGmsiCsv,
     AbortController, TextEncoder, Date, location:{protocol:"http:"}, document:{body:{}}, console,
     setTimeout:(callback, delay) => {const id=++state.nextTimer;state.timers.set(id,{callback,delay});return id;},
     clearTimeout:id => state.timers.delete(id),
@@ -258,10 +266,21 @@ function makeApp({language="kor", condition=0, skip=true, upload, load=async lan
 }
 async function flush() { await new Promise(resolve => setImmediate(resolve)); }
 function finishRows(state, language="kor", condition="condition_1") {
+  const musicRows = buildGmsiTrials({
+    dataset: gmsiDatasets[language === "eng" ? "en" : "ko"], plugin:function SurveyLikert(){}, condition
+  }).map((trial, page) => {
+    const row = {
+      ...state.properties, ...structuredClone(trial.data), trial_type:"survey-likert",
+      response:Object.fromEntries(trial.questions.map((question, index) => [question.name, (page * 9 + index) % 7])),
+      note:'한글, "quoted"\nsecond line'
+    };
+    trial.on_finish(row);
+    return row;
+  });
   state.rows = [
     {...state.properties, task:"consent",consented:true,trial_type:"html-button-response"},
     {...state.properties, task:"demographics",trial_type:"survey-html-form",response:{age:"23",gender:"prefer_not_to_say",education:"bachelor"}},
-    {...state.properties, task:"musical_sophistication",trial_type:"survey-likert",response:{musician_identity:3},note:'한글, "quoted"\nsecond line'},
+    ...musicRows,
     ...completedPages(datasets[language === "eng" ? "en" : "ko"], condition).map(row => ({...state.properties,...row})),
     {...state.properties, task:"debrief",trial_type:"html-button-response",debrief_acknowledged:true}
   ];
@@ -277,8 +296,12 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
     const musicPosition = tasks.indexOf("musical_sophistication");
     assert.equal(tasks.filter(task => task === "demographics").length,1);
     assert.equal(tasks.filter(task => task === "personality_traits").length,12);
-    assert.deepEqual(tasks.slice(musicPosition),["musical_sophistication",...Array(12).fill("personality_traits"),"debrief"]);
-    const bigFive = state.timeline[musicPosition + 1];
+    assert.deepEqual(tasks.slice(musicPosition),[...Array(2).fill("musical_sophistication"),...Array(12).fill("personality_traits"),"debrief"]);
+    const music = state.timeline.slice(musicPosition, musicPosition + 2);
+    assert.deepEqual(Array.from(music, trial => trial.questions.length), [9,9]);
+    assert(music.every(trial => trial.data.questionnaire_language === (language === "eng" ? "en" : "ko")));
+    assert(music.every(trial => trial.data.is_placeholder === false));
+    const bigFive = state.timeline[musicPosition + 2];
     assert.equal(bigFive.data.questionnaire_language, language === "eng" ? "en" : "ko");
     assert.equal(state.properties.verification_skip_sessions,skip);
     assert.equal(app.getCompleted(),0);
@@ -307,7 +330,7 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
   }
 });
 
-test("three successful files share ID; JSON retains Big Five; main CSV excludes only its pages", async () => {
+test("four successful files share ID; JSON retains both questionnaires; main CSV includes GMSI", async () => {
   for (const language of ["eng","kor"]) {
     const {app,state} = makeApp({language});
     await app.startExperiment();
@@ -315,23 +338,28 @@ test("three successful files share ID; JSON retains Big Five; main CSV excludes 
     const original = structuredClone(state.rows);
     const pending = app.finishSurveyAndSave();
     await flush(); await pending;
-    assert.equal(state.requests.length,3);
+    assert.equal(state.requests.length,4);
     assert.equal(app.finishSurveyAndSave(),pending);
-    const [json,main,bigfive] = state.requests.map(request => request.parsed);
-    assert.equal(json.filename,`CCM_ccm_draft_05_${sessionId}.json`);
-    assert.equal(main.filename,`CCM_ccm_draft_05_${sessionId}.csv`);
-    assert.equal(bigfive.filename,`CCM_ccm_draft_05_${sessionId}_bigfive.csv`);
+    const [json,main,bigfive,gmsi] = state.requests.map(request => request.parsed);
+    assert.equal(json.filename,`CCM_ccm_draft_06_${sessionId}.json`);
+    assert.equal(main.filename,`CCM_ccm_draft_06_${sessionId}.csv`);
+    assert.equal(bigfive.filename,`CCM_ccm_draft_06_${sessionId}_bigfive.csv`);
+    assert.equal(gmsi.filename,`CCM_ccm_draft_06_${sessionId}_gmsi.csv`);
     const envelope = JSON.parse(json.data);
     assert.deepEqual(envelope.trials, original);
     assert.equal(envelope.session_id, sessionId);
     const mainParsed = parseCsv(main.data);
     const taskColumn = mainParsed[0].indexOf("task");
-    assert.deepEqual(mainParsed.slice(1).map(row => row[taskColumn]),["consent","demographics","musical_sophistication","debrief"]);
+    assert.deepEqual(mainParsed.slice(1).map(row => row[taskColumn]),["consent","demographics","musical_sophistication","musical_sophistication","debrief"]);
     const noteColumn = mainParsed[0].indexOf("note");
     assert.equal(mainParsed[3][noteColumn], original[2].note);
     const resultParsed = parseCsv(bigfive.data);
     assert.equal(resultParsed[1][resultParsed[0].indexOf("session_id")],sessionId);
     assert.equal(resultParsed[1][resultParsed[0].indexOf("completed_at")],envelope.completed_at);
+    const musicParsed = parseCsv(gmsi.data);
+    assert.equal(musicParsed[0].length,19);
+    assert.equal(musicParsed[1][0],sessionId);
+    assert.deepEqual(musicParsed[1].slice(1).map(Number),Array.from({length:18},(_,i)=>i%7+1));
     assert.deepEqual(state.rows,original);
     assert.equal(state.nodes["save-reference"].hidden,true);
     assert.equal(state.nodes["save-retry"].hidden,true);
@@ -339,10 +367,10 @@ test("three successful files share ID; JSON retains Big Five; main CSV excludes 
   }
 });
 
-test("sending has only the exact localized message; completion waits for the third confirmation", async () => {
+test("sending has only the exact localized message; completion waits for the fourth confirmation", async () => {
   for (const language of ["eng","kor"]) {
     let release;
-    const {app,state} = makeApp({language, upload:async number => number === 3
+    const {app,state} = makeApp({language, upload:async number => number === 4
       ? new Promise(resolve => {release=()=>resolve({status:201,json:async()=>({message:"Success"})});})
       : {status:201,json:async()=>({message:"Success"})}});
     await app.startExperiment(); finishRows(state,language);
@@ -350,7 +378,7 @@ test("sending has only the exact localized message; completion waits for the thi
     const promise=app.finishSurveyAndSave(); promise.then(()=>{resolved=true;});
     assert.equal(app.finishSurveyAndSave(),promise);
     await flush();
-    assert.equal(state.requests.length,3);
+    assert.equal(state.requests.length,4);
     assert.equal(resolved,false);
     assert.equal(state.nodes["save-status"].textContent,language === "eng" ? "Sending results. Do not close the tab" : "결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오");
     assert.equal(state.nodes["save-reference"].hidden,true);
@@ -361,7 +389,7 @@ test("sending has only the exact localized message; completion waits for the thi
 });
 
 test("failure at each file position reveals ID, hides technical details, and retry skips saved files", async () => {
-  for (const failedPosition of [1,2,3]) {
+  for (const failedPosition of [1,2,3,4]) {
     let fail=true;
     const {app,state} = makeApp({upload:async number => {
       if (number === failedPosition && fail) {fail=false;throw new Error("PRIVATE_SERVER_DETAIL");}
@@ -384,7 +412,7 @@ test("failure at each file position reveals ID, hides technical details, and ret
     const concurrent = state.nodes["save-retry"].listeners.click();
     await retry; await concurrent; await promise;
     assert.equal(state.requests[failedPosition].body,failedRequest);
-    assert.equal(state.requests.length,4);
+    assert.equal(state.requests.length,5);
     assert.equal(state.nodes["save-reference"].hidden,true);
   }
 });
@@ -434,7 +462,7 @@ test("timeouts before/after headers remain unconfirmed", async () => {
 
 test("incomplete/invalid Big Five stops preparation before any upload", async () => {
   for (const mutation of [
-    state => state.rows.splice(4,1),
+    state => state.rows.splice(state.rows.findIndex(row=>row.bigfive_page===1),1),
     state => {state.rows.find(row=>row.bigfive_page===1).response[datasets.ko.items[0].id]=null;},
     state => {state.rows.find(row=>row.bigfive_page===12).bigfive_result.N.score++;}
   ]) {
@@ -443,6 +471,20 @@ test("incomplete/invalid Big Five stops preparation before any upload", async ()
     assert.equal(state.requests.length,0);
     assert.equal(state.nodes["save-reference"].hidden,false);
     assert.equal(state.display.dataset.submissionCode,"SAVE_BIGFIVE_SERIALIZE");
+  }
+});
+
+test("incomplete/invalid GMSI stops preparation before any upload", async () => {
+  for (const mutation of [
+    state => state.rows.splice(state.rows.findIndex(row=>row.gmsi_page===2),1),
+    state => {state.rows.find(row=>row.gmsi_page===1).response.AE_01=null;},
+    state => {state.rows.find(row=>row.gmsi_page===2).gmsi_answers[0].response_1_to_7=1;}
+  ]) {
+    const {app,state} = makeApp(); await app.startExperiment(); finishRows(state); mutation(state);
+    app.finishSurveyAndSave(); await flush();
+    assert.equal(state.requests.length,0);
+    assert.equal(state.nodes["save-reference"].hidden,false);
+    assert.equal(state.display.dataset.submissionCode,"SAVE_GMSI_SERIALIZE");
   }
 });
 
@@ -459,4 +501,9 @@ test("declined consent, unfinished debrief and unavailable questionnaire never u
   assert.equal(state.runs,0);
   assert.equal(state.requests.length,0);
   assert(context.document.body.textContent.includes(sessionId));
+  const musicFailure = makeApp({loadMusic:async()=>{throw new Error("GMSI_MISSING");}});
+  await assert.rejects(musicFailure.app.startExperiment(),/GMSI_MISSING/);
+  assert.equal(musicFailure.state.runs,0);
+  assert.equal(musicFailure.state.requests.length,0);
+  assert(musicFailure.context.document.body.textContent.includes(sessionId));
 });

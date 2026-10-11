@@ -1,0 +1,189 @@
+{
+  "questionnaire_id": "gold_msi_general_18",
+  "questionnaire_version": "gold_msi_general_18_v1",
+  "language": "ko",
+  "choices": {
+    "agreement": [
+      "전혀 그렇지 않다",
+      "매우 그렇지 않다",
+      "그렇지 않다",
+      "보통이다",
+      "그렇다",
+      "매우 그렇다",
+      "완전히 그렇다"
+    ],
+    "practice_years": [
+      "0년",
+      "1년",
+      "2년",
+      "3년",
+      "4-5년",
+      "6-9년",
+      "10년 이상"
+    ],
+    "daily_practice": [
+      "0분",
+      "30분",
+      "1시간",
+      "1시간 30분",
+      "2시간",
+      "3-4시간",
+      "5시간 이상"
+    ],
+    "instruments": [
+      "0개",
+      "1개",
+      "2개",
+      "3개",
+      "4개",
+      "5개",
+      "6개 이상"
+    ]
+  },
+  "items": [
+    {
+      "id": "AE_01",
+      "korean_item_number": 1,
+      "text": "나는 여가 시간에 음악과 관련된 활동을 많이 한다.",
+      "source_text": "나는 여가 시간에 음악과 관련된 활동을 많이 한다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "AE_02",
+      "korean_item_number": 3,
+      "text": "나는 블로그나 SNS에 음악에 대한 글을 쓰는 것을 좋아한다.",
+      "source_text": "나는 블로그나 SNS에 음악에 대한 글을 쓰는 것을 좋아한다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "AE_05",
+      "korean_item_number": 15,
+      "text": "나는 종종 인터넷에서 음악과 관련된 내용을 읽거나 찾는다.",
+      "source_text": "나는 종종 인터넷에서 음악과 관련된 내용을 읽거나 찾는다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "AE_07",
+      "korean_item_number": 24,
+      "text": "나는 음악에 중독된 것처럼 음악 없이는 살 수 없다.",
+      "source_text": "나는 음악에 중독된 것처럼 음악 없이는 살 수 없다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "EM_04",
+      "korean_item_number": 19,
+      "text": "나는 무엇이 그 음악을 특별하게 만드는지 알 수 있다.",
+      "source_text": "나는 무엇이 그 음악을 특별하게 만드는지 알 수 있다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "MT_01",
+      "korean_item_number": 32,
+      "text": "나는 ___ 동안 규칙적으로 악기나 노래 연습을 했다.",
+      "source_text": "나는 0년 / 1년 / 2년 / 3년 / 4-5년 / 6-9년 / 10년 이상 동안 규칙적으로 악기나 노래 연습을 했다.",
+      "scale": "practice_years",
+      "negative": false
+    },
+    {
+      "id": "MT_02",
+      "korean_item_number": 33,
+      "text": "내가 악기나 노래를 최대로 많이 연습한 시간은 하루에 ___이다.",
+      "source_text": "내가 악기나 노래를 최대로 많이 연습한 시간은 하루에 0분 / 30분 / 1시간 / 1시간 30분 / 2시간 / 3-4시간 / 5시간 이상이다.",
+      "scale": "daily_practice",
+      "negative": false
+    },
+    {
+      "id": "MT_03",
+      "korean_item_number": 14,
+      "text": "나는 노래를 부르거나 악기를 연주할 때, 음악적 재능에 대해 칭찬 받은 적이 없다.",
+      "source_text": "나는 노래를 부르거나 악기를 연주할 때, 음악적 재능에 대해 칭찬 받은 적이 없다.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "MT_06",
+      "korean_item_number": 37,
+      "text": "나는 ___의 악기를 연주할 수 있다.",
+      "source_text": "나는 0개 / 1개 / 2개 / 3개 / 4개 / 5개 / 6개 이상의 악기를 연주할 수 있다.",
+      "scale": "instruments",
+      "negative": false
+    },
+    {
+      "id": "MT_07",
+      "korean_item_number": 27,
+      "text": "나는 나 자신을 음악가(뮤지션)이라고 생각하지 않는다.",
+      "source_text": "나는 나 자신을 음악가(뮤지션)이라고 생각하지 않는다.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "PA_04",
+      "korean_item_number": 12,
+      "text": "나는 한 곡에 대한 두 개의 다른 스타일의 연주를 비교하고 차이점에 대해 설명할 수 있다.",
+      "source_text": "나는 한 곡에 대한 두 개의 다른 스타일의 연주를 비교하고 차이점에 대해 설명할 수 있다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "PA_08",
+      "korean_item_number": 23,
+      "text": "나는 노래할 때, 내가 부르는 음이 맞는지 틀린지 전혀 모른다.",
+      "source_text": "나는 노래할 때, 내가 부르는 음이 맞는지 틀린지 전혀 모른다.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "SA_01",
+      "korean_item_number": 4,
+      "text": "누군가 내가 모르는 노래를 부를 때, 나는 대부분 따라부를 수 있다.",
+      "source_text": "누군가 내가 모르는 노래를 부를 때, 나는 대부분 따라부를 수 있다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "SA_02",
+      "korean_item_number": 7,
+      "text": "나는 외워서 노래를 부르거나 연주할 수 있다.",
+      "source_text": "나는 외워서 노래를 부르거나 연주할 수 있다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "SA_03",
+      "korean_item_number": 10,
+      "text": "나는 음원에 맞추어 노래를 부를 때, 정확한 음으로 부를 수 있다.",
+      "source_text": "나는 음원에 맞추어 노래를 부를 때, 정확한 음으로 부를 수 있다.",
+      "scale": "agreement",
+      "negative": false
+    },
+    {
+      "id": "SA_04",
+      "korean_item_number": 17,
+      "text": "누군가 익숙한 노래를 부를 때, 나는 그 노래에 화음을 넣어서 부르지 못한다.",
+      "source_text": "누군가 익숙한 노래를 부를 때, 나는 그 노래에 화음을 넣어서 부르지 못한다.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "SA_05",
+      "korean_item_number": 25,
+      "text": "나는 음이 틀릴까봐 사람들 앞에서 노래 부르는 것을 좋아하지 않는다.",
+      "source_text": "나는 음이 틀릴까봐 사람들 앞에서 노래 부르는 것을 좋아하지 않는다.",
+      "scale": "agreement",
+      "negative": true
+    },
+    {
+      "id": "SA_06",
+      "korean_item_number": 29,
+      "text": "나는 새로운 노래라 할지라도 2-3번 들으면 혼자서도 부를 수 있다.",
+      "source_text": "나는 새로운 노래라 할지라도 2-3번 들으면 혼자서도 부를 수 있다.",
+      "scale": "agreement",
+      "negative": false
+    }
+  ]
+}
