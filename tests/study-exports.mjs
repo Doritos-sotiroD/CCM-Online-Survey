@@ -15,7 +15,7 @@ function complete(condition = "condition_1", sessions = 2, skip = false) {
     ...musicRows(metadata, sessions),
     {...metadata, task: "musical_sophistication", response: {AE_01: 3}},
     {...metadata, task: "personality_traits", response: {TEST_ITEM: 3}},
-    {...metadata, task: "contact_information", response: {phone_number: "", email_address: ""}},
+    {...metadata, task: "contact_information", response: {phone_number_1: "", phone_number_2: "", phone_number_3: "", phone_number: "", email_address: ""}},
     {...metadata, task: "debrief", debrief_acknowledged: true, time_elapsed: 1200000}
   ];
   return {rows, metadata};
@@ -67,12 +67,12 @@ test("verification exports have no invented trial rows, completed condition or p
   }
 });
 
-test("optional contact values round-trip without conversion in both normal and verification exports", () => {
+test("optional contact values export digits and leading zeros without mutating raw segments", () => {
   const responses = [
-    {phone_number: "", email_address: ""},
-    {phone_number: "010-0000-0000", email_address: ""},
-    {phone_number: "", email_address: "pilot@example.invalid"},
-    {phone_number: "+82 10-0000-0000", email_address: "pilot@example.invalid"}
+    {phone_number_1: "", phone_number_2: "", phone_number_3: "", phone_number: "", email_address: ""},
+    {phone_number_1: "010", phone_number_2: "0123", phone_number_3: "4567", phone_number: "01001234567", email_address: ""},
+    {phone_number_1: "", phone_number_2: "", phone_number_3: "", phone_number: "", email_address: "pilot@example.invalid"},
+    {phone_number_1: "000", phone_number_2: "0000", phone_number_3: "0000", phone_number: "00000000000", email_address: "pilot@example.invalid"}
   ];
   for (const condition of ["condition_1", "condition_2"]) for (const skip of [false,true]) for (const response of responses) {
     const {rows, metadata} = complete(condition, skip ? 0 : 1, skip);
@@ -93,6 +93,10 @@ test("missing, duplicate or malformed contact rows fail instead of inventing bla
     (rows, contact) => { delete contact.response.phone_number; },
     (rows, contact) => { delete contact.response.email_address; },
     (rows, contact) => { contact.response.phone_number = 100; },
+    (rows, contact) => { contact.response.phone_number = "010-1234-5678"; },
+    (rows, contact) => { contact.response.phone_number = "0101234567"; },
+    (rows, contact) => { contact.response.phone_number = "010123456789"; },
+    (rows, contact) => { contact.response.phone_number = "O1012345678"; },
     (rows, contact) => { contact.response.email_address = null; }
   ];
   for (const mutate of mutations) {

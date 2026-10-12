@@ -109,6 +109,7 @@ export function createProceduralCsv(rows, metadata) {
   const contact = rows.filter(row => row.task === "contact_information");
   if (contact.length !== 1 ||
       typeof contact[0].response?.phone_number !== "string" ||
+      !/^(?:[0-9]{11})?$/.test(contact[0].response.phone_number) ||
       typeof contact[0].response?.email_address !== "string") {
     throw new Error("PROCEDURAL_EXPORT_CONTACT_INVALID");
   }

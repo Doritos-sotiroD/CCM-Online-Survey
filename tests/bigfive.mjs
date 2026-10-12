@@ -290,7 +290,7 @@ function finishRows(state, language="kor", condition="condition_1", sessions=0) 
     ...experimentRows(state.properties,sessions),
     ...musicRows,
     ...completedPages(datasets[language === "eng" ? "en" : "ko"], condition).map(row => ({...state.properties,...row})),
-    {...state.properties, task:"contact_information",phase:"questionnaire",trial_type:"survey-html-form",response:{phone_number:"",email_address:""}},
+    {...state.properties, task:"contact_information",phase:"questionnaire",trial_type:"survey-html-form",response:{phone_number_1:"",phone_number_2:"",phone_number_3:"",phone_number:"",email_address:""}},
     {...state.properties, task:"debrief",trial_type:"html-button-response",debrief_acknowledged:true,time_elapsed:1800000}
   ];
 }
@@ -352,7 +352,7 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
   }
 });
 
-test("contact page has two optional fields after Big Five in both normal and verification timelines", async () => {
+test("contact page has three optional phone segments and email after Big Five in both timelines", async () => {
   for (const condition of [0,1]) for (const skip of [false,true]) {
     const {app,state} = makeApp({condition,skip});
     await app.startExperiment();
@@ -367,25 +367,48 @@ test("contact page has two optional fields after Big Five in both normal and ver
     assert.equal(contact.dataAsArray,false);
     assert.equal(contact.button_label,"다음");
     const inputs = Array.from(contact.html.matchAll(/<input\b[^>]*>/g), match => match[0]);
-    assert.equal(inputs.length,2);
-    assert.match(inputs[0],/name="phone_number" type="tel"/);
-    assert.match(inputs[1],/name="email_address" type="email"/);
+    assert.equal(inputs.length,4);
+    for (const [index, length] of [3,4,4].entries()) {
+      assert(inputs[index].includes(`name="phone_number_${index + 1}" type="tel"`));
+      assert(inputs[index].includes('inputmode="numeric"'));
+      assert(inputs[index].includes(`pattern="[0-9]{${length}}" maxlength="${length}"`));
+    }
+    assert.match(inputs[3],/name="email_address" type="email"/);
     assert(inputs.every(input => !/\brequired\b|\bvalue\s*=/.test(input)));
   }
 });
 
-test("empty, partial and complete contact responses save unchanged in JSON and procedural CSV", async () => {
+test("contact completion retains phone segments and rejects incomplete or non-digit numbers", async () => {
+  for (const condition of [0,1]) {
+    const {app,state} = makeApp({condition});
+    await app.startExperiment();
+    const contact = state.timeline.find(trial => trial.data?.task === "contact_information");
+    for (const parts of [["","",""],["010","0123","4567"],["000","0000","0000"]]) {
+      const response = {phone_number_1:parts[0],phone_number_2:parts[1],phone_number_3:parts[2],email_address:""};
+      const raw = structuredClone(response);
+      contact.on_finish({response});
+      assert.deepEqual(response,{...raw,phone_number:parts.join("")});
+    }
+    for (const parts of [["010","",""],["","1234","5678"],["01","1234","5678"],["010","1234","567"],["010","1234","56789"],["abc","1234","5678"],[undefined,"",""],[10,"1234","5678"]]) {
+      assert.throws(() => contact.on_finish({response:{phone_number_1:parts[0],phone_number_2:parts[1],phone_number_3:parts[2]}}),/CONTACT_PHONE_INVALID/);
+    }
+  }
+});
+
+test("optional contacts retain raw phone segments in JSON and export digits only to procedural CSV", async () => {
   const responses = [
-    {phone_number:"",email_address:""},
-    {phone_number:"010-0000-0000",email_address:""},
-    {phone_number:"",email_address:"pilot@example.invalid"},
-    {phone_number:"+82 10-0000-0000",email_address:"pilot@example.invalid"}
+    {phone_number_1:"",phone_number_2:"",phone_number_3:"",email_address:""},
+    {phone_number_1:"010",phone_number_2:"0123",phone_number_3:"4567",email_address:""},
+    {phone_number_1:"",phone_number_2:"",phone_number_3:"",email_address:"pilot@example.invalid"},
+    {phone_number_1:"000",phone_number_2:"0000",phone_number_3:"0000",email_address:"pilot@example.invalid"}
   ];
   for (const condition of [0,1]) for (const response of responses) {
     const {app,state} = makeApp({condition});
     await app.startExperiment();
     finishRows(state,"kor",state.properties.condition);
-    state.rows.find(row => row.task === "contact_information").response = structuredClone(response);
+    const contactRow = state.rows.find(row => row.task === "contact_information");
+    contactRow.response = structuredClone(response);
+    state.timeline.find(trial => trial.data?.task === "contact_information").on_finish(contactRow);
     const original = structuredClone(state.rows);
     await app.finishSurveyAndSave();
     assert.equal(state.requests.length,5);
@@ -393,7 +416,7 @@ test("empty, partial and complete contact responses save unchanged in JSON and p
     assert.deepEqual(JSON.parse(json.data).trials,original);
     const parsed = parseCsv(procedural.data);
     assert.deepEqual(parsed[0].slice(-2),["phone_number","email_address"]);
-    assert.deepEqual(parsed[1].slice(-2),[response.phone_number,response.email_address]);
+    assert.deepEqual(parsed[1].slice(-2),[response.phone_number_1 + response.phone_number_2 + response.phone_number_3,response.email_address]);
     for (const file of [main,bigfive,gmsi]) {
       assert(!parseCsv(file.data)[0].some(field => ["phone_number","email_address"].includes(field)));
     }

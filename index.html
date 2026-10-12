@@ -99,6 +99,17 @@
       font: inherit;
     }
 
+    .contact-information .phone-number-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) auto minmax(0, 4fr) auto minmax(0, 4fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .contact-information .phone-number-fields input {
+      text-align: center;
+    }
+
     /* jsPsych's button display rule otherwise overrides the hidden attribute. */
     #save-retry[hidden] {
       display: none;
@@ -2326,7 +2337,14 @@
         <div class="contact-fields">
           <p>
             <label for="participant-phone-number">전화번호 (선택)</label><br>
-            <input id="participant-phone-number" name="phone_number" type="tel">
+            <small id="participant-phone-format">000-0000-0000 형식으로 입력해 주세요.</small>
+            <span class="phone-number-fields">
+              <input id="participant-phone-number" name="phone_number_1" type="tel" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" placeholder="000" aria-label="전화번호 앞 3자리" aria-describedby="participant-phone-format">
+              <span aria-hidden="true">-</span>
+              <input id="participant-phone-number-2" name="phone_number_2" type="tel" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" aria-label="전화번호 가운데 4자리" aria-describedby="participant-phone-format">
+              <span aria-hidden="true">-</span>
+              <input id="participant-phone-number-3" name="phone_number_3" type="tel" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" aria-label="전화번호 마지막 4자리" aria-describedby="participant-phone-format">
+            </span>
           </p>
           <p>
             <label for="participant-email-address">이메일 주소 (선택)</label><br>
@@ -2343,6 +2361,44 @@
         task: "contact_information",
         phase: "questionnaire",
         condition: experimentConfig.condition
+      },
+
+      on_load: function () {
+        const display = jsPsych.getDisplayElement();
+        const phoneFields = [
+          display.querySelector("#participant-phone-number"),
+          display.querySelector("#participant-phone-number-2"),
+          display.querySelector("#participant-phone-number-3")
+        ];
+        const focusOrder = [...phoneFields, display.querySelector("#participant-email-address")];
+
+        phoneFields.forEach((field, index) => {
+          field.addEventListener("input", function (event) {
+            if (event.isComposing) return;
+
+            const digits = field.value.replace(/[^0-9]/g, "").slice(0, field.maxLength);
+            if (field.value !== digits) field.value = digits;
+
+            const phoneStarted = phoneFields.some(input => input.value !== "");
+            phoneFields.forEach(input => { input.required = phoneStarted; });
+
+            if (field.value.length === field.maxLength && !event.inputType?.startsWith("delete")) {
+              focusOrder[index + 1].focus();
+            }
+          });
+        });
+      },
+
+      on_finish: function (data) {
+        const lengths = [3, 4, 4];
+        const parts = lengths.map((_, index) => data.response?.[`phone_number_${index + 1}`]);
+        if (parts.some(part => typeof part !== "string") ||
+            (parts.some(part => part !== "") &&
+             parts.some((part, index) => !new RegExp(`^[0-9]{${lengths[index]}}$`).test(part)))) {
+          throw new Error("CONTACT_PHONE_INVALID");
+        }
+        // Retain the raw segments and the existing combined export field.
+        data.response.phone_number = parts.join("");
       }
     };
 

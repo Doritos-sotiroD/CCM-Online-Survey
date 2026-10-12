@@ -155,11 +155,17 @@ Both conditions show the optional Korean contact-information page immediately
 after the last Big Five page and before debrief, including verification runs
 that skip listening sessions. Either field or both fields may be left blank.
 The page explains that contacts are collected for the pilot coffee-gift-card
-draw. A supplied email is checked by the browser's email input; phone numbers
-use a telephone input without a fixed format.
+draw. A supplied email is checked by the browser's email input. Phone numbers
+use three digit-only fields in `000-0000-0000` format, requiring 3, 4, and 4
+digits. Completing each phone field advances focus to the next, with the last
+field advancing to email. All three phone fields may be blank; once a number
+is started, all three must be completed.
 
-The procedural CSV appends the phone number and email address as strings,
-preserving leading zeros, `+`, spaces, and hyphens in the recorded phone response.
+The procedural CSV appends the phone number and email address as strings.
+The phone number contains exactly 11 digits without hyphens, preserving leading
+zeros (for example, `01012345678`). The raw JSON response retains the three
+segments as `phone_number_1`, `phone_number_2`, and `phone_number_3`, alongside
+the combined `phone_number` value.
 Unfilled fields are empty strings. Exactly one contact response row with both
 string fields must exist; a missing, duplicate, or malformed row stops export
 rather than inventing blank responses. The complete raw contact response also
