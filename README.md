@@ -147,17 +147,33 @@ raw response objects, keyword event histories, or questionnaire/procedural rows.
 
 The single row has exactly `session_id`, `condition`, `sessions_completed`,
 `overall_duration_minutes`, `consented`, `eligibility_1`, `eligibility_2`,
-`eligibility_3`, `eligibility_4`, `eligibility_5`,
-`instruction_duration_minutes`, `practice_sessions_completed`.
+`eligibility_3`, `eligibility_4`,
+`instruction_duration_minutes`, `practice_sessions_completed`, `phone_number`,
+`email_address`.
 
-The five required Korean eligibility questions match the
+Both conditions show the optional Korean contact-information page immediately
+after the last Big Five page and before debrief, including verification runs
+that skip listening sessions. Either field or both fields may be left blank.
+The page explains that contacts are collected for the pilot coffee-gift-card
+draw. A supplied email is checked by the browser's email input; phone numbers
+use a telephone input without a fixed format.
+
+The procedural CSV appends the phone number and email address as strings,
+preserving leading zeros, `+`, spaces, and hyphens in the recorded phone response.
+Unfilled fields are empty strings. Exactly one contact response row with both
+string fields must exist; a missing, duplicate, or malformed row stops export
+rather than inventing blank responses. The complete raw contact response also
+remains in JSON. Contact columns are not added to the experiment, GMSI, or
+Big Five CSVs.
+
+The pilot uses four required Korean eligibility questions from the
 [reference survey](https://blues95.github.io/jangdan_project_test/):
 age 20–64, hearing difficulties, hand-movement difficulties, past/current
-neurological or psychiatric conditions, and whether the participation consent
-form was signed. `eligibility_1` through `eligibility_5` retain the raw `yes`/`no`
+neurological or psychiatric conditions. The consent-signature question is omitted
+for the pilot. `eligibility_1` through `eligibility_4` retain the raw `yes`/`no`
 answers in that order in both JSON and procedural CSV. Like the reference page,
 this screen records answers without automatic exclusion or a derived `eligible`
-flag. The preceding consent screen still terminates a declined-consent run.
+flag. Consent is recorded on the preceding introduction page.
 
 Overall duration is the final debrief row's elapsed time divided by 60,000:
 from jsPsych's first consent screen through debrief acknowledgment, including

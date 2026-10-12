@@ -283,16 +283,30 @@ function finishRows(state, language="kor", condition="condition_1", sessions=0) 
   state.rows = [
     {...state.properties, task:"consent",consented:true,response:{consent_decision:"agree"},trial_type:"survey-html-form"},
     {...state.properties, task:"eligibility",response:{
-      eligibility_1:"yes",eligibility_2:"no",eligibility_3:"no",eligibility_4:"no",eligibility_5:"yes"
+      eligibility_1:"yes",eligibility_2:"no",eligibility_3:"no",eligibility_4:"no"
     },trial_type:"survey-html-form"},
-    {...state.properties, task:"demographics",trial_type:"survey-html-form",response:{age:"23",gender:"prefer_not_to_say",education:"bachelor"}},
+    {...state.properties, task:"demographics",trial_type:"survey-html-form",response:{age:"23",gender:"male",education:"bachelor"}},
     ...(state.properties.verification_skip_sessions ? [] : practiceRows(state.properties)),
     ...experimentRows(state.properties,sessions),
     ...musicRows,
     ...completedPages(datasets[language === "eng" ? "en" : "ko"], condition).map(row => ({...state.properties,...row})),
+    {...state.properties, task:"contact_information",phase:"questionnaire",trial_type:"survey-html-form",response:{phone_number:"",email_address:""}},
     {...state.properties, task:"debrief",trial_type:"html-button-response",debrief_acknowledged:true,time_elapsed:1800000}
   ];
 }
+
+test("pilot eligibility form and procedural export use the same four questions in both conditions", async () => {
+  for (const condition of [0,1]) {
+    const {app,state} = makeApp({condition});
+    await app.startExperiment();
+    const eligibility = state.timeline.find(trial => trial.data?.task === "eligibility");
+    const fields = [...new Set(Array.from(eligibility.html.matchAll(/name="(eligibility_\d+)"/g), match => match[1]))];
+    assert.deepEqual(fields,["eligibility_1","eligibility_2","eligibility_3","eligibility_4"]);
+    finishRows(state,"kor",state.properties.condition);
+    const parsed = parseCsv(createProceduralCsv(state.rows,{...metadata,condition:state.properties.condition}));
+    assert.deepEqual(parsed[0].filter(field => field.startsWith("eligibility_")),fields);
+  }
+});
 
 test("normal/skip timelines in both conditions keep demographics first and Big Five after listening", async () => {
   for (const condition of [0,1]) for (const skip of [false,true]) for (const language of ["eng","kor"]) {
@@ -304,7 +318,7 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
     const musicPosition = tasks.indexOf("musical_sophistication");
     assert.equal(tasks.filter(task => task === "demographics").length,1);
     assert.equal(tasks.filter(task => task === "personality_traits").length,12);
-    assert.deepEqual(tasks.slice(musicPosition),[...Array(2).fill("musical_sophistication"),...Array(12).fill("personality_traits"),"debrief"]);
+    assert.deepEqual(tasks.slice(musicPosition),[...Array(2).fill("musical_sophistication"),...Array(12).fill("personality_traits"),"contact_information","debrief"]);
     const music = state.timeline.slice(musicPosition, musicPosition + 2);
     assert.deepEqual(Array.from(music, trial => trial.questions.length), [9,9]);
     assert(music.every(trial => trial.data.questionnaire_language === (language === "eng" ? "en" : "ko")));
@@ -338,6 +352,55 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
   }
 });
 
+test("contact page has two optional fields after Big Five in both normal and verification timelines", async () => {
+  for (const condition of [0,1]) for (const skip of [false,true]) {
+    const {app,state} = makeApp({condition,skip});
+    await app.startExperiment();
+    const contacts = state.timeline.filter(trial => trial.data?.task === "contact_information");
+    assert.equal(contacts.length,1);
+    const contact = contacts[0];
+    const position = state.timeline.indexOf(contact);
+    assert.equal(state.timeline[position - 1].data.task,"personality_traits");
+    assert.equal(state.timeline[position + 1].data.task,"debrief");
+    assert.equal(contact.data.condition,state.properties.condition);
+    assert.equal(contact.data.phase,"questionnaire");
+    assert.equal(contact.dataAsArray,false);
+    assert.equal(contact.button_label,"다음");
+    const inputs = Array.from(contact.html.matchAll(/<input\b[^>]*>/g), match => match[0]);
+    assert.equal(inputs.length,2);
+    assert.match(inputs[0],/name="phone_number" type="tel"/);
+    assert.match(inputs[1],/name="email_address" type="email"/);
+    assert(inputs.every(input => !/\brequired\b|\bvalue\s*=/.test(input)));
+  }
+});
+
+test("empty, partial and complete contact responses save unchanged in JSON and procedural CSV", async () => {
+  const responses = [
+    {phone_number:"",email_address:""},
+    {phone_number:"010-0000-0000",email_address:""},
+    {phone_number:"",email_address:"pilot@example.invalid"},
+    {phone_number:"+82 10-0000-0000",email_address:"pilot@example.invalid"}
+  ];
+  for (const condition of [0,1]) for (const response of responses) {
+    const {app,state} = makeApp({condition});
+    await app.startExperiment();
+    finishRows(state,"kor",state.properties.condition);
+    state.rows.find(row => row.task === "contact_information").response = structuredClone(response);
+    const original = structuredClone(state.rows);
+    await app.finishSurveyAndSave();
+    assert.equal(state.requests.length,5);
+    const [json,main,procedural,bigfive,gmsi] = state.requests.map(request => request.parsed);
+    assert.deepEqual(JSON.parse(json.data).trials,original);
+    const parsed = parseCsv(procedural.data);
+    assert.deepEqual(parsed[0].slice(-2),["phone_number","email_address"]);
+    assert.deepEqual(parsed[1].slice(-2),[response.phone_number,response.email_address]);
+    for (const file of [main,bigfive,gmsi]) {
+      assert(!parseCsv(file.data)[0].some(field => ["phone_number","email_address"].includes(field)));
+    }
+    assert.deepEqual(state.rows,original);
+  }
+});
+
 test("five successful files share ID; JSON retains all raw data; experiment/procedural CSVs contain only agreed fields", async () => {
   for (const language of ["eng","kor"]) {
     const {app,state} = makeApp({language});
@@ -360,7 +423,7 @@ test("five successful files share ID; JSON retains all raw data; experiment/proc
     const mainParsed = parseCsv(main.data);
     assert.deepEqual(mainParsed,[ ["trial_no","work_id","session_id","familiarity","response_time_seconds"] ]);
     const procedureParsed = parseCsv(procedural.data);
-    assert.deepEqual(procedureParsed[1],[sessionId,"","0","30","true","yes","no","no","no","yes","0","0"]);
+    assert.deepEqual(procedureParsed[1],[sessionId,"","0","30","true","yes","no","no","no","0","0","",""]);
     const resultParsed = parseCsv(bigfive.data);
     assert.equal(resultParsed[1][resultParsed[0].indexOf("session_id")],sessionId);
     assert.equal(resultParsed[1][resultParsed[0].indexOf("completed_at")],envelope.completed_at);
@@ -399,7 +462,7 @@ test("normal runs export 30/60 combined music trials for either condition and pr
     const summary = parseCsv(procedure.data);
     assert.equal(summary[1][1],condition === 0 ? "condition_1" : "condition_2");
     assert.equal(summary[1][2],String(sessions));
-    assert.equal(summary[1].at(-1),"2");
+    assert.equal(summary[1][summary[0].indexOf("practice_sessions_completed")],"2");
     assert.deepEqual(state.rows,before);
   }
 });
@@ -430,8 +493,11 @@ test("actual trial callbacks time from clip end to familiarity submission across
 test("invalid experiment or procedural data prevents every upload", async () => {
   for (const [code,mutate] of [
     ["SAVE_CSV_SERIALIZE",state=>{state.rows.find(row=>row.phase === "main" && row.task === "familiarity").response_time_seconds = 0;}],
-    ["SAVE_PROCEDURAL_SERIALIZE",state=>{delete state.rows.find(row=>row.task === "eligibility").response.eligibility_5;}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{delete state.rows.find(row=>row.task === "eligibility").response.eligibility_4;}],
     ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.find(row=>row.task === "eligibility").response.eligibility_3 = "invalid";}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.splice(state.rows.findIndex(row=>row.task === "contact_information"),1);}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.splice(state.rows.length-1,0,structuredClone(state.rows.find(row=>row.task === "contact_information")));}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.find(row=>row.task === "contact_information").response.phone_number = 100;}],
     ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.find(row=>row.task === "instructions").rt = NaN;}]
   ]) {
     const {app,state} = makeApp({skip:false}); await app.startExperiment();

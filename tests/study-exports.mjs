@@ -8,13 +8,14 @@ function complete(condition = "condition_1", sessions = 2, skip = false) {
   const rows = [
     {...metadata, task: "consent", consented: true, response: {consent_decision: "agree"}},
     {...metadata, task: "eligibility", response: {
-      eligibility_1: "yes", eligibility_2: "no", eligibility_3: "no", eligibility_4: "no", eligibility_5: "yes"
+      eligibility_1: "yes", eligibility_2: "no", eligibility_3: "no", eligibility_4: "no"
     }},
     {...metadata, task: "demographics", response: {age: "23"}},
     ...(skip ? [] : practiceRows(metadata)),
     ...musicRows(metadata, sessions),
     {...metadata, task: "musical_sophistication", response: {AE_01: 3}},
     {...metadata, task: "personality_traits", response: {TEST_ITEM: 3}},
+    {...metadata, task: "contact_information", response: {phone_number: "", email_address: ""}},
     {...metadata, task: "debrief", debrief_acknowledged: true, time_elapsed: 1200000}
   ];
   return {rows, metadata};
@@ -50,8 +51,8 @@ test("procedural CSV contains just one summary with final counts and durations i
     const {rows, metadata} = complete(condition);
     const before = structuredClone(rows);
     const parsed = parseStudyCsv(createProceduralCsv(rows, metadata));
-    assert.deepEqual(parsed[0], ["session_id", "condition", "sessions_completed", "overall_duration_minutes", "consented", "eligibility_1", "eligibility_2", "eligibility_3", "eligibility_4", "eligibility_5", "instruction_duration_minutes", "practice_sessions_completed"]);
-    assert.deepEqual(parsed[1], [metadata.session_id, condition, "2", "20", "true", "yes", "no", "no", "no", "yes", "0.75", "2"]);
+    assert.deepEqual(parsed[0], ["session_id", "condition", "sessions_completed", "overall_duration_minutes", "consented", "eligibility_1", "eligibility_2", "eligibility_3", "eligibility_4", "instruction_duration_minutes", "practice_sessions_completed", "phone_number", "email_address"]);
+    assert.deepEqual(parsed[1], [metadata.session_id, condition, "2", "20", "true", "yes", "no", "no", "no", "0.75", "2", "", ""]);
     assert.equal(parsed.length, 2);
     assert.deepEqual(rows, before);
   }
@@ -62,7 +63,42 @@ test("verification exports have no invented trial rows, completed condition or p
     const {rows, metadata} = complete(condition, 0, true);
     assert.equal(parseStudyCsv(createExperimentCsv(rows, metadata)).length, 1);
     const parsed = parseStudyCsv(createProceduralCsv(rows, metadata));
-    assert.deepEqual(parsed[1], [metadata.session_id, "", "0", "20", "true", "yes", "no", "no", "no", "yes", "0", "0"]);
+    assert.deepEqual(parsed[1], [metadata.session_id, "", "0", "20", "true", "yes", "no", "no", "no", "0", "0", "", ""]);
+  }
+});
+
+test("optional contact values round-trip without conversion in both normal and verification exports", () => {
+  const responses = [
+    {phone_number: "", email_address: ""},
+    {phone_number: "010-0000-0000", email_address: ""},
+    {phone_number: "", email_address: "pilot@example.invalid"},
+    {phone_number: "+82 10-0000-0000", email_address: "pilot@example.invalid"}
+  ];
+  for (const condition of ["condition_1", "condition_2"]) for (const skip of [false,true]) for (const response of responses) {
+    const {rows, metadata} = complete(condition, skip ? 0 : 1, skip);
+    rows.find(row => row.task === "contact_information").response = structuredClone(response);
+    const before = structuredClone(rows);
+    const parsed = parseStudyCsv(createProceduralCsv(rows, metadata));
+    assert.deepEqual(parsed[0].slice(-2), ["phone_number", "email_address"]);
+    assert.deepEqual(parsed[1].slice(-2), [response.phone_number, response.email_address]);
+    assert.deepEqual(rows, before);
+  }
+});
+
+test("missing, duplicate or malformed contact rows fail instead of inventing blank responses", () => {
+  const mutations = [
+    (rows, contact) => rows.splice(rows.indexOf(contact), 1),
+    (rows, contact) => rows.splice(rows.indexOf(contact), 0, structuredClone(contact)),
+    (rows, contact) => { delete contact.response; },
+    (rows, contact) => { delete contact.response.phone_number; },
+    (rows, contact) => { delete contact.response.email_address; },
+    (rows, contact) => { contact.response.phone_number = 100; },
+    (rows, contact) => { contact.response.email_address = null; }
+  ];
+  for (const mutate of mutations) {
+    const {rows, metadata} = complete();
+    mutate(rows, rows.find(row => row.task === "contact_information"));
+    assert.throws(() => createProceduralCsv(rows, metadata), /PROCEDURAL_EXPORT_CONTACT_INVALID/);
   }
 });
 
@@ -89,13 +125,13 @@ test("missing, misordered, mismatched, invalid or incorrectly timed trials fail 
 });
 
 test("all eligibility answer combinations export unchanged without an exclusion decision", () => {
-  for (const condition of ["condition_1", "condition_2"]) for (let mask = 0; mask < 32; mask++) {
+  for (const condition of ["condition_1", "condition_2"]) for (let mask = 0; mask < 16; mask++) {
     const {rows, metadata} = complete(condition);
-    const answers = Array.from({length: 5}, (_, index) => mask & (1 << index) ? "yes" : "no");
+    const answers = Array.from({length: 4}, (_, index) => mask & (1 << index) ? "yes" : "no");
     rows[1].response = Object.fromEntries(answers.map((answer, index) => [`eligibility_${index + 1}`, answer]));
     const before = structuredClone(rows);
     const parsed = parseStudyCsv(createProceduralCsv(rows, metadata));
-    assert.deepEqual(parsed[1].slice(5, 10), answers);
+    assert.deepEqual(parsed[1].slice(5, 9), answers);
     assert.equal(parsed[0].includes("eligible"), false);
     assert.deepEqual(rows, before);
   }
@@ -104,8 +140,8 @@ test("all eligibility answer combinations export unchanged without an exclusion 
 test("procedure export rejects incomplete consent, eligibility, practice and endpoint timing", () => {
   const mutations = [
     rows => rows[0].consented = false,
-    ...Array.from({length: 5}, (_, index) => rows => { delete rows[1].response[`eligibility_${index + 1}`]; }),
-    ...Array.from({length: 5}, (_, index) => rows => { rows[1].response[`eligibility_${index + 1}`] = "invalid"; }),
+    ...Array.from({length: 4}, (_, index) => rows => { delete rows[1].response[`eligibility_${index + 1}`]; }),
+    ...Array.from({length: 4}, (_, index) => rows => { rows[1].response[`eligibility_${index + 1}`] = "invalid"; }),
     rows => rows.at(-1).debrief_acknowledged = false,
     rows => rows.at(-1).time_elapsed = NaN,
     rows => rows.find(row => row.task === "instructions").rt = -1,

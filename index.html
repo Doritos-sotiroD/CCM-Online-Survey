@@ -33,8 +33,70 @@
       max-width: 900px;
     }
 
+    .jspsych-display-element:has(.experiment-introduction) {
+      background: #f1f3f7;
+    }
+
+    .experiment-introduction {
+      width: min(1000px, calc(100vw - 40px));
+      max-width: 1000px;
+      padding: 32px 0;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .experiment-introduction .introduction-card {
+      margin-bottom: 20px;
+      padding: clamp(20px, 3vw, 32px);
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+      text-align: left;
+    }
+
+    .experiment-introduction h1 {
+      margin: 0 0 20px;
+      font-size: clamp(26px, 3.2vw, 34px);
+      line-height: 1.4;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    .experiment-introduction .introduction-card p {
+      margin: 0 0 18px;
+    }
+
+    .experiment-introduction .introduction-card > p:last-child {
+      margin-bottom: 0;
+    }
+
+    .experiment-introduction .introduction-privacy {
+      padding-left: 20px;
+    }
+
     .eligibility-questionnaire fieldset {
       border: 0;
+    }
+
+    .contact-information {
+      width: min(600px, calc(100vw - 40px));
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .contact-information .contact-description,
+    .contact-information .contact-fields {
+      text-align: left;
+    }
+
+    .contact-information input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #aeb7c2;
+      border-radius: 5px;
+      font: inherit;
     }
 
     /* jsPsych's button display rule otherwise overrides the hidden attribute. */
@@ -569,43 +631,28 @@
     // Suggested plugin: jsPsychSurveyHtmlForm
     const consent = {
       type: jsPsychSurveyHtmlForm,
+      css_classes: ["experiment-introduction"],
 
       preamble: `
-        <div class="survey-section">
-          <h2>[연구 참여 동의 제목]</h2>
-          <div class="information-text">
-            [연구 설명 및 동의서 내용을 입력하세요.]
+        <div class="introduction-card">
+          <h1>음악 감정 평가 실험 안내</h1>
+          <p>안녕하세요! 실험에 관심 가져 주셔서 감사합니다. 본 실험은 짧은 음악 클립을 듣고 느껴지는 감정을 평가하는 실험입니다.</p>
+          <p>본 실험은 파일럿 단계의 실험으로, 실험 결과는 연구에 사용되지 않습니다.</p>
+          <p>본 실험에서 수집되는 개인정보는 다음과 같으며, 연구 이외의 목적으로 사용되지 않습니다.</p>
+          <div class="introduction-privacy">
+            <p><strong>수집․이용하려는 개인정보의 항목</strong> : 나이, 성별, 학력, 설문 응답 데이터, 참여자 확인 및 연락에 사용하는 이메일과 전화번호</p>
+            <p><strong>개인정보의 수집 이용 목적</strong> : 연구 참여 자격 확인, 개인별 특성이 및 음악의 다양한 변수들이 음악을 듣고 느끼는 감정에 미치는 영향 검증</p>
           </div>
+          <p>[다음]을 누르시면 위 개인정보의 수집 및 활용에 동의하는 것으로 간주하고 실험을 진행합니다.<br>
+          동의하지 않으실 경우 실험을 종료해주시면 됩니다.</p>
         </div>
       `,
 
       html: `
-        <fieldset>
-          <legend>[연구 참여 동의 여부를 선택해 주세요.]</legend>
-
-          <label>
-            <input
-              type="radio"
-              name="consent_decision"
-              value="agree"
-              required
-            >
-            [동의함]
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="consent_decision"
-              value="decline"
-              required
-            >
-            [동의하지 않음]
-          </label>
-        </fieldset>
+        <input type="hidden" name="consent_decision" value="agree">
       `,
 
-      button_label: "[다음]",
+      button_label: "다음",
 
       data: {
         task: "consent"
@@ -712,20 +759,6 @@
           </label>
         </fieldset>
 
-        <fieldset>
-          <legend>5. 실험 참여 동의서에 서명하였습니까?</legend>
-          <p style="font-size: 0.9em;">(연구 시작 전에 반드시 선행되어야 합니다!)</p>
-
-          <label>
-            <input type="radio" name="eligibility_5" value="yes" required>
-            예 (동의합니다)
-          </label>
-
-          <label>
-            <input type="radio" name="eligibility_5" value="no" required>
-            아니오
-          </label>
-        </fieldset>
       `,
 
       button_label: "다음",
@@ -894,29 +927,26 @@
         `
             <h2>감정 단어 입력</h2>
             <p>음악을 듣는 동안 실제로 느낀 감정을 한 단어씩 입력해 주세요.</p>
-            <p>단어를 입력한 뒤 Enter를 누르면 화면에 추가됩니다.</p>
-            <p>다른 감정도 같은 방법으로 입력할 수 있습니다.</p>
-          `,
-        `
-            <h2>입력한 단어 확인</h2>
-            <p>입력한 단어는 화면에서 확인할 수 있습니다.</p>
-            <p>지우려면 단어 옆의 ×를 눌러 주세요.</p>
-            <p>한 개 이상의 단어를 추가하고 입력란을 비운 뒤 응답 완료를 눌러 주세요.</p>
+            <p>단어를 입력한 뒤 Enter를 누르면 응답이 추가됩니다.</p>
+            <p>다른 감정도 같은 방법으로 입력할 수 있으며, 입력하는 응답의 개수는 제한이 없습니다.</p>
+            <p>제출한 응답을 지우고 싶으시면 단어 옆의 x를 눌러 주세요.</p>
+            <p>응답 완료를 누르면 친숙도를 확인한 뒤 다음 음악을 재생합니다.</p>
           `
       ],
 
       condition_2: [
         `
             <h2>느낌 평가</h2>
-            <p>음악을 듣는 동안 실제로 느낀 상태를 각 문장에 대해 평가해 주세요.</p>
+            <p>음악을 듣는 동안 느낀 감정을 각 문장에 대해 평가해 주세요</p>
             <p>화면에 표시된 기준을 보고 1부터 9까지 중 하나를 선택해 주세요.</p>
           `,
         `
-            <h2>응답 확인</h2>
+            <h2>응답 방법</h2>
             <p>각 문장마다 하나의 응답을 선택해 주세요.</p>
             <p>제출 전에는 선택을 바꿀 수 있습니다.</p>
             <p>화면 아래에도 문항이 있으면 내려서 확인해 주세요.</p>
             <p>모든 문항에 답한 뒤 응답 완료를 눌러 주세요.</p>
+            <p>응답이 완료되면 친숙도를 확인한 뒤 다음 음악을 재생합니다</p>
           `
       ]
     };
@@ -927,7 +957,7 @@
       pages: [
         `
             <h2>실험 안내</h2>
-            <p>5초 길이의 음악을 듣고 자신의 느낌에 답하는 실험입니다.</p>
+            <p>본 실험은 5초 길이의 음악을 듣고 느껴지는 감정을 답하는 실험입니다.</p>
             <p>음악 재생이 끝나면 응답 화면이 나타납니다.</p>
             <p>정답은 없으니 자신의 느낌대로 답해 주세요.</p>
           `,
@@ -936,8 +966,7 @@
         ...conditionPages[condition],
 
         `
-            <h2>친숙도와 연습</h2>
-            <p>느낌에 대한 응답을 마치면 음악이 얼마나 친숙했는지 답해 주세요.</p>
+            <h2>${condition === "condition_2" ? "연습시행" : "연습 시행"}</h2>
             <p>먼저 연습용 음악으로 이 과정을 연습합니다.</p>
             <p>연습이 끝나면 필요한 만큼 다시 연습하거나 본 실험을 시작할 수 있습니다.</p>
           `
@@ -1249,6 +1278,7 @@
     let emotionKeywords = [];
     let keywordEvents = [];
     let responseScreenStart = null;
+    let removeSubmitShortcut = null;
 
     const collectEmotionKeywords = {
       type: jsPsychHtmlButtonResponse,
@@ -1346,6 +1376,33 @@
         const continueButton = display.querySelector(
           ".jspsych-btn"
         );
+
+        continueButton.textContent =
+          `응답 완료 (${/Mac/i.test(navigator.platform) ? "cmd" : "ctrl"} + Enter)`;
+
+        function submitWithShortcut(event) {
+          if (
+            event.key !== "Enter" ||
+            !(event.ctrlKey || event.metaKey) ||
+            event.altKey || event.shiftKey ||
+            event.isComposing || event.keyCode === 229
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (!event.repeat && !continueButton.disabled) {
+            continueButton.click();
+          }
+        }
+
+        // Capture the shortcut before the input's Enter-to-add handler.
+        display.addEventListener("keydown", submitWithShortcut, true);
+        removeSubmitShortcut = function () {
+          display.removeEventListener("keydown", submitWithShortcut, true);
+        };
 
 
         function normalizeKeyword(value) {
@@ -1524,6 +1581,9 @@
       },
 
       on_finish: function (data) {
+        removeSubmitShortcut();
+        removeSubmitShortcut = null;
+
         data.emotion_keywords =
           emotionKeywords.slice();
 
@@ -2171,11 +2231,8 @@
           <label for="participant-gender">성별</label><br>
           <select id="participant-gender" name="gender" required>
             <option value="" disabled selected>선택해 주세요</option>
-            <option value="female">여성</option>
             <option value="male">남성</option>
-            <option value="nonbinary">논바이너리</option>
-            <option value="other">기타</option>
-            <option value="prefer_not_to_say">응답하지 않음</option>
+            <option value="female">여성</option>
           </select>
         </p>
 
@@ -2251,6 +2308,46 @@
     ];
   }
 
+
+  function buildContactInformation() {
+    const contactInformation = {
+      type: jsPsychSurveyHtmlForm,
+      css_classes: ["contact-information"],
+
+      preamble: `
+        <h2>연락처 정보</h2>
+        <div class="contact-description">
+          <p>파일럿 실험에 참여한 분들을 대상으로 커피 기프티콘을 추첨하여 전달드리기 위해 다음의 연락처를 수집합니다.</p>
+          <p>연락처 정보 입력은 선택사항이며, 원하지 않는 분들은 입력하지 않으셔도 괜찮습니다.</p>
+        </div>
+      `,
+
+      html: `
+        <div class="contact-fields">
+          <p>
+            <label for="participant-phone-number">전화번호 (선택)</label><br>
+            <input id="participant-phone-number" name="phone_number" type="tel">
+          </p>
+          <p>
+            <label for="participant-email-address">이메일 주소 (선택)</label><br>
+            <input id="participant-email-address" name="email_address" type="email">
+          </p>
+        </div>
+      `,
+
+      button_label: "다음",
+      dataAsArray: false,
+      autocomplete: false,
+
+      data: {
+        task: "contact_information",
+        phase: "questionnaire",
+        condition: experimentConfig.condition
+      }
+    };
+
+    return [contactInformation];
+  }
 
   function buildDebrief() {
     // Replace the draft explanation and contact placeholders later.
@@ -2626,6 +2723,7 @@
 
     timeline.push(
       ...buildParticipantQuestionnaires(),
+      ...buildContactInformation(),
       ...buildDebrief()
     );
 

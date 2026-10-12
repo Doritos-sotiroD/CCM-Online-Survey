@@ -97,7 +97,7 @@ export function createProceduralCsv(rows, metadata) {
   musicTrials(rows, metadata);
   const consent = rows.filter(row => row.task === "consent");
   const eligibility = rows.filter(row => row.task === "eligibility");
-  const eligibilityFields = ["eligibility_1", "eligibility_2", "eligibility_3", "eligibility_4", "eligibility_5"];
+  const eligibilityFields = ["eligibility_1", "eligibility_2", "eligibility_3", "eligibility_4"];
   const debrief = rows.at(-1);
   if (consent.length !== 1 || consent[0].consented !== true || consent[0].response?.consent_decision !== "agree" ||
       eligibility.length !== 1 ||
@@ -105,6 +105,12 @@ export function createProceduralCsv(rows, metadata) {
       debrief?.task !== "debrief" || debrief.debrief_acknowledged !== true ||
       !Number.isFinite(debrief.time_elapsed) || debrief.time_elapsed < 0) {
     throw new Error("PROCEDURAL_EXPORT_COMPLETION_INVALID");
+  }
+  const contact = rows.filter(row => row.task === "contact_information");
+  if (contact.length !== 1 ||
+      typeof contact[0].response?.phone_number !== "string" ||
+      typeof contact[0].response?.email_address !== "string") {
+    throw new Error("PROCEDURAL_EXPORT_CONTACT_INVALID");
   }
   const instructions = rows.filter(row => row.task === "instructions");
   const practice = rows.filter(row => row.phase === "practice" && row.task === "practice_decision");
@@ -131,9 +137,10 @@ export function createProceduralCsv(rows, metadata) {
     eligibility_2: eligibility[0].response.eligibility_2,
     eligibility_3: eligibility[0].response.eligibility_3,
     eligibility_4: eligibility[0].response.eligibility_4,
-    eligibility_5: eligibility[0].response.eligibility_5,
     instruction_duration_minutes: instructions.reduce((sum, row) => sum + row.rt, 0) / 60000,
-    practice_sessions_completed: practice.length
+    practice_sessions_completed: practice.length,
+    phone_number: contact[0].response.phone_number,
+    email_address: contact[0].response.email_address
   };
   return csv(Object.keys(record), [Object.values(record)]);
 }
