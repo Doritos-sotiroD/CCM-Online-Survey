@@ -10,6 +10,8 @@ import { scoreBigFive } from "../questionnaires/bigfive/scoring.js";
 import { createBigFiveCsv } from "../questionnaires/bigfive/export.js";
 import { buildGmsiTrials } from "../questionnaires/gmsi/questionnaire.js";
 import { createGmsiCsv } from "../questionnaires/gmsi/export.js";
+import { createExperimentCsv, createProceduralCsv } from "../exports/study.js";
+import { musicRows as experimentRows, practiceRows } from "./study-fixtures.mjs";
 
 const datasets = Object.fromEntries(await Promise.all(["en", "ko"].map(async language => [
   language, JSON.parse(await readFile(new URL(`../questionnaires/bigfive/data/${language}.json`, import.meta.url), "utf8"))
@@ -226,7 +228,7 @@ function makeApp({language="kor", condition=0, skip=true, upload,
     textContent:"", hidden:true, disabled:false, listeners:{}, addEventListener(name, handler){this.listeners[name]=handler;}
   }]));
   const display = {innerHTML:"", textContent:"", dataset:{}, querySelector(selector){assert(selector.slice(1) in nodes);return nodes[selector.slice(1)];}};
-  const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, runs:0};
+  const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, runs:0, now:0};
   const jsPsych = {
     randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => pool.slice(0,count), shuffle:array => [...array]},
     data: {addProperties(fields){Object.assign(state.properties,fields);for (const row of state.rows) Object.assign(row,fields);}, get:() => new DataCollection(state.rows)},
@@ -235,8 +237,9 @@ function makeApp({language="kor", condition=0, skip=true, upload,
   };
   const context = {
     initJsPsych:options => {state.options=options;return jsPsych;},
-    loadBigFive:load, buildBigFiveTrials, isBigFiveRow:row => row.questionnaire_id === "ipip_neo_120", createBigFiveCsv,
+    loadBigFive:load, buildBigFiveTrials, createBigFiveCsv,
     loadGmsi:loadMusic, buildGmsiTrials, createGmsiCsv,
+    createExperimentCsv, createProceduralCsv, performance:{now:()=>state.now},
     AbortController, TextEncoder, Date, location:{protocol:"http:"}, document:{body:{}}, console,
     setTimeout:(callback, delay) => {const id=++state.nextTimer;state.timers.set(id,{callback,delay});return id;},
     clearTimeout:id => state.timers.delete(id),
@@ -257,7 +260,7 @@ function makeApp({language="kor", condition=0, skip=true, upload,
     .replace(/^  import .*;\r?\n/gm, "")
     .replace('const lang = "kor";', `const lang = "${language}";`)
     .replace("  startExperiment();", "");
-  source += `\nglobalThis.app = {startExperiment,finishSurveyAndSave,uploadCompletedSession,experimentConfig,dataSavingConfig,buildParticipantQuestionnaires,buildConsentAndEligibility,buildSecondSessionChoice,setCompleted:value=>{completedSessions=value;},getCompleted:()=>completedSessions,sessionId};`;
+  source += `\nglobalThis.app = {startExperiment,finishSurveyAndSave,uploadCompletedSession,experimentConfig,dataSavingConfig,buildParticipantQuestionnaires,buildConsentAndEligibility,buildSecondSessionChoice,buildCondition1Trials,buildCondition2Trials,setCompleted:value=>{completedSessions=value;},getCompleted:()=>completedSessions,sessionId};`;
   vm.runInNewContext(source,context,{filename:"index.html"});
   const app = context.app;
   app.experimentConfig.skipSessionsForVerification = skip;
@@ -265,7 +268,7 @@ function makeApp({language="kor", condition=0, skip=true, upload,
   return {app,state,context};
 }
 async function flush() { await new Promise(resolve => setImmediate(resolve)); }
-function finishRows(state, language="kor", condition="condition_1") {
+function finishRows(state, language="kor", condition="condition_1", sessions=0) {
   const musicRows = buildGmsiTrials({
     dataset: gmsiDatasets[language === "eng" ? "en" : "ko"], plugin:function SurveyLikert(){}, condition
   }).map((trial, page) => {
@@ -278,11 +281,16 @@ function finishRows(state, language="kor", condition="condition_1") {
     return row;
   });
   state.rows = [
-    {...state.properties, task:"consent",consented:true,trial_type:"html-button-response"},
+    {...state.properties, task:"consent",consented:true,response:{consent_decision:"agree"},trial_type:"survey-html-form"},
+    {...state.properties, task:"eligibility",response:{
+      eligibility_1:"yes",eligibility_2:"no",eligibility_3:"no",eligibility_4:"no",eligibility_5:"yes"
+    },trial_type:"survey-html-form"},
     {...state.properties, task:"demographics",trial_type:"survey-html-form",response:{age:"23",gender:"prefer_not_to_say",education:"bachelor"}},
+    ...(state.properties.verification_skip_sessions ? [] : practiceRows(state.properties)),
+    ...experimentRows(state.properties,sessions),
     ...musicRows,
     ...completedPages(datasets[language === "eng" ? "en" : "ko"], condition).map(row => ({...state.properties,...row})),
-    {...state.properties, task:"debrief",trial_type:"html-button-response",debrief_acknowledged:true}
+    {...state.properties, task:"debrief",trial_type:"html-button-response",debrief_acknowledged:true,time_elapsed:1800000}
   ];
 }
 
@@ -330,7 +338,7 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
   }
 });
 
-test("four successful files share ID; JSON retains both questionnaires; main CSV includes GMSI", async () => {
+test("five successful files share ID; JSON retains all raw data; experiment/procedural CSVs contain only agreed fields", async () => {
   for (const language of ["eng","kor"]) {
     const {app,state} = makeApp({language});
     await app.startExperiment();
@@ -338,21 +346,21 @@ test("four successful files share ID; JSON retains both questionnaires; main CSV
     const original = structuredClone(state.rows);
     const pending = app.finishSurveyAndSave();
     await flush(); await pending;
-    assert.equal(state.requests.length,4);
+    assert.equal(state.requests.length,5);
     assert.equal(app.finishSurveyAndSave(),pending);
-    const [json,main,bigfive,gmsi] = state.requests.map(request => request.parsed);
+    const [json,main,procedural,bigfive,gmsi] = state.requests.map(request => request.parsed);
     assert.equal(json.filename,`CCM_ccm_draft_06_${sessionId}.json`);
     assert.equal(main.filename,`CCM_ccm_draft_06_${sessionId}.csv`);
+    assert.equal(procedural.filename,`CCM_ccm_draft_06_${sessionId}_procedural.csv`);
     assert.equal(bigfive.filename,`CCM_ccm_draft_06_${sessionId}_bigfive.csv`);
     assert.equal(gmsi.filename,`CCM_ccm_draft_06_${sessionId}_gmsi.csv`);
     const envelope = JSON.parse(json.data);
     assert.deepEqual(envelope.trials, original);
     assert.equal(envelope.session_id, sessionId);
     const mainParsed = parseCsv(main.data);
-    const taskColumn = mainParsed[0].indexOf("task");
-    assert.deepEqual(mainParsed.slice(1).map(row => row[taskColumn]),["consent","demographics","musical_sophistication","musical_sophistication","debrief"]);
-    const noteColumn = mainParsed[0].indexOf("note");
-    assert.equal(mainParsed[3][noteColumn], original[2].note);
+    assert.deepEqual(mainParsed,[ ["trial_no","work_id","session_id","familiarity","response_time_seconds"] ]);
+    const procedureParsed = parseCsv(procedural.data);
+    assert.deepEqual(procedureParsed[1],[sessionId,"","0","30","true","yes","no","no","no","yes","0","0"]);
     const resultParsed = parseCsv(bigfive.data);
     assert.equal(resultParsed[1][resultParsed[0].indexOf("session_id")],sessionId);
     assert.equal(resultParsed[1][resultParsed[0].indexOf("completed_at")],envelope.completed_at);
@@ -367,10 +375,80 @@ test("four successful files share ID; JSON retains both questionnaires; main CSV
   }
 });
 
-test("sending has only the exact localized message; completion waits for the fourth confirmation", async () => {
+test("normal runs export 30/60 combined music trials for either condition and preserve raw JSON", async () => {
+  for (const condition of [0,1]) for (const sessions of [1,2]) {
+    const {app,state} = makeApp({condition,skip:false});
+    await app.startExperiment();
+    const choice = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
+    state.timeline[choice-1].on_timeline_finish();
+    if (sessions === 2) state.timeline[choice+1].timeline[0].on_timeline_finish();
+    finishRows(state,"kor",condition === 0 ? "condition_1" : "condition_2",sessions);
+    const before = structuredClone(state.rows);
+    await app.finishSurveyAndSave();
+    assert.equal(state.requests.length,5);
+    const [json,experiment,procedure] = state.requests.map(request=>request.parsed);
+    assert.deepEqual(JSON.parse(json.data).trials,before);
+    const parsed = parseCsv(experiment.data);
+    assert.equal(parsed.length,sessions*30+1);
+    assert.equal(parsed.at(-1)[0],String(sessions*30));
+    assert.equal(parsed[0][2],"session_id");
+    assert.equal(parsed[1][2],sessionId);
+    assert.equal(parsed[0].includes("task"),false);
+    assert.equal(parsed[0].includes("stimulus_id"),false);
+    assert.equal(parsed[0].includes("experiment_version"),false);
+    const summary = parseCsv(procedure.data);
+    assert.equal(summary[1][1],condition === 0 ? "condition_1" : "condition_2");
+    assert.equal(summary[1][2],String(sessions));
+    assert.equal(summary[1].at(-1),"2");
+    assert.deepEqual(state.rows,before);
+  }
+});
+
+test("actual trial callbacks time from clip end to familiarity submission across both response formats and practice", async () => {
+  for (const condition of [0,1]) for (const phase of ["practice","main"]) {
+    const {app,state} = makeApp({condition,skip:false});
+    await app.startExperiment();
+    const builder = condition === 0 ? app.buildCondition1Trials : app.buildCondition2Trials;
+    const trials = builder({audioFiles:["audio/0001.mp3"],phase});
+    const [listening,,familiarity] = condition === 0 ? trials[1].timeline : trials.slice(1,4);
+    const listeningRow = {}, familiarityRow = {response:{familiarity:8}};
+    assert.throws(()=>familiarity.on_finish(familiarityRow),/TIMING_INVALID/);
+    state.now = 100000;
+    listening.on_finish(listeningRow);
+    state.now = 109500;
+    familiarity.on_finish(familiarityRow);
+    assert.equal(listeningRow.excerpt_ended_at_ms,100000);
+    assert.equal(familiarityRow.familiarity_completed_at_ms,109500);
+    assert.equal(familiarityRow.response_time_seconds,9.5);
+    assert.equal(familiarityRow.familiarity_rating_1_to_9,9);
+    state.now = 200000; listening.on_finish({});
+    state.now = 200300; familiarity.on_finish(familiarityRow);
+    assert.equal(familiarityRow.response_time_seconds,0.3);
+  }
+});
+
+test("invalid experiment or procedural data prevents every upload", async () => {
+  for (const [code,mutate] of [
+    ["SAVE_CSV_SERIALIZE",state=>{state.rows.find(row=>row.phase === "main" && row.task === "familiarity").response_time_seconds = 0;}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{delete state.rows.find(row=>row.task === "eligibility").response.eligibility_5;}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.find(row=>row.task === "eligibility").response.eligibility_3 = "invalid";}],
+    ["SAVE_PROCEDURAL_SERIALIZE",state=>{state.rows.find(row=>row.task === "instructions").rt = NaN;}]
+  ]) {
+    const {app,state} = makeApp({skip:false}); await app.startExperiment();
+    const choice = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
+    state.timeline[choice-1].on_timeline_finish();
+    finishRows(state,"kor","condition_1",1); mutate(state);
+    app.finishSurveyAndSave(); await flush();
+    assert.equal(state.requests.length,0);
+    assert.equal(state.display.dataset.submissionCode,code);
+    assert.equal(state.nodes["save-reference"].hidden,false);
+  }
+});
+
+test("sending has only the exact localized message; completion waits for the fifth confirmation", async () => {
   for (const language of ["eng","kor"]) {
     let release;
-    const {app,state} = makeApp({language, upload:async number => number === 4
+    const {app,state} = makeApp({language, upload:async number => number === 5
       ? new Promise(resolve => {release=()=>resolve({status:201,json:async()=>({message:"Success"})});})
       : {status:201,json:async()=>({message:"Success"})}});
     await app.startExperiment(); finishRows(state,language);
@@ -378,7 +456,7 @@ test("sending has only the exact localized message; completion waits for the fou
     const promise=app.finishSurveyAndSave(); promise.then(()=>{resolved=true;});
     assert.equal(app.finishSurveyAndSave(),promise);
     await flush();
-    assert.equal(state.requests.length,4);
+    assert.equal(state.requests.length,5);
     assert.equal(resolved,false);
     assert.equal(state.nodes["save-status"].textContent,language === "eng" ? "Sending results. Do not close the tab" : "결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오");
     assert.equal(state.nodes["save-reference"].hidden,true);
@@ -389,7 +467,7 @@ test("sending has only the exact localized message; completion waits for the fou
 });
 
 test("failure at each file position reveals ID, hides technical details, and retry skips saved files", async () => {
-  for (const failedPosition of [1,2,3,4]) {
+  for (const failedPosition of [1,2,3,4,5]) {
     let fail=true;
     const {app,state} = makeApp({upload:async number => {
       if (number === failedPosition && fail) {fail=false;throw new Error("PRIVATE_SERVER_DETAIL");}
@@ -412,7 +490,7 @@ test("failure at each file position reveals ID, hides technical details, and ret
     const concurrent = state.nodes["save-retry"].listeners.click();
     await retry; await concurrent; await promise;
     assert.equal(state.requests[failedPosition].body,failedRequest);
-    assert.equal(state.requests.length,5);
+    assert.equal(state.requests.length,6);
     assert.equal(state.nodes["save-reference"].hidden,true);
   }
 });

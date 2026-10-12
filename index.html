@@ -33,6 +33,10 @@
       max-width: 900px;
     }
 
+    .eligibility-questionnaire fieldset {
+      border: 0;
+    }
+
     /* jsPsych's button display rule otherwise overrides the hidden attribute. */
     #save-retry[hidden] {
       display: none;
@@ -258,10 +262,11 @@
 <script type="module">
   "use strict";
 
-  import { loadBigFive, buildBigFiveTrials, isBigFiveRow } from "./questionnaires/bigfive/questionnaire.js";
+  import { loadBigFive, buildBigFiveTrials } from "./questionnaires/bigfive/questionnaire.js";
   import { createBigFiveCsv } from "./questionnaires/bigfive/export.js";
   import { loadGmsi, buildGmsiTrials } from "./questionnaires/gmsi/questionnaire.js";
   import { createGmsiCsv } from "./questionnaires/gmsi/export.js";
+  import { createExperimentCsv, createProceduralCsv } from "./exports/study.js";
 
   /* ------------------------------------------------------------------
      1. INITIALIZE JSPSYCH
@@ -622,17 +627,17 @@
 
     const eligibility = {
       type: jsPsychSurveyHtmlForm,
+      css_classes: ["eligibility-questionnaire"],
 
       preamble: `
         <div class="survey-section">
-          <h2>[참여 조건 확인 제목]</h2>
-          <p>[참여 조건을 확인하기 위한 안내문을 입력하세요.]</p>
+          <h2>연구 참여자 적격성 검증표</h2>
         </div>
       `,
 
       html: `
         <fieldset>
-          <legend>[참여 조건 질문 1]</legend>
+          <legend>1. 만 20세 이상 64세 이하입니까?</legend>
 
           <label>
             <input
@@ -641,7 +646,7 @@
               value="yes"
               required
             >
-            [예]
+            예
           </label>
 
           <label>
@@ -651,12 +656,12 @@
               value="no"
               required
             >
-            [아니요]
+            아니오
           </label>
         </fieldset>
 
         <fieldset>
-          <legend>[참여 조건 질문 2]</legend>
+          <legend>2. 청력 때문에 일상 생활에 장애를 겪습니까?</legend>
 
           <label>
             <input
@@ -665,7 +670,7 @@
               value="yes"
               required
             >
-            [예]
+            예
           </label>
 
           <label>
@@ -675,7 +680,50 @@
               value="no"
               required
             >
-            [아니요]
+            아니오
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>3. 손 움직임의 불편함 때문에 일상 생활에 장애를 겪습니까?</legend>
+
+          <label>
+            <input type="radio" name="eligibility_3" value="yes" required>
+            예
+          </label>
+
+          <label>
+            <input type="radio" name="eligibility_3" value="no" required>
+            아니오
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>4. 과거 또는 현재 신경/정신 관련 질환을 겪은 적이 있습니까?</legend>
+
+          <label>
+            <input type="radio" name="eligibility_4" value="yes" required>
+            예
+          </label>
+
+          <label>
+            <input type="radio" name="eligibility_4" value="no" required>
+            아니오
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>5. 실험 참여 동의서에 서명하였습니까?</legend>
+          <p style="font-size: 0.9em;">(연구 시작 전에 반드시 선행되어야 합니다!)</p>
+
+          <label>
+            <input type="radio" name="eligibility_5" value="yes" required>
+            예 (동의합니다)
+          </label>
+
+          <label>
+            <input type="radio" name="eligibility_5" value="no" required>
+            아니오
           </label>
         </fieldset>
       `,
@@ -684,20 +732,6 @@
 
       data: {
         task: "eligibility"
-      },
-
-      on_finish: function (data) {
-        const eligible =
-          data.response.eligibility_1 === "yes" &&
-          data.response.eligibility_2 === "yes";
-
-        data.eligible = eligible;
-
-        if (!eligible) {
-          jsPsych.abortExperiment(
-            "참여 조건에 해당하지 않아 실험이 종료되었습니다."
-          );
-        }
       }
     };
 
@@ -1057,6 +1091,15 @@
     return [instructions, preloadPractice, practiceLoop];
   }
 
+  function finishExcerptResponseTiming(data, excerptEndedAtMs) {
+    const completedAtMs = performance.now();
+    if (!Number.isFinite(excerptEndedAtMs) || !Number.isFinite(completedAtMs) || completedAtMs < excerptEndedAtMs) {
+      throw new Error("EXCERPT_RESPONSE_TIMING_INVALID");
+    }
+    data.familiarity_completed_at_ms = completedAtMs;
+    data.response_time_seconds = (completedAtMs - excerptEndedAtMs) / 1000;
+  }
+
   function buildCondition1Trials({
     audioFiles = experimentConfig.audioFiles,
     phase = "main"
@@ -1158,6 +1201,7 @@
       4. PRESENT THE FIVE-SECOND EXCERPT
       --------------------------------------------------------------- */
 
+    let excerptEndedAtMs = null;
     const listenToExcerpt = {
       type: jsPsychAudioKeyboardResponse,
 
@@ -1168,6 +1212,11 @@
       response_allowed_while_playing: false,
 
       trial_ends_after_audio: true,
+
+      on_finish: function (data) {
+        excerptEndedAtMs = performance.now();
+        data.excerpt_ended_at_ms = excerptEndedAtMs;
+      },
 
       prompt: `
           <div class="listening-screen">
@@ -1544,6 +1593,8 @@
       },
 
       on_finish: function (data) {
+        finishExcerptResponseTiming(data, excerptEndedAtMs);
+        excerptEndedAtMs = null;
         const raw = data.response?.familiarity;
 
         // Preserve the original response and save a separate 1–9 score.
@@ -1593,6 +1644,7 @@
     audioFiles = experimentConfig.audioFiles,
     phase = "main"
   } = {}) {
+    let excerptEndedAtMs = null;
     if (lang !== "eng" && lang !== "kor") {
       throw new Error('Set lang to "eng" or "kor" for Condition 2 ratings.');
     }
@@ -1893,6 +1945,10 @@
         },
 
         on_finish: function (data) {
+          if (task === "familiarity") {
+            finishExcerptResponseTiming(data, excerptEndedAtMs);
+            excerptEndedAtMs = null;
+          }
           // jsPsych stores positions as 0–8. Retain those raw responses and
           // also save named 1–9 columns that are convenient in a CSV export.
           for (const item of items) {
@@ -1983,6 +2039,11 @@
         response_ends_trial: false,
         trial_ends_after_audio: true,
         post_trial_gap: 0,
+
+        on_finish: function (data) {
+          excerptEndedAtMs = performance.now();
+          data.excerpt_ended_at_ms = excerptEndedAtMs;
+        },
 
         data: {
           ...metadata,
@@ -2405,7 +2466,7 @@
     let preparationCode = "SAVE_DATA_SERIALIZE";
     try {
       validateDataSavingConfig();
-      // All four files use one snapshot. Exporting never modifies live rows.
+      // All five files use one snapshot. Exporting never modifies live rows.
       const snapshot = jsPsych.data.get().readOnly();
       const completedAt = new Date().toISOString();
       const metadata = {
@@ -2428,17 +2489,17 @@
       const gmsiCsv = createGmsiCsv(snapshot.values(), gmsiDataset, metadata);
 
       preparationCode = "SAVE_CSV_SERIALIZE";
-      // Keep Big Five pages in JSON, and exclude them only from the main CSV copy.
-      // Nested responses/keyword arrays remain JSON text inside CSV cells.
-      const mainSnapshot = snapshot.filterCustom(row => !isBigFiveRow(row));
-      mainSnapshot.addToAll({ completed_at: completedAt });
-      const csvString = mainSnapshot.csv();
+      const csvString = createExperimentCsv(snapshot.values(), metadata);
+
+      preparationCode = "SAVE_PROCEDURAL_SERIALIZE";
+      const proceduralCsv = createProceduralCsv(snapshot.values(), metadata);
 
       // Prepare and size-check ALL immutable requests before sending any file.
       const baseName = `CCM_${experimentVersion}_${sessionId}`;
       for (const [key, filename, data] of [
         ["JSON", baseName + ".json", dataString],
         ["CSV", baseName + ".csv", csvString],
+        ["PROCEDURAL_CSV", baseName + "_procedural.csv", proceduralCsv],
         ["BIGFIVE_CSV", baseName + "_bigfive.csv", bigFiveCsv],
         ["GMSI_CSV", baseName + "_gmsi.csv", gmsiCsv]
       ]) {
