@@ -3,6 +3,18 @@ Website made with jsPsych for emotion evaluation of CCM
 
 ## Local preview
 
+The page immediately displays `실험이 로딩중입니다` or
+`The experiment is being loaded`, selected by `language` in the early
+`survey-startup-guard` script in `index.html`. This is the single language
+setting used by the rest of the application. External scripts are deferred so
+they cannot block the initial message. The jsPsych stylesheet loads without
+blocking that message, and the timeline waits for the stylesheet to be ready.
+Missing scripts/modules/styles, initialization errors, and startup fetch or
+configuration failures display a localized error with the researcher's email
+and the session ID when one has already been generated. The startup guard is
+removed when the first trial begins. Direct-file opening retains the local-server
+instructions below.
+
 Open the experiment through HTTP/HTTPS. Opening `index.html` directly with a
 `file://` address prevents loading the questionnaire data and stimulus metadata.
 Direct-file opening displays local-server instructions before any module imports,
@@ -27,7 +39,8 @@ sophistication, Big Five, and debrief. Big Five runs once after the listening
 sessions, whether the participant accepts or declines session 2.
 
 `experimentConfig.skipSessionsForVerification` in `index.html` replaces the
-old first-session-only toggle. It is currently `true`: after consent, eligibility,
+old first-session-only toggle. It is currently `false`, enabling the normal
+listening workflow. When set to `true`, after consent, eligibility,
 and demographics, participants go directly to musical sophistication and Big
 Five. Calibration, practice, both listening sessions, the second-session choice,
 audio preloads, and stimulus-metadata fetching are skipped. The normal DataPipe
@@ -44,15 +57,23 @@ In `index.html`, `experimentConfig.stimulusPoolSize` controls the number of
 eligible numbered clips (currently 4831). `stimulusFirstNumber` controls the
 starting filename number (initially 1). The pool is therefore
 `audio/0001.mp3` through `audio/4831.mp3`. The pool must contain at least
-60 clips and exclude practice/calibration audio.
+63 clips and exclude calibration audio.
 
 In the normal workflow, startup loads `metadata.csv`, validates each configured
-clip's `clip_filename` / `work_id` mapping, and samples 60 distinct clips without
-replacement. The first 30 form session 1 and the remaining 30 form optional
-session 2. Each session preloads only its own batch. Selection is independent
+clip's `clip_filename` / `work_id` mapping, and samples 63 distinct clips without
+replacement. The first 3 are reserved for practice, the next 30 form session 1,
+and the final 30 form optional session 2. Practice preloads its three clips once;
+each main session preloads only its own batch. Selection is independent
 across participants. Main listening, emotion, and familiarity rows retain
 `work_id`; shared rows record `stimulus_pool_size` and `stimulus_first_number`.
 Missing/invalid metadata or audio stops the affected workflow.
+
+Participants complete one practice attempt and may choose up to two additional
+attempts, each using the next reserved clip with the assigned condition's emotion
+and familiarity responses. They may enter the main experiment after attempt 1
+or 2. After attempt 3, the repeat button is disabled and only the main-experiment
+button is available. The instructions explain this limit. Unused practice clips
+stay excluded from both main sessions. `audio/practice.mp3` is no longer used.
 
 ## Questionnaires
 
@@ -67,13 +88,14 @@ The personality placeholder has been replaced with the full 120-item
 Johnson IPIP-NEO questionnaire from
 [rubynor/bigfive-web](https://github.com/rubynor/bigfive-web).
 
-The existing `lang` setting controls both GMSI and Big Five: `"eng"` loads
+The shared `language` setting controls both GMSI and Big Five: `"eng"` loads
 English and `"kor"` loads Korean, including each questionnaire's instructions
 and navigation. Missing or invalid selected-language data stops startup.
 For Big Five, all question and choice wording, UUIDs, ordering,
 domain/facet mappings, and reverse keys are preserved from the pinned source.
 There are 12 pages of 10 required items, no default responses, and no results
-screen, interpretation, or participant download. Scores are calculated silently.
+screen or interpretation. Scores are calculated silently; failed final uploads
+can offer the study recovery ZIP described below.
 
 The static modules live in `questionnaires/gmsi/`, `questionnaires/bigfive/`, and `exports/`;
 no framework, build system, backend, or new runtime dependency is required. See
@@ -188,7 +210,8 @@ inside that timeline. It excludes startup before the timeline and final uploads.
 Instruction duration is the instructions plugin's total response time divided
 by 60,000, including revisits without exporting navigation history. Practice
 counts completed cycles reaching the decision screen after familiarity, not
-starts or button clicks.
+starts or button clicks. Normal runs require 1–3 completed practice attempts;
+excessive or inconsistent practice records stop export.
 
 Verification runs that skip the listening workflow produce a header-only
 experiment CSV and a procedural row with zero completed music/practice sessions,
@@ -217,7 +240,7 @@ CSV remain quoted JSON cells.
 
 Only consented runs ending with an acknowledged debrief upload. Unfinished runs
 and early exits do not upload. There is no ongoing autosave, browser storage,
-download fallback, or reload recovery. Responses stay in memory while the tab
+or reload recovery. Responses stay in memory while the tab
 is open. Closing/reloading before confirmed submission can lose unsaved data.
 
 Every questionnaire must be complete and internally consistent before upload.
@@ -252,7 +275,7 @@ never rendered or logged.
   Retries use identical filenames, bodies, IDs, and completion timestamps.
 - Rejections requiring configuration/data correction stop further submission.
 - Queued responses (HTTP 202 or an explicit queue indication) and duplicate
-  conflicts (HTTP 409 or `OSF_FILE_EXISTS`) block competing retries and require
+  conflicts (HTTP 409 or `FILE_EXISTS`) block competing retries and require
   researcher inspection. Neither means confirmed storage.
 - Simultaneous clicks and repeated completion callbacks cannot start another
   submission. Filename collisions never authorize overwriting or renaming.
@@ -262,6 +285,26 @@ A lost confirmation can become a duplicate on retry. Use the displayed
 contents, and retain the matching records. Multi-file submission is not atomic;
 the browser cannot independently verify private files or guarantee exactly-once
 delivery. Existing DataPipe service-managed retries remain separate.
+
+### Manual recovery ZIP
+
+After all five files have been prepared and validated, any upload failure or
+unconfirmed/queued/duplicate outcome reveals a localized results-ZIP download
+link and instructions to email the ZIP to `ben701@kaist.ac.kr` with the session
+ID. The archive contains the full JSON and all four CSVs, including files that
+were already uploaded successfully. Their contents and filenames are exactly
+those prepared for DataPipe; downloading does not generate a new ID, completion
+timestamp, or response snapshot. Reconcile emailed and online copies by session
+ID and filenames before analysis.
+
+`exports/zip.js` creates a standard, uncompressed ZIP using browser APIs, with
+UTF-8 contents and per-file CRC-32 checksums. It adds no runtime dependency or
+server. Archive-generation failure displays a separate recovery error. Invalid
+or incomplete export data never produces a partial recovery ZIP.
+
+Downloading never marks online submission successful or sends an email. The
+participant attaches the downloaded ZIP manually. A successful online retry
+hides the recovery controls and releases the temporary download URL.
 
 ### DataPipe configuration
 
@@ -287,7 +330,7 @@ replace the persistence provider.
 
 ## Local verification
 
-With an existing Node.js installation, run:
+With an existing Node.js 22.7+ installation, run:
 
 ```powershell
 node --test tests/bigfive.mjs tests/gmsi.mjs tests/study-exports.mjs
@@ -306,6 +349,12 @@ Study export checks also cover 30/60 trial rows in both conditions, final keywor
 padding and Unicode/CSV escaping, renamed 1–9 dimension scores, cross-screen
 response timing, procedural durations/counts, verification runs, non-mutation,
 and preparation failures before any of the five uploads.
+
+Startup checks cover both exact loading messages, failures before body parsing,
+stylesheet readiness, and initialization failures. Recovery checks validate ZIP
+directory entries and CRCs, compare every archived file with its prepared upload
+contents in both conditions/languages and one/two-session paths, and cover
+partial uploads, archive-generation failure, and cleanup after successful retry.
 
 The control-flow checks use a minimal jsPsych/DOM boundary and do not replace
 browser verification of actual rendering or live persistence. For a browser

@@ -6,26 +6,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Music Emotion Survey</title>
 
+  <!-- Keep startup feedback independent of every external script and module. -->
+  <script id="survey-startup-guard">
+    const surveyStartup = (() => {
+      const language = "kor"; // "eng" or "kor"; shared by the entire survey.
+      document.documentElement.lang = language === "eng" ? "en" : "ko";
+      const text = language === "eng" ? {
+        loading: "The experiment is being loaded",
+        failure: "The experiment could not start. Please reload the page or contact ben701@kaist.ac.kr.",
+        reference: "Session ID: "
+      } : {
+        loading: "실험이 로딩중입니다",
+        failure: "실험을 시작하지 못했습니다. 페이지를 새로고침하거나 ben701@kaist.ac.kr로 문의해 주세요.",
+        reference: "세션 ID: "
+      };
+      let started = false;
+      let failed = false;
+      let reference = "";
+      let resolveStyles;
+      let rejectStyles;
+      const stylesReady = new Promise((resolve, reject) => {
+        resolveStyles = resolve;
+        rejectStyles = reject;
+      });
+      // Report early failures; the promise awaited by startup stays rejected.
+      stylesReady.catch(() => fail());
+
+      function render() {
+        const status = document.getElementById("survey-startup-status");
+        const message = failed
+          ? text.failure + (reference ? " " + text.reference + reference : "")
+          : text.loading;
+        if (status) status.textContent = message;
+        else if (failed && document.body) document.body.textContent = message;
+      }
+      function fail(sessionId) {
+        if (started || location.protocol === "file:") return;
+        failed = true;
+        if (typeof sessionId === "string") reference = sessionId;
+        render();
+        rejectStyles(new Error("SURVEY_STARTUP_FAILED"));
+      }
+      function onError() { fail(); }
+      window.addEventListener("error", onError, true);
+      window.addEventListener("unhandledrejection", onError);
+      document.addEventListener("DOMContentLoaded", render, { once: true });
+      return {
+        language, stylesReady, render, fail,
+        get failed() { return failed; },
+        stylesLoaded() { resolveStyles(); },
+        complete() {
+          if (failed) throw new Error("SURVEY_STARTUP_FAILED");
+          if (started) return;
+          started = true;
+          window.removeEventListener("error", onError, true);
+          window.removeEventListener("unhandledrejection", onError);
+          document.getElementById("survey-startup")?.remove();
+        }
+      };
+    })();
+  </script>
+
   <!-- jsPsych core -->
-  <script src="https://unpkg.com/jspsych@8.3.0"></script>
-  <link rel="stylesheet" href="https://unpkg.com/jspsych@8.3.0/css/jspsych.css" />
+  <script defer src="https://unpkg.com/jspsych@8.3.0"></script>
+  <link rel="stylesheet" href="https://unpkg.com/jspsych@8.3.0/css/jspsych.css"
+        media="print" onload="this.media='all'; surveyStartup.stylesLoaded()" />
 
   <!-- General experiment utilities -->
-  <script src="https://unpkg.com/@jspsych/plugin-preload@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-browser-check@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-preload@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-browser-check@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-fullscreen@2.1.0"></script>
 
   <!-- Instructions and simple response screens -->
-  <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.2.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.2.0"></script>
 
   <!-- Audio presentation -->
-  <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.2.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.2.0"></script>
 
   <!-- Survey response formats -->
-  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-survey-likert@2.2.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-survey-likert@2.2.0"></script>
 
   <style>
     /* Keep global styling minimal. Add the final UI styles here later. */
@@ -111,7 +173,7 @@
     }
 
     /* jsPsych's button display rule otherwise overrides the hidden attribute. */
-    #save-retry[hidden] {
+    #save-retry[hidden], #save-download[hidden] {
       display: none;
     }
 
@@ -314,7 +376,13 @@
   </style>
 </head>
 
-<body></body>
+<body>
+  <div id="survey-startup" style="max-width: 700px; margin: 60px auto; padding: 20px; font-family: sans-serif; line-height: 1.6;">
+    <p id="survey-startup-status" role="status" aria-live="polite">실험이 로딩중입니다</p>
+    <noscript>실험을 시작하려면 JavaScript를 활성화해 주세요. / Please enable JavaScript to start the experiment.</noscript>
+  </div>
+  <script>surveyStartup.render();</script>
+</body>
 
 <!-- This must run before module imports: file:// blocks those imports entirely. -->
 <script id="local-preview-check">
@@ -340,6 +408,9 @@
   import { loadGmsi, buildGmsiTrials } from "./questionnaires/gmsi/questionnaire.js";
   import { createGmsiCsv } from "./questionnaires/gmsi/export.js";
   import { createExperimentCsv, createProceduralCsv } from "./exports/study.js";
+  import { createResultsZip } from "./exports/zip.js";
+
+  if (surveyStartup.failed) throw new Error("SURVEY_STARTUP_FAILED");
 
   /* ------------------------------------------------------------------
      1. INITIALIZE JSPSYCH
@@ -353,6 +424,8 @@
     show_progress_bar: true,
     auto_update_progress_bar: true,
     message_progress_bar: "진행률",
+
+    on_trial_start: function () { surveyStartup.complete(); },
 
     // Do not add an automatic delay between trials.
     // Timing gaps should be defined explicitly within the timeline.
@@ -375,8 +448,9 @@
      ------------------------------------------------------------------ */
 
   // Language for Condition 2, the second-session choice, GMSI, Big Five, and saving.
-  const lang = "kor"; // "eng" or "kor"
+  const lang = surveyStartup.language;
 
+  const maxPracticeAttempts = 3;
   const experimentConfig = {
     // Assigned from DataPipe before instructions, practice, or main trials.
     condition: null,
@@ -390,11 +464,11 @@
     stimulusPoolSize: 4831,
     stimulusFirstNumber: 1,
 
-    // Filled once at startup with two disjoint random batches of 30.
+    // Filled once at startup with disjoint batches of 3, 30, and 30.
+    practiceAudioFiles: [],
     audioFiles: [],
     secondSessionAudioFiles: [],
-    calibrationAudioFile: "audio/calibration.mp3",
-    practiceAudioFile: "audio/practice.mp3"
+    calibrationAudioFile: "audio/calibration.mp3"
   };
 
   // Generate one identifier for this survey run.
@@ -498,8 +572,7 @@
   async function selectSessionStimuli() {
     const pool = Array.from({ length: experimentConfig.stimulusPoolSize }, (_, index) =>
       `audio/${String(experimentConfig.stimulusFirstNumber + index).padStart(4, "0")}.mp3`);
-    if (pool.includes(experimentConfig.practiceAudioFile) ||
-        pool.includes(experimentConfig.calibrationAudioFile)) {
+    if (pool.includes(experimentConfig.calibrationAudioFile)) {
       throw new Error("STIMULUS_POOL_INCLUDES_SETUP_AUDIO");
     }
 
@@ -515,9 +588,14 @@
         stimulusWorkIds.set(audioFile, workId);
       }
 
-      const selected = jsPsych.randomization.sampleWithoutReplacement(pool, 60);
-      experimentConfig.audioFiles = selected.slice(0, 30);
-      experimentConfig.secondSessionAudioFiles = selected.slice(30);
+      const selected = jsPsych.randomization.sampleWithoutReplacement(pool, maxPracticeAttempts + 60);
+      if (selected.length !== maxPracticeAttempts + 60 || new Set(selected).size !== selected.length ||
+          selected.some(audioFile => !stimulusWorkIds.has(audioFile))) {
+        throw new Error("STIMULUS_SELECTION_INVALID");
+      }
+      experimentConfig.practiceAudioFiles = selected.slice(0, maxPracticeAttempts);
+      experimentConfig.audioFiles = selected.slice(maxPracticeAttempts, maxPracticeAttempts + 30);
+      experimentConfig.secondSessionAudioFiles = selected.slice(maxPracticeAttempts + 30);
       jsPsych.data.addProperties({
         stimulus_pool_size: experimentConfig.stimulusPoolSize,
         stimulus_first_number: experimentConfig.stimulusFirstNumber
@@ -587,8 +665,9 @@
     "CONDITION_ASSIGNMENT_NOT_ACTIVE", "SESSION_LIMIT_REACHED",
     "INVALID_DATA", "INVALID_BASE64_DATA", "USER_DATA_NOT_FOUND", "INVALID_OWNER",
     "INVALID_OSF_TOKEN", "INVALID_REFRESH_TOKEN", "NOT_USING_OAUTH",
-    "OAUTH_NOT_SETUP", "TOKEN_RESOLUTION_ERROR", "OSF_FILE_EXISTS",
-    "OSF_UPLOAD_ERROR", "OSF_UPLOAD_EXCEPTION", "INVALID_METADATA_ERROR",
+    "OAUTH_NOT_SETUP", "TOKEN_RESOLUTION_ERROR", "FILE_EXISTS",
+    "UPLOAD_ERROR", "UPLOAD_EXCEPTION", "PROVIDER_NOT_CONNECTED",
+    "PROVIDER_TOKEN_EXPIRED", "EXPERIMENT_FINALIZED", "INVALID_METADATA_ERROR",
     "OSF_METADATA_UPLOAD_ERROR", "METADATA_ERROR", "DATA_PERSIST_ERROR",
     "UNKNOWN_ERROR_GETTING_CONDITION"
   ]);
@@ -624,10 +703,7 @@
   try {
     validateDataSavingConfig();
   } catch (error) {
-    document.body.textContent =
-      (lang === "eng"
-        ? "The survey cannot start. Please record this session ID and contact the researcher. Session ID: "
-        : "실험을 시작할 수 없습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 세션 ID: ") + sessionId;
+    surveyStartup.fail(sessionId);
     throw error;
   }
 
@@ -909,10 +985,10 @@
   }
 
   function buildIntroductionAndPractice() {
-    // 1. VALIDATE THE ASSIGNED CONDITION AND PRACTICE FILE
+    // 1. VALIDATE THE ASSIGNED CONDITION AND RESERVED PRACTICE FILES
     // The condition must already be assigned before timeline assembly.
     const condition = experimentConfig.condition;
-    const practiceFile = experimentConfig.practiceAudioFile;
+    const practiceFiles = experimentConfig.practiceAudioFiles;
 
     if (!["condition_1", "condition_2"].includes(condition)) {
       throw new Error(
@@ -920,14 +996,12 @@
       );
     }
 
-    if (typeof practiceFile !== "string" || !practiceFile.trim()) {
-      throw new Error("Set experimentConfig.practiceAudioFile.");
-    }
-
-    if (experimentConfig.audioFiles.includes(practiceFile)) {
-      throw new Error(
-        "Use a practice file outside the main audioFiles list."
-      );
+    if (!Array.isArray(practiceFiles) || practiceFiles.length !== maxPracticeAttempts ||
+        new Set(practiceFiles).size !== maxPracticeAttempts ||
+        practiceFiles.some(audioFile => !stimulusWorkIds.has(audioFile) ||
+          experimentConfig.audioFiles.includes(audioFile) ||
+          experimentConfig.secondSessionAudioFiles.includes(audioFile))) {
+      throw new Error("PRACTICE_STIMULI_INVALID");
     }
 
     // 2. SHOW INSTRUCTIONS ONLY FOR THE ASSIGNED RESPONSE FORMAT
@@ -978,8 +1052,9 @@
 
         `
             <h2>${condition === "condition_2" ? "연습시행" : "연습 시행"}</h2>
-            <p>먼저 연습용 음악으로 이 과정을 연습합니다.</p>
-            <p>연습이 끝나면 필요한 만큼 다시 연습하거나 본 실험을 시작할 수 있습니다.</p>
+            <p>먼저 음악 한 곡으로 이 과정을 연습합니다.</p>
+            <p>연습은 최대 3회까지 할 수 있으며, 원하실 경우 3회를 전부 마치지 않았더라도 본 실험으로 진행할 수 있습니다.</p>
+            <p>3회 연습을 마치면 본 실험으로 진행합니다.</p>
           `
       ],
 
@@ -1005,35 +1080,27 @@
       ? buildCondition1Trials
       : buildCondition2Trials;
 
-    const [preloadPractice, ...practiceTrials] = buildAssignedTrials({
-      audioFiles: [practiceFile],
-      phase: "practice"
+    const practiceSets = practiceFiles.map(practiceFile => {
+      const [preload, ...trials] = buildAssignedTrials({
+        audioFiles: [practiceFile],
+        phase: "practice"
+      });
+      if (preload?.type !== jsPsychPreload || preload.audio?.length !== 1 ||
+          preload.audio[0] !== practiceFile || preload.data?.phase !== "practice" || !trials.length) {
+        throw new Error("PRACTICE_TRIALS_INVALID");
+      }
+      return { preload, trials };
     });
-
-    // Prevent an old builder that ignores these arguments from accidentally
-    // using the main-session audio files for practice.
-    if (
-      preloadPractice?.type !== jsPsychPreload ||
-      preloadPractice.audio?.length !== 1 ||
-      preloadPractice.audio[0] !== practiceFile ||
-      preloadPractice.data?.phase !== "practice" ||
-      !practiceTrials.length
-    ) {
-      throw new Error(
-        "Update the condition builders to accept audioFiles and phase."
-      );
-    }
+    const preloadPractice = { ...practiceSets[0].preload, audio: [...practiceFiles] };
 
     // 4. LABEL EACH ATTEMPT WHILE PRESERVING RESPONSE-SAVING CALLBACKS
-    let practiceAttempt = 0;
-
-    function addAttemptNumber(node) {
+    function addAttemptNumber(node, attemptNumber) {
       // Condition 1 has a nested timeline.
       // Condition 2 currently returns individual trials.
       if (Array.isArray(node.timeline)) {
         return {
           ...node,
-          timeline: node.timeline.map(addAttemptNumber)
+          timeline: node.timeline.map(child => addAttemptNumber(child, attemptNumber))
         };
       }
 
@@ -1048,87 +1115,58 @@
             originalOnFinish.call(this, data);
           }
 
-          data.practice_attempt = practiceAttempt;
+          data.practice_attempt = attemptNumber;
         }
       };
     }
 
-    const startAttempt = {
-      type: jsPsychHtmlButtonResponse,
-
-      stimulus: `
-          <h2>연습</h2>
+    // 5. RUN ONE REQUIRED ATTEMPT AND AT MOST TWO OPTIONAL ATTEMPTS
+    let continuePractice = true;
+    const attempts = practiceSets.map(({ trials }, index) => {
+      const attemptNumber = index + 1;
+      const lastAttempt = attemptNumber === maxPracticeAttempts;
+      const startAttempt = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <h2>연습 ${attemptNumber}/${maxPracticeAttempts}</h2>
           <p>준비가 되면 연습 시작을 눌러 주세요.</p>
         `,
-
-      choices: ["연습 시작"],
-      post_trial_gap: 0,
-
-      data: {
-        task: "practice_start",
-        phase: "practice",
-        condition: condition
-      },
-
-      on_start: function () {
-        // A trial's on_start runs on every pass through the practice loop.
-        practiceAttempt += 1;
-      },
-
-      on_finish: function (data) {
-        data.practice_attempt = practiceAttempt;
-      }
-    };
-
-    const repeatDecision = {
-      type: jsPsychHtmlButtonResponse,
-
-      stimulus: `
-          <h2>연습을 마쳤습니다.</h2>
-          <p>같은 음악으로 다시 연습하거나 본 실험을 시작할 수 있습니다.</p>
+        choices: ["연습 시작"],
+        post_trial_gap: 0,
+        data: { task: "practice_start", phase: "practice", condition },
+        on_finish: function (data) { data.practice_attempt = attemptNumber; }
+      };
+      const repeatDecision = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <h2>연습 ${attemptNumber}회를 마쳤습니다.</h2>
+          ${lastAttempt
+            ? "<p>3회의 연습을 모두 마쳤습니다. 본 실험 시작을 눌러 진행해 주세요.</p>"
+            : `<p>다른 음악으로 다시 연습하거나 본 실험을 시작할 수 있습니다.</p><p>${maxPracticeAttempts - attemptNumber}회의 추가 연습이 가능합니다.</p>`}
         `,
+        choices: ["다시 연습하기", "본 실험 시작"],
+        button_html: function (choice, choiceIndex) {
+          return `<button class="jspsych-btn"${lastAttempt && choiceIndex === 0 ? " disabled" : ""}>${choice}</button>`;
+        },
+        post_trial_gap: 0,
+        data: { task: "practice_decision", phase: "practice", condition },
+        on_finish: function (data) {
+          if (![0, 1].includes(data.response) || (lastAttempt && data.response === 0)) {
+            throw new Error("PRACTICE_DECISION_INVALID");
+          }
+          data.practice_attempt = attemptNumber;
+          data.repeat_practice = !lastAttempt && data.response === 0;
+          continuePractice = data.repeat_practice;
+        }
+      };
+      return {
+        timeline: [startAttempt, ...trials.map(node => addAttemptNumber(node, attemptNumber)), repeatDecision],
+        conditional_function: function () { return continuePractice; }
+      };
+    });
 
-      choices: ["다시 연습하기", "본 실험 시작"],
-      post_trial_gap: 0,
-
-      data: {
-        task: "practice_decision",
-        phase: "practice",
-        condition: condition
-      },
-
-      on_finish: function (data) {
-        data.practice_attempt = practiceAttempt;
-
-        // jsPsych numbers buttons from zero: the first button requests a repeat.
-        data.repeat_practice = data.response === 0;
-      }
-    };
-
-    // 5. REPEAT THE COMPLETE PRACTICE TRIAL UNTIL THE PARTICIPANT IS READY
-    // At least one complete attempt is required. There is no repetition limit.
-    const practiceLoop = {
-      timeline: [
-        startAttempt,
-        ...practiceTrials.map(addAttemptNumber),
-        repeatDecision
-      ],
-
-      loop_function: function (data) {
-        // Examine the decision from this iteration only.
-        const decision = data
-          .filter({ task: "practice_decision" })
-          .last(1)
-          .values()[0];
-
-        return decision.repeat_practice === true;
-      }
-    };
-
-    // Instructions and audio preloading run once.
-    // Only the complete practice cycle repeats.
-    // On exit, jsPsych continues into the existing main-session timeline.
-    return [instructions, preloadPractice, practiceLoop];
+    // All three clips stay reserved, including any skipped optional attempts.
+    return [instructions, preloadPractice, { timeline: attempts }];
   }
 
   function finishExcerptResponseTiming(data, excerptEndedAtMs) {
@@ -2158,7 +2196,7 @@
     }
 
     if (!Number.isSafeInteger(experimentConfig.stimulusPoolSize) ||
-        experimentConfig.stimulusPoolSize < 60 ||
+        experimentConfig.stimulusPoolSize < maxPracticeAttempts + 60 ||
         !Number.isSafeInteger(experimentConfig.stimulusFirstNumber) ||
         experimentConfig.stimulusFirstNumber < 0 ||
         !Number.isSafeInteger(experimentConfig.stimulusFirstNumber + experimentConfig.stimulusPoolSize - 1)) {
@@ -2512,11 +2550,11 @@
         throw submissionError(code, rejected ? "rejected" : "unconfirmed", response.status);
       }
 
-      if (confirmation?.error === "OSF_UPLOAD_QUEUED" || confirmation?.queued === true) {
+      if (confirmation?.queued === true) {
         throw submissionError("SAVE_QUEUED", "queued", response.status);
       }
-      if (confirmation?.error === "OSF_FILE_EXISTS") {
-        throw submissionError("DP_OSF_FILE_EXISTS", "duplicate", response.status);
+      if (confirmation?.error === "FILE_EXISTS") {
+        throw submissionError("DP_FILE_EXISTS", "duplicate", response.status);
       }
 
       // DataPipe's successful OSF write returns 201 and this exact message.
@@ -2531,7 +2569,7 @@
 
       // Explicit configuration/validation errors need researcher intervention.
       // Transient transport/service errors may be retried with the same body.
-      const transientError = ["OSF_UPLOAD_ERROR", "OSF_UPLOAD_EXCEPTION"]
+      const transientError = ["UPLOAD_ERROR", "UPLOAD_EXCEPTION"]
         .includes(confirmation?.error);
       const explicitError = typeof confirmation?.error === "string";
       const rejected = (explicitError && !transientError) ||
@@ -2561,6 +2599,9 @@
       retryHelp: "Check your connection. You may retry after five seconds.",
       reference: "Session ID: ",
       retry: "Retry submission",
+      download: "Download results ZIP",
+      recoveryHelp: "Download the ZIP and attach it to an email to ben701@kaist.ac.kr. Include the session ID above. Downloading does not confirm online submission.",
+      recoveryFailure: "The results ZIP could not be prepared. Keep this tab open and contact ben701@kaist.ac.kr with the session ID above.",
       success: "Your responses have been saved. Thank you for participating."
     } : {
       sending: "결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오",
@@ -2569,6 +2610,9 @@
       retryHelp: "인터넷 연결을 확인해 주세요. 5초 후 다시 제출할 수 있습니다.",
       reference: "세션 ID: ",
       retry: "다시 제출",
+      download: "결과 ZIP 다운로드",
+      recoveryHelp: "ZIP 파일을 다운로드한 뒤 ben701@kaist.ac.kr로 보내는 이메일에 첨부해 주세요. 위 세션 ID도 함께 알려 주세요. 다운로드는 온라인 제출 완료를 의미하지 않습니다.",
+      recoveryFailure: "결과 ZIP 파일을 준비하지 못했습니다. 이 창을 열어 둔 채 위 세션 ID와 함께 ben701@kaist.ac.kr로 문의해 주세요.",
       success: "응답이 저장되었습니다. 참여해 주셔서 감사합니다."
     };
 
@@ -2607,15 +2651,21 @@
       <p id="save-status" role="status" aria-live="polite"></p>
       <p id="save-reference" hidden></p>
       <button id="save-retry" class="jspsych-btn" type="button" hidden></button>
+      <a id="save-download" class="jspsych-btn" hidden></a>
+      <p id="save-recovery-help" hidden></p>
     `;
     const status = display.querySelector("#save-status");
     const reference = display.querySelector("#save-reference");
     const retry = display.querySelector("#save-retry");
+    const download = display.querySelector("#save-download");
+    const recoveryHelp = display.querySelector("#save-recovery-help");
     status.textContent = text.sending;
     reference.textContent = text.reference + sessionId;
     retry.textContent = text.retry;
+    download.textContent = text.download;
 
     const files = [];
+    const baseName = `CCM_${experimentVersion}_${sessionId}`;
     let preparationCode = "SAVE_DATA_SERIALIZE";
     try {
       validateDataSavingConfig();
@@ -2648,7 +2698,6 @@
       const proceduralCsv = createProceduralCsv(snapshot.values(), metadata);
 
       // Prepare and size-check ALL immutable requests before sending any file.
-      const baseName = `CCM_${experimentVersion}_${sessionId}`;
       for (const [key, filename, data] of [
         ["JSON", baseName + ".json", dataString],
         ["CSV", baseName + ".csv", csvString],
@@ -2664,7 +2713,7 @@
         if (new TextEncoder().encode(requestBody).byteLength >= 32000000) {
           throw submissionError("SAVE_REQUEST_TOO_LARGE");
         }
-        files.push({ key, requestBody, state: "pending" });
+        files.push({ key, filename, data, requestBody, state: "pending" });
       }
     } catch (error) {
       status.textContent = text.failure;
@@ -2672,6 +2721,23 @@
       // Preserve a fixed diagnostic for researcher inspection without rendering it.
       display.dataset.submissionCode = error?.submissionCode || preparationCode;
       return submissionPromise;
+    }
+
+    let recoveryUrl = null;
+    function showRecoveryDownload() {
+      try {
+        if (recoveryUrl === null) recoveryUrl = URL.createObjectURL(createResultsZip(files));
+        download.href = recoveryUrl;
+        download.download = baseName + ".zip";
+        download.hidden = false;
+        recoveryHelp.textContent = text.recoveryHelp;
+        delete display.dataset.recoveryCode;
+      } catch (error) {
+        download.hidden = true;
+        recoveryHelp.textContent = text.recoveryFailure;
+        display.dataset.recoveryCode = "SAVE_ZIP_PREPARE";
+      }
+      recoveryHelp.hidden = false;
     }
 
     let state = "ready";
@@ -2682,9 +2748,12 @@
       retry.hidden = true;
       retry.disabled = true;
       reference.hidden = true;
+      download.hidden = true;
+      recoveryHelp.hidden = true;
       delete display.dataset.submissionCode;
       delete display.dataset.submissionFile;
       delete display.dataset.submissionHttpStatus;
+      delete display.dataset.recoveryCode;
       status.textContent = text.sending;
 
       let activeFile;
@@ -2699,6 +2768,10 @@
         }
         state = "saved";
         status.textContent = text.success;
+        if (recoveryUrl !== null) {
+          URL.revokeObjectURL(recoveryUrl);
+          recoveryUrl = null;
+        }
         resolveSubmission();
       } catch (error) {
         state = error?.submissionState || "rejected";
@@ -2711,6 +2784,7 @@
         }
         status.textContent = state === "queued" || state === "duplicate"
           ? text.blocked : text.failure;
+        showRecoveryDownload();
         if (state === "unconfirmed") {
           status.textContent += " " + text.retryHelp;
           retry.hidden = false;
@@ -2738,58 +2812,57 @@
       if (location.protocol === "file:") {
         throw new Error("LOCAL_WEB_SERVER_REQUIRED");
       }
+      await surveyStartup.stylesReady;
+      if (surveyStartup.failed) throw new Error("SURVEY_STARTUP_FAILED");
       validateSessionConfiguration();
       [bigFiveDataset, gmsiDataset] = await Promise.all([loadBigFive(lang), loadGmsi(lang)]);
       if (!experimentConfig.skipSessionsForVerification) await selectSessionStimuli();
       retrievedConditionNumber = await retrieveConditionNumber();
+      experimentConfig.condition = retrievedConditionNumber === 0
+        ? "condition_1"
+        : "condition_2";
+      jsPsych.data.addProperties({ condition: experimentConfig.condition });
+
+      timeline.push(
+        ...buildConsentAndEligibility(),
+        ...buildDemographics()
+      );
+
+      jsPsych.data.addProperties({
+        verification_skip_sessions: experimentConfig.skipSessionsForVerification
+      });
+      if (!experimentConfig.skipSessionsForVerification) {
+        timeline.push(
+          ...buildHeadphoneCheckAndCalibration(),
+          ...buildIntroductionAndPractice(),
+          buildMainSession(1, experimentConfig.audioFiles),
+          buildSecondSessionChoice(),
+          {
+            timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
+            conditional_function: function () {
+              return continueToSecondSession;
+            }
+          }
+        );
+      }
+
+      timeline.push(
+        ...buildParticipantQuestionnaires(),
+        ...buildContactInformation(),
+        ...buildDebrief()
+      );
+
+      /* ------------------------------------------------------------------
+         5. RUN THE EXPERIMENT
+
+         Leave this disabled until at least one trial has been added.
+         ------------------------------------------------------------------ */
+
+      await jsPsych.run(timeline);
     } catch (error) {
-      document.body.textContent = (lang === "eng"
-        ? "The survey cannot start. Please record this session ID and contact the researcher. Session ID: "
-        : "실험을 시작할 수 없습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 세션 ID: ") + sessionId;
+      surveyStartup.fail(sessionId);
       throw error;
     }
-
-    experimentConfig.condition = retrievedConditionNumber === 0
-      ? "condition_1"
-      : "condition_2";
-    jsPsych.data.addProperties({ condition: experimentConfig.condition });
-
-    timeline.push(
-      ...buildConsentAndEligibility(),
-      ...buildDemographics()
-    );
-
-    jsPsych.data.addProperties({
-      verification_skip_sessions: experimentConfig.skipSessionsForVerification
-    });
-    if (!experimentConfig.skipSessionsForVerification) {
-      timeline.push(
-        ...buildHeadphoneCheckAndCalibration(),
-        ...buildIntroductionAndPractice(),
-        buildMainSession(1, experimentConfig.audioFiles),
-        buildSecondSessionChoice(),
-        {
-          timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
-          conditional_function: function () {
-            return continueToSecondSession;
-          }
-        }
-      );
-    }
-
-    timeline.push(
-      ...buildParticipantQuestionnaires(),
-      ...buildContactInformation(),
-      ...buildDebrief()
-    );
-
-    /* ------------------------------------------------------------------
-       5. RUN THE EXPERIMENT
-
-       Leave this disabled until at least one trial has been added.
-       ------------------------------------------------------------------ */
-
-    jsPsych.run(timeline);
   }
 
   startExperiment();

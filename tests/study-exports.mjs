@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {createExperimentCsv, createProceduralCsv} from "../exports/study.js";
 import {musicRows, practiceRows, parseStudyCsv} from "./study-fixtures.mjs";
 
-function complete(condition = "condition_1", sessions = 2, skip = false) {
+function complete(condition = "condition_1", sessions = 2, skip = false, attempts = 2) {
   const metadata = {session_id: "TEST_STUDY_EXPORT", condition, sessions_completed: sessions, verification_skip_sessions: skip};
   const rows = [
     {...metadata, task: "consent", consented: true, response: {consent_decision: "agree"}},
@@ -11,7 +11,7 @@ function complete(condition = "condition_1", sessions = 2, skip = false) {
       eligibility_1: "yes", eligibility_2: "no", eligibility_3: "no", eligibility_4: "no"
     }},
     {...metadata, task: "demographics", response: {age: "23"}},
-    ...(skip ? [] : practiceRows(metadata)),
+    ...(skip ? [] : practiceRows(metadata, attempts)),
     ...musicRows(metadata, sessions),
     {...metadata, task: "musical_sophistication", response: {AE_01: 3}},
     {...metadata, task: "personality_traits", response: {TEST_ITEM: 3}},
@@ -65,6 +65,24 @@ test("verification exports have no invented trial rows, completed condition or p
     const parsed = parseStudyCsv(createProceduralCsv(rows, metadata));
     assert.deepEqual(parsed[1], [metadata.session_id, "", "0", "20", "true", "yes", "no", "no", "no", "0", "0", "", ""]);
   }
+});
+
+test("procedural export counts one to three practice attempts and rejects zero or four", () => {
+  for (const condition of ["condition_1","condition_2"]) for (const attempts of [0,1,2,3,4]) {
+    const {rows,metadata} = complete(condition,1,false,attempts);
+    if (attempts === 0 || attempts === 4) {
+      assert.throws(()=>createProceduralCsv(rows,metadata),/PROCEDURAL_EXPORT_PRACTICE_INVALID/);
+    } else {
+      const before = structuredClone(rows);
+      const summary = parseStudyCsv(createProceduralCsv(rows,metadata));
+      assert.equal(summary[1][summary[0].indexOf("practice_sessions_completed")],String(attempts));
+      assert.equal(parseStudyCsv(createExperimentCsv(rows,metadata)).length,31);
+      assert.deepEqual(rows,before);
+    }
+  }
+  const {rows,metadata} = complete("condition_1",1,false,3);
+  rows.findLast(row=>row.task === "practice_decision").repeat_practice = true;
+  assert.throws(()=>createProceduralCsv(rows,metadata),/PROCEDURAL_EXPORT_PRACTICE_INVALID/);
 });
 
 test("optional contact values export digits and leading zeros without mutating raw segments", () => {

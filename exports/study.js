@@ -118,7 +118,7 @@ export function createProceduralCsv(rows, metadata) {
   const familiarity = rows.filter(row => row.phase === "practice" && row.task === "familiarity");
   if (metadata.verification_skip_sessions
       ? instructions.length !== 0 || practice.length !== 0 || familiarity.length !== 0
-      : instructions.length !== 1 || practice.length === 0 || familiarity.length !== practice.length) {
+      : instructions.length !== 1 || practice.length < 1 || practice.length > 3 || familiarity.length !== practice.length) {
     throw new Error("PROCEDURAL_EXPORT_PRACTICE_INVALID");
   }
   if (instructions.some(row => !Number.isFinite(row.rt) || row.rt < 0 || row.rt > debrief.time_elapsed) ||

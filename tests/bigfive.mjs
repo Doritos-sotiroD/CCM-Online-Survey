@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import vm from "node:vm";
+import { crc32 } from "node:zlib";
 import {
   buildBigFiveTrials, decodeBigFivePage, loadBigFive, validateBigFiveDataset
 } from "../questionnaires/bigfive/questionnaire.js";
@@ -11,6 +12,7 @@ import { createBigFiveCsv } from "../questionnaires/bigfive/export.js";
 import { buildGmsiTrials } from "../questionnaires/gmsi/questionnaire.js";
 import { createGmsiCsv } from "../questionnaires/gmsi/export.js";
 import { createExperimentCsv, createProceduralCsv } from "../exports/study.js";
+import { createResultsZip } from "../exports/zip.js";
 import { musicRows as experimentRows, practiceRows } from "./study-fixtures.mjs";
 
 const datasets = Object.fromEntries(await Promise.all(["en", "ko"].map(async language => [
@@ -37,6 +39,121 @@ test("direct-file startup explains how to open HTTP even when module imports are
     } else {
       assert.equal(document.body.innerHTML, "");
     }
+  }
+});
+
+function startupHarness(language, bodyReady = true) {
+  const listeners = new Map();
+  const status = {textContent:""};
+  const state = {bodyReady, removed:false};
+  const document = {
+    documentElement:{lang:"ko"}, body:{textContent:""},
+    getElementById(id) {
+      if (!state.bodyReady) return null;
+      return id === "survey-startup-status" ? status : {remove(){state.removed=true;}};
+    },
+    addEventListener(name, handler){listeners.set(name,handler);}
+  };
+  const window = {
+    addEventListener(name, handler){listeners.set(name,handler);},
+    removeEventListener(name){listeners.delete(name);}
+  };
+  const source = html.match(/<script id="survey-startup-guard">([\s\S]*?)<\/script>/)[1]
+    .replace('const language = "kor";', `const language = "${language}";`);
+  const context = {document,window,location:{protocol:"https:"}};
+  vm.runInNewContext(source + "\nglobalThis.startup = surveyStartup;",context);
+  return {startup:context.startup,status,state,listeners,document};
+}
+
+test("startup shows the exact loading text in both languages before deferred dependencies execute", () => {
+  for (const language of ["kor","eng"]) {
+    const {startup,status,document} = startupHarness(language);
+    startup.render();
+    assert.equal(status.textContent,language === "kor" ? "실험이 로딩중입니다" : "The experiment is being loaded");
+    assert.equal(document.documentElement.lang,language === "kor" ? "ko" : "en");
+  }
+  for (const script of html.matchAll(/<script\b[^>]*\bsrc="[^"]+"[^>]*>/g)) assert.match(script[0],/\bdefer\b/);
+  assert(html.indexOf('id="survey-startup-guard"') < html.indexOf('src="https://unpkg.com/'));
+  assert.match(html, /media="print" onload="this.media='all'; surveyStartup.stylesLoaded\(\)"/);
+});
+
+test("resource/module/initialization failures show a contactable startup error, including failures before body parsing", async () => {
+  for (const language of ["kor","eng"]) for (const event of ["error","unhandledrejection"]) {
+    const {startup,status,state,listeners} = startupHarness(language,false);
+    listeners.get(event)({message:"PRIVATE_ERROR_DETAILS"});
+    state.bodyReady = true;
+    listeners.get("DOMContentLoaded")();
+    assert.equal(startup.failed,true);
+    assert(status.textContent.includes("ben701@kaist.ac.kr"));
+    assert(!status.textContent.includes("PRIVATE_ERROR_DETAILS"));
+    assert(!status.textContent.includes("로딩중") && !status.textContent.includes("being loaded"));
+    await assert.rejects(startup.stylesReady,/SURVEY_STARTUP_FAILED/);
+    assert.throws(()=>startup.complete(),/SURVEY_STARTUP_FAILED/);
+  }
+});
+
+test("startup waits for stylesheet readiness and stops intercepting errors once the first trial starts", async () => {
+  const {startup,status,state,listeners} = startupHarness("eng");
+  let ready=false;
+  startup.stylesReady.then(()=>{ready=true;});
+  await Promise.resolve();
+  assert.equal(ready,false);
+  startup.stylesLoaded();
+  await startup.stylesReady;
+  assert.equal(ready,true);
+  startup.complete();
+  assert.equal(state.removed,true);
+  assert.equal(listeners.has("error"),false);
+  assert.equal(listeners.has("unhandledrejection"),false);
+  startup.fail("TEST_LATE_FAILURE");
+  assert.equal(startup.failed,false);
+  assert(!status.textContent.includes("TEST_LATE_FAILURE"));
+});
+
+// Independent ZIP reader: validate the directory, each payload, and CRCs using Node's zlib.
+async function readResultsZip(blob) {
+  const bytes = Buffer.from(await blob.arrayBuffer());
+  const footer = bytes.length - 22;
+  assert.equal(bytes.readUInt32LE(footer),0x06054b50);
+  const count = bytes.readUInt16LE(footer + 10);
+  let position = bytes.readUInt32LE(footer + 16);
+  assert.equal(position + bytes.readUInt32LE(footer + 12),footer);
+  const files = [];
+  for (let index=0;index<count;index++) {
+    assert.equal(bytes.readUInt32LE(position),0x02014b50);
+    assert.equal(bytes.readUInt16LE(position+10),0);
+    assert.equal(bytes.readUInt16LE(position+8),0x0800);
+    const length = bytes.readUInt32LE(position+24);
+    const nameLength = bytes.readUInt16LE(position+28);
+    const filename = bytes.subarray(position+46,position+46+nameLength).toString("utf8");
+    const local = bytes.readUInt32LE(position+42);
+    assert.equal(bytes.readUInt32LE(local),0x04034b50);
+    const start = local+30+bytes.readUInt16LE(local+26)+bytes.readUInt16LE(local+28);
+    const payload = bytes.subarray(start,start+length);
+    assert.equal(bytes.subarray(local+30,local+30+nameLength).toString("utf8"),filename);
+    assert.equal(bytes.readUInt32LE(local+22),length);
+    assert.equal(bytes.readUInt32LE(local+14),crc32(payload));
+    assert.equal(bytes.readUInt32LE(position+16),crc32(payload));
+    files.push({filename,data:payload.toString("utf8")});
+    position += 46+nameLength+bytes.readUInt16LE(position+30)+bytes.readUInt16LE(position+32);
+  }
+  assert.equal(position,footer);
+  return files;
+}
+
+test("ZIP preserves exact Unicode/CSV/JSON bytes and rejects invalid or duplicate filenames", async () => {
+  const files = [
+    {filename:"TEST_results.csv",data:'"감정","quote""comma,\r\nline"\r\n'},
+    {filename:"TEST_raw.json",data:JSON.stringify({raw:"한글 🎵",number:"01012345678"})},
+    {filename:"TEST_empty.csv",data:""}
+  ];
+  const before = structuredClone(files);
+  const zip = createResultsZip(files);
+  assert.equal(zip.type,"application/zip");
+  assert.deepEqual(await readResultsZip(zip),files);
+  assert.deepEqual(files,before);
+  for (const invalid of [[],[{filename:"../escape.csv",data:"x"}],[files[0],files[0]],[{filename:"TEST.csv",data:null}]]) {
+    assert.throws(()=>createResultsZip(invalid),/RESULTS_ZIP_/);
   }
 });
 
@@ -221,16 +338,17 @@ class DataCollection {
     return headers.map(cell).join(",") + "\r\n" + this.rows.map(row => headers.map(h => cell(row[h])).join(",")).join("\r\n") + "\r\n";
   }
 }
-function makeApp({language="kor", condition=0, skip=true, upload,
+function makeApp({language="kor", condition=0, skip=true, upload, archive=createResultsZip,
+  poolSize=63, sample=(pool,count)=>pool.slice(0,count),
   load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"]),
   loadMusic=async language => structuredClone(gmsiDatasets[language === "eng" ? "en" : "ko"])} = {}) {
-  const nodes = Object.fromEntries(["save-status","save-reference","save-retry"].map(id => [id, {
+  const nodes = Object.fromEntries(["save-status","save-reference","save-retry","save-download","save-recovery-help"].map(id => [id, {
     textContent:"", hidden:true, disabled:false, listeners:{}, addEventListener(name, handler){this.listeners[name]=handler;}
   }]));
   const display = {innerHTML:"", textContent:"", dataset:{}, querySelector(selector){assert(selector.slice(1) in nodes);return nodes[selector.slice(1)];}};
-  const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, runs:0, now:0};
+  const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, samplingRequests:[], runs:0, now:0, archives:[], revokedUrls:[]};
   const jsPsych = {
-    randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => pool.slice(0,count), shuffle:array => [...array]},
+    randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => {state.samplingRequests.push({size:pool.length,count});return sample(pool,count);}, shuffle:array => [...array]},
     data: {addProperties(fields){Object.assign(state.properties,fields);for (const row of state.rows) Object.assign(row,fields);}, get:() => new DataCollection(state.rows)},
     getDisplayElement:() => display, run:timeline => {state.timeline=timeline;state.runs++;},
     timelineVariable:name => ({timelineVariable:name}), abortExperiment:message => {state.aborted=message;}
@@ -240,13 +358,16 @@ function makeApp({language="kor", condition=0, skip=true, upload,
     loadBigFive:load, buildBigFiveTrials, createBigFiveCsv,
     loadGmsi:loadMusic, buildGmsiTrials, createGmsiCsv,
     createExperimentCsv, createProceduralCsv, performance:{now:()=>state.now},
+    createResultsZip:archive,
+    URL:{createObjectURL(blob){state.archives.push(blob);return `blob:TEST_${state.archives.length}`;},revokeObjectURL(url){state.revokedUrls.push(url);}},
+    surveyStartup:{language,failed:false,stylesReady:Promise.resolve(),complete(){},fail(id){context.document.body.textContent="STARTUP_FAILED " + id;}},
     AbortController, TextEncoder, Date, location:{protocol:"http:"}, document:{body:{}}, console,
     setTimeout:(callback, delay) => {const id=++state.nextTimer;state.timers.set(id,{callback,delay});return id;},
     clearTimeout:id => state.timers.delete(id),
     fetch:async (url, options) => {
       if (url === "metadata.csv") {
         state.metadataRequests++;
-        return {ok:true,text:async () => "clip_filename,work_id\n" + Array.from({length:60},(_, i) => `${String(i+1).padStart(4,"0")}.mp3,WORK_${i+1}`).join("\n")};
+        return {ok:true,text:async () => "clip_filename,work_id\n" + Array.from({length:poolSize},(_, i) => `${String(i+1).padStart(4,"0")}.mp3,WORK_${i+1}`).join("\n")};
       }
       if (url === "https://pipe.jspsych.org/api/condition/") return {status:200,json:async () => ({condition})};
       assert.equal(url, "https://pipe.jspsych.org/api/data/");
@@ -258,13 +379,12 @@ function makeApp({language="kor", condition=0, skip=true, upload,
   for (const name of [...html.matchAll(/\bjsPsych[A-Z]\w+/g)].map(match => match[0])) context[name] = function Plugin() {};
   let source = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1]
     .replace(/^  import .*;\r?\n/gm, "")
-    .replace('const lang = "kor";', `const lang = "${language}";`)
     .replace("  startExperiment();", "");
-  source += `\nglobalThis.app = {startExperiment,finishSurveyAndSave,uploadCompletedSession,experimentConfig,dataSavingConfig,buildParticipantQuestionnaires,buildConsentAndEligibility,buildSecondSessionChoice,buildCondition1Trials,buildCondition2Trials,setCompleted:value=>{completedSessions=value;},getCompleted:()=>completedSessions,sessionId};`;
+  source += `\nglobalThis.app = {startExperiment,finishSurveyAndSave,uploadCompletedSession,experimentConfig,dataSavingConfig,buildParticipantQuestionnaires,buildConsentAndEligibility,buildIntroductionAndPractice,buildSecondSessionChoice,buildCondition1Trials,buildCondition2Trials,setCompleted:value=>{completedSessions=value;},getCompleted:()=>completedSessions,sessionId};`;
   vm.runInNewContext(source,context,{filename:"index.html"});
   const app = context.app;
   app.experimentConfig.skipSessionsForVerification = skip;
-  app.experimentConfig.stimulusPoolSize = 60;
+  app.experimentConfig.stimulusPoolSize = poolSize;
   return {app,state,context};
 }
 async function flush() { await new Promise(resolve => setImmediate(resolve)); }
@@ -329,6 +449,7 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
     assert.equal(app.getCompleted(),0);
     if (skip) {
       assert.equal(state.metadataRequests,0);
+      assert.equal(state.samplingRequests.length,0);
       assert.equal(musicPosition,3);
       assert.equal(state.timeline.some(trial => trial.timeline),false);
     } else {
@@ -349,6 +470,93 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
       assert.equal(first.data.session_number,1);
       assert.equal(second.timeline[0].data.session_number,2);
     }
+  }
+});
+
+test("startup samples 63 distinct clips once from the full pool and reserves disjoint 3/30/30 batches", async () => {
+  for (const condition of [0,1]) {
+    const {app,state} = makeApp({condition,skip:false,poolSize:4831,sample:(pool,count)=>pool.slice(-count).reverse()});
+    await app.startExperiment();
+    assert.deepEqual(state.samplingRequests,[{size:4831,count:63}]);
+    const {practiceAudioFiles,audioFiles,secondSessionAudioFiles} = app.experimentConfig;
+    assert.deepEqual([practiceAudioFiles.length,audioFiles.length,secondSessionAudioFiles.length],[3,30,30]);
+    assert.equal(new Set([...practiceAudioFiles,...audioFiles,...secondSessionAudioFiles]).size,63);
+    assert.deepEqual(Array.from(practiceAudioFiles),["audio/4831.mp3","audio/4830.mp3","audio/4829.mp3"]);
+    assert.equal(audioFiles[0],"audio/4828.mp3");
+    assert.equal(secondSessionAudioFiles.at(-1),"audio/4769.mp3");
+    assert(![...practiceAudioFiles,...audioFiles,...secondSessionAudioFiles].includes("audio/practice.mp3"));
+    const instructionsPosition = state.timeline.findIndex(trial=>trial.data?.task === "instructions");
+    assert.deepEqual(Array.from(state.timeline[instructionsPosition + 1].audio),Array.from(practiceAudioFiles));
+    const choicePosition = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
+    assert.deepEqual(Array.from(state.timeline[choicePosition - 1].timeline[0].audio),Array.from(audioFiles));
+    assert.deepEqual(Array.from(state.timeline[choicePosition + 1].timeline[0].timeline[0].audio),Array.from(secondSessionAudioFiles));
+  }
+});
+
+test("practice uses one fresh reserved clip per attempt, permits early exit and disables a fourth attempt", async () => {
+  for (const condition of [0,1]) for (const completedAttempts of [1,2,3]) {
+    const {app,state} = makeApp({condition,skip:false});
+    await app.startExperiment();
+    const position = state.timeline.findIndex(trial=>trial.data?.task === "instructions");
+    assert(state.timeline[position].pages.at(-1).includes("최대 3회"));
+    const attempts = state.timeline[position + 2].timeline;
+    assert.equal(attempts.length,3);
+    const originalBatches = JSON.stringify(app.experimentConfig);
+    for (const [index,attempt] of attempts.entries()) {
+      assert.equal(attempt.conditional_function(),index < completedAttempts);
+      if (index >= completedAttempts) continue;
+      const start = attempt.timeline[0];
+      const decision = attempt.timeline.at(-1);
+      const startRow = {};
+      start.on_finish(startRow);
+      assert.equal(startRow.practice_attempt,index + 1);
+      const responseNodes = attempt.timeline.slice(1,-1);
+      const leaves = condition === 0 ? responseNodes[0].timeline : responseNodes;
+      assert.equal(leaves.length,3);
+      const [listening,emotion,familiarity] = leaves;
+      assert.equal(emotion.data.task,condition === 0 ? "free_response" : "dimensional_rating");
+      assert(leaves.every(node=>node.data.phase === "practice"));
+      if (condition === 0) {
+        assert.equal(responseNodes[0].timeline_variables.length,1);
+        assert.equal(responseNodes[0].timeline_variables[0].audioFile,app.experimentConfig.practiceAudioFiles[index]);
+      } else {
+        assert.equal(listening.stimulus,app.experimentConfig.practiceAudioFiles[index]);
+      }
+      const listeningRow = {}, familiarityRow = {response:{familiarity:8}};
+      state.now = 10000 * (index + 1); listening.on_finish(listeningRow);
+      state.now += 500; familiarity.on_finish(familiarityRow);
+      assert.equal(listeningRow.practice_attempt,index + 1);
+      assert.equal(familiarityRow.practice_attempt,index + 1);
+      assert.equal(familiarityRow.familiarity_rating_1_to_9,9);
+      assert.equal(familiarityRow.response_time_seconds,0.5);
+      assert.equal(/\bdisabled\b/.test(decision.button_html("다시 연습하기",0)),index === 2);
+      assert.equal(/\bdisabled\b/.test(decision.button_html("본 실험 시작",1)),false);
+      if (index === 2) assert.throws(()=>decision.on_finish({response:0}),/PRACTICE_DECISION_INVALID/);
+      assert.throws(()=>decision.on_finish({response:null}),/PRACTICE_DECISION_INVALID/);
+      const decisionRow = {response:index < completedAttempts - 1 ? 0 : 1};
+      decision.on_finish(decisionRow);
+      assert.equal(decisionRow.practice_attempt,index + 1);
+      assert.equal(decisionRow.repeat_practice,index < completedAttempts - 1);
+    }
+    assert.equal(JSON.stringify(app.experimentConfig),originalBatches);
+    assert.equal(state.samplingRequests.length,1);
+  }
+});
+
+test("undersized pools, invalid sampling and overlapping practice clips fail explicitly", async () => {
+  const undersized = makeApp({skip:false,poolSize:62});
+  await assert.rejects(undersized.app.startExperiment(),/STIMULUS_POOL_CONFIG_INVALID/);
+  assert.equal(undersized.state.runs,0);
+  for (const sample of [(pool,count)=>pool.slice(0,count - 1),(pool,count)=>Array(count).fill(pool[0])]) {
+    const {app,state} = makeApp({skip:false,sample});
+    await assert.rejects(app.startExperiment(),/STIMULUS_SELECTION_INVALID/);
+    assert.equal(state.runs,0);
+  }
+  for (const condition of [0,1]) for (const source of ["audioFiles","secondSessionAudioFiles"]) {
+    const {app} = makeApp({condition,skip:false});
+    await app.startExperiment();
+    app.experimentConfig.practiceAudioFiles[0] = app.experimentConfig[source][0];
+    assert.throws(()=>app.buildIntroductionAndPractice(),/PRACTICE_STIMULI_INVALID/);
   }
 });
 
@@ -550,6 +758,9 @@ test("sending has only the exact localized message; completion waits for the fif
     assert.equal(state.nodes["save-status"].textContent,language === "eng" ? "Sending results. Do not close the tab" : "결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오");
     assert.equal(state.nodes["save-reference"].hidden,true);
     assert.equal(state.nodes["save-retry"].hidden,true);
+    assert.equal(state.nodes["save-download"].hidden,true);
+    assert.equal(state.nodes["save-recovery-help"].hidden,true);
+    assert.equal(state.archives.length,0);
     release(); await flush(); await promise;
     assert.equal(resolved,true);
   }
@@ -569,6 +780,7 @@ test("failure at each file position reveals ID, hides technical details, and ret
     assert(state.nodes["save-reference"].textContent.includes(sessionId));
     assert.equal(state.nodes["save-retry"].disabled,true);
     assert.equal(state.nodes["save-retry"].hidden,false);
+    assert.equal(state.nodes["save-download"].hidden,false);
     assert.equal(/SAVE_|PRIVATE|HTTP|JSON|CSV|OSF/.test(state.nodes["save-status"].textContent),false);
     const failedRequest = state.requests.at(-1).body;
     await state.nodes["save-retry"].listeners.click();
@@ -581,6 +793,11 @@ test("failure at each file position reveals ID, hides technical details, and ret
     assert.equal(state.requests[failedPosition].body,failedRequest);
     assert.equal(state.requests.length,6);
     assert.equal(state.nodes["save-reference"].hidden,true);
+    assert.equal(state.nodes["save-download"].hidden,true);
+    assert.equal(state.nodes["save-recovery-help"].hidden,true);
+    assert.equal(state.revokedUrls.length,1);
+    assert.deepEqual(await readResultsZip(state.archives[0]),state.requests.slice(0,failedPosition-1)
+      .concat(state.requests.slice(failedPosition)).map(request=>({filename:request.parsed.filename,data:request.parsed.data})));
   }
 });
 
@@ -589,7 +806,9 @@ test("queue, duplicate, rejection and malformed confirmations never claim succes
     {status:202,body:{},state:"queued"},
     {status:201,body:{queued:true,message:"Success"},state:"queued"},
     {status:409,jsonError:true,state:"duplicate"},
-    {status:400,body:{error:"OSF_FILE_EXISTS"},state:"duplicate"},
+    {status:400,body:{error:"FILE_EXISTS"},state:"duplicate"},
+    {status:400,body:{error:"UPLOAD_ERROR"},state:"unconfirmed"},
+    {status:500,body:{error:"UPLOAD_EXCEPTION"},state:"unconfirmed"},
     {status:400,body:{error:"INVALID_DATA"},state:"rejected"},
     {status:201,body:{message:"Success",error:"UNKNOWN_PRIVATE_ERROR"},state:"rejected"},
     {status:200,body:{message:"Success"},state:"unconfirmed"},
@@ -606,8 +825,83 @@ test("queue, duplicate, rejection and malformed confirmations never claim succes
     assert.equal(state.requests.length,1);
     assert.equal(state.nodes["save-reference"].hidden,false);
     assert.equal(state.nodes["save-retry"].hidden,failure.state!=="unconfirmed");
+    assert.equal(state.nodes["save-download"].hidden,false);
+    assert.equal((await readResultsZip(state.archives[0])).length,5);
     assert.equal(/PRIVATE|SAVE_|DP_|HTTP|CSV|JSON|OSF/.test(state.nodes["save-status"].textContent),false);
   }
+});
+
+test("recovery ZIP contains all four CSVs and full JSON in both conditions/languages after a partial upload", async () => {
+  for (const language of ["kor","eng"]) for (const conditionNumber of [0,1]) for (const sessions of [1,2]) {
+    const condition = conditionNumber === 0 ? "condition_1" : "condition_2";
+    const {app,state} = makeApp({language,condition:conditionNumber,skip:false,upload:async number=>{
+      if (number === 3) throw new Error("TEST_NETWORK_FAILURE");
+      return {status:201,json:async()=>({message:"Success"})};
+    }});
+    await app.startExperiment();
+    const choice = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
+    state.timeline[choice-1].on_timeline_finish();
+    if (sessions === 2) state.timeline[choice+1].timeline[0].on_timeline_finish();
+    finishRows(state,language,condition,sessions);
+    const before = structuredClone(state.rows);
+    let resolved=false;
+    app.finishSurveyAndSave().then(()=>{resolved=true;});
+    await flush();
+    assert.equal(resolved,false);
+    assert.equal(state.requests.length,3);
+    const files = await readResultsZip(state.archives[0]);
+    const envelope = JSON.parse(files[0].data);
+    const {trials,...metadata} = envelope;
+    const datasetLanguage = language === "kor" ? "ko" : "en";
+    assert.deepEqual(trials,before);
+    assert.deepEqual(files.map(file=>file.data),[
+      files[0].data,
+      createExperimentCsv(before,metadata),
+      createProceduralCsv(before,metadata),
+      createBigFiveCsv(before,datasets[datasetLanguage],metadata),
+      createGmsiCsv(before,gmsiDatasets[datasetLanguage],metadata)
+    ]);
+    assert(files.every(file=>file.filename.includes(sessionId)));
+    assert.equal(files.filter(file=>file.filename.endsWith(".csv")).length,4);
+    assert.equal(files.filter(file=>file.filename.endsWith(".json")).length,1);
+    for (let index=0;index<state.requests.length;index++) {
+      assert.equal(files[index].filename,state.requests[index].parsed.filename);
+      assert.equal(files[index].data,state.requests[index].parsed.data);
+    }
+    assert.equal(state.nodes["save-download"].download,`CCM_ccm_draft_06_${sessionId}.zip`);
+    assert.equal(state.nodes["save-download"].href,"blob:TEST_1");
+    assert(state.nodes["save-recovery-help"].textContent.includes("ben701@kaist.ac.kr"));
+    assert.deepEqual(state.rows,before);
+  }
+});
+
+test("archive-generation failure keeps upload unconfirmed and clearly reports that ZIP recovery failed", async () => {
+  const {app,state} = makeApp({upload:async()=>{throw new Error("TEST_OFFLINE");},archive:()=>{throw new Error("PRIVATE_ZIP_ERROR");}});
+  await app.startExperiment(); finishRows(state);
+  let resolved=false;
+  app.finishSurveyAndSave().then(()=>{resolved=true;}); await flush();
+  assert.equal(resolved,false);
+  assert.equal(state.requests.length,1);
+  assert.equal(state.nodes["save-download"].hidden,true);
+  assert.equal(state.nodes["save-recovery-help"].hidden,false);
+  assert(state.nodes["save-recovery-help"].textContent.includes("ben701@kaist.ac.kr"));
+  assert(!state.nodes["save-recovery-help"].textContent.includes("PRIVATE_ZIP_ERROR"));
+  assert.equal(state.display.dataset.submissionCode,"SAVE_CONNECTION");
+  assert.equal(state.display.dataset.recoveryCode,"SAVE_ZIP_PREPARE");
+});
+
+test("a rejected stylesheet or questionnaire-builder startup failure cannot start the timeline", async () => {
+  const stylesheet = makeApp();
+  stylesheet.context.surveyStartup.stylesReady = Promise.reject(new Error("TEST_STYLESHEET_FAILURE"));
+  await assert.rejects(stylesheet.app.startExperiment(),/TEST_STYLESHEET_FAILURE/);
+  assert.equal(stylesheet.state.runs,0);
+  assert.equal(stylesheet.state.requests.length,0);
+  assert(stylesheet.context.document.body.textContent.includes(sessionId));
+  const plugin = makeApp();
+  plugin.context.jsPsychSurveyLikert = undefined;
+  await assert.rejects(plugin.app.startExperiment(),/PLUGIN_UNAVAILABLE/);
+  assert.equal(plugin.state.runs,0);
+  assert(plugin.context.document.body.textContent.includes(sessionId));
 });
 
 test("timeouts before/after headers remain unconfirmed", async () => {
@@ -637,6 +931,8 @@ test("incomplete/invalid Big Five stops preparation before any upload", async ()
     app.finishSurveyAndSave(); await flush();
     assert.equal(state.requests.length,0);
     assert.equal(state.nodes["save-reference"].hidden,false);
+    assert.equal(state.nodes["save-download"].hidden,true);
+    assert.equal(state.archives.length,0);
     assert.equal(state.display.dataset.submissionCode,"SAVE_BIGFIVE_SERIALIZE");
   }
 });
@@ -651,6 +947,8 @@ test("incomplete/invalid GMSI stops preparation before any upload", async () => 
     app.finishSurveyAndSave(); await flush();
     assert.equal(state.requests.length,0);
     assert.equal(state.nodes["save-reference"].hidden,false);
+    assert.equal(state.nodes["save-download"].hidden,true);
+    assert.equal(state.archives.length,0);
     assert.equal(state.display.dataset.submissionCode,"SAVE_GMSI_SERIALIZE");
   }
 });

@@ -28,12 +28,15 @@ export function practiceRows(properties, attempts = 2) {
   return [
     {...properties, task: "instructions", phase: "practice", rt: 45000,
       view_history: [{page_index: 0, viewing_time: 15000}, {page_index: 1, viewing_time: 20000}, {page_index: 0, viewing_time: 10000}]},
-    ...Array.from({length: attempts}, (_, i) => [
-      {...properties, task: "practice_start", phase: "practice", practice_attempt: i + 1},
-      {...properties, task: "familiarity", phase: "practice", practice_attempt: i + 1},
-      {...properties, task: "practice_decision", phase: "practice", practice_attempt: i + 1,
-        repeat_practice: i < attempts - 1}
-    ]).flat()
+    ...Array.from({length: attempts}, (_, i) => {
+      const identity = {...properties, phase: "practice", practice_attempt: i + 1,
+        audio_file: `audio/TEST_PRACTICE_${i + 1}.mp3`, stimulus_id: `TEST_PRACTICE_${i + 1}`};
+      return [
+        {...identity, task: "practice_start"},
+        {...identity, task: "familiarity"},
+        {...identity, task: "practice_decision", repeat_practice: i < attempts - 1}
+      ];
+    }).flat()
   ];
 }
 
