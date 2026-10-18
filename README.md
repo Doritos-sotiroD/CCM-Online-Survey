@@ -54,14 +54,18 @@ This developer setting is not a participant-facing option.
 ## Stimulus selection
 
 In `index.html`, `experimentConfig.stimulusPoolSize` controls the number of
-eligible numbered clips (currently 4831). `stimulusFirstNumber` controls the
-starting filename number (initially 1). The pool is therefore
-`audio/0001.mp3` through `audio/4831.mp3`. The pool must contain at least
-63 clips and exclude calibration audio.
+eligible numbered clips (currently 200). `stimulusFirstNumber` controls the
+starting filename number (20), and `stimulusNumberStep` controls the interval
+between clip numbers (20). The eligible files are therefore `audio/0020.mp3`,
+`audio/0040.mp3`, ..., `audio/4000.mp3`. The pool must contain at least
+63 clips, use a positive integer interval, and exclude calibration audio.
 
 In the normal workflow, startup loads `metadata.csv`, validates each configured
-clip's `clip_filename` / `work_id` mapping, and samples 63 distinct clips without
-replacement. The first 3 are reserved for practice, the next 30 form session 1,
+clip's `clip_filename` / `work_id` mapping, and samples 63 distinct integers from
+1 through 200 without replacement. With the current configuration, each sampled
+number is multiplied by 20 and padded to four digits to form its clip filename
+(1 → `0020.mp3`, 50 → `1000.mp3`, 200 → `4000.mp3`).
+The first 3 are reserved for practice, the next 30 form session 1,
 and the final 30 form optional session 2. Practice preloads its three clips once;
 each main session preloads only its own batch. Selection is independent
 across participants. Main listening, emotion, and familiarity rows retain

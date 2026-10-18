@@ -459,10 +459,11 @@
     // Set false to run calibration, practice, and the normal listening sessions.
     skipSessionsForVerification: false,
 
-    // Pool size is a file count: 4831 files starting at 1 means 0001–4831.
-    // Set the first number to 0 if filenames begin with 0000.mp3.
-    stimulusPoolSize: 4831,
-    stimulusFirstNumber: 1,
+    // Sample numbers 1–200; each maps to its number multiplied by 20.
+    // The 200 eligible files are 0020, 0040, ..., 4000.mp3.
+    stimulusPoolSize: 200,
+    stimulusFirstNumber: 20,
+    stimulusNumberStep: 20,
 
     // Filled once at startup with disjoint batches of 3, 30, and 30.
     practiceAudioFiles: [],
@@ -570,9 +571,11 @@
   }
 
   async function selectSessionStimuli() {
-    const pool = Array.from({ length: experimentConfig.stimulusPoolSize }, (_, index) =>
-      `audio/${String(experimentConfig.stimulusFirstNumber + index).padStart(4, "0")}.mp3`);
-    if (pool.includes(experimentConfig.calibrationAudioFile)) {
+    const pool = Array.from({ length: experimentConfig.stimulusPoolSize }, (_, index) => index + 1);
+    const audioFileForNumber = number =>
+      `audio/${String(experimentConfig.stimulusFirstNumber + (number - 1) * experimentConfig.stimulusNumberStep).padStart(4, "0")}.mp3`;
+    const audioPool = pool.map(audioFileForNumber);
+    if (audioPool.includes(experimentConfig.calibrationAudioFile)) {
       throw new Error("STIMULUS_POOL_INCLUDES_SETUP_AUDIO");
     }
 
@@ -582,17 +585,19 @@
       const response = await fetch("metadata.csv", { signal: controller.signal, cache: "no-store" });
       if (!response.ok) throw new Error("STIMULUS_METADATA_HTTP_ERROR");
       const workIds = parseStimulusMetadata(await response.text());
-      for (const audioFile of pool) {
+      for (const audioFile of audioPool) {
         const workId = workIds.get(audioFile.split("/").pop());
         if (workId === undefined) throw new Error("STIMULUS_METADATA_MISSING_CLIP");
         stimulusWorkIds.set(audioFile, workId);
       }
 
-      const selected = jsPsych.randomization.sampleWithoutReplacement(pool, maxPracticeAttempts + 60);
-      if (selected.length !== maxPracticeAttempts + 60 || new Set(selected).size !== selected.length ||
-          selected.some(audioFile => !stimulusWorkIds.has(audioFile))) {
+      const selectedNumbers = jsPsych.randomization.sampleWithoutReplacement(pool, maxPracticeAttempts + 60);
+      if (selectedNumbers.length !== maxPracticeAttempts + 60 ||
+          new Set(selectedNumbers).size !== selectedNumbers.length ||
+          selectedNumbers.some(number => !pool.includes(number))) {
         throw new Error("STIMULUS_SELECTION_INVALID");
       }
+      const selected = selectedNumbers.map(audioFileForNumber);
       experimentConfig.practiceAudioFiles = selected.slice(0, maxPracticeAttempts);
       experimentConfig.audioFiles = selected.slice(maxPracticeAttempts, maxPracticeAttempts + 30);
       experimentConfig.secondSessionAudioFiles = selected.slice(maxPracticeAttempts + 30);
@@ -2199,7 +2204,10 @@
         experimentConfig.stimulusPoolSize < maxPracticeAttempts + 60 ||
         !Number.isSafeInteger(experimentConfig.stimulusFirstNumber) ||
         experimentConfig.stimulusFirstNumber < 0 ||
-        !Number.isSafeInteger(experimentConfig.stimulusFirstNumber + experimentConfig.stimulusPoolSize - 1)) {
+        !Number.isSafeInteger(experimentConfig.stimulusNumberStep) ||
+        experimentConfig.stimulusNumberStep < 1 ||
+        !Number.isSafeInteger(experimentConfig.stimulusFirstNumber +
+          (experimentConfig.stimulusPoolSize - 1) * experimentConfig.stimulusNumberStep)) {
       throw new Error("STIMULUS_POOL_CONFIG_INVALID");
     }
   }

@@ -339,7 +339,7 @@ class DataCollection {
   }
 }
 function makeApp({language="kor", condition=0, skip=true, upload, archive=createResultsZip,
-  poolSize=63, sample=(pool,count)=>pool.slice(0,count),
+  poolSize=200, sample=(pool,count)=>pool.slice(0,count),
   load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"]),
   loadMusic=async language => structuredClone(gmsiDatasets[language === "eng" ? "en" : "ko"])} = {}) {
   const nodes = Object.fromEntries(["save-status","save-reference","save-retry","save-download","save-recovery-help"].map(id => [id, {
@@ -367,7 +367,7 @@ function makeApp({language="kor", condition=0, skip=true, upload, archive=create
     fetch:async (url, options) => {
       if (url === "metadata.csv") {
         state.metadataRequests++;
-        return {ok:true,text:async () => "clip_filename,work_id\n" + Array.from({length:poolSize},(_, i) => `${String(i+1).padStart(4,"0")}.mp3,WORK_${i+1}`).join("\n")};
+        return {ok:true,text:async () => "clip_filename,work_id\n" + Array.from({length:poolSize},(_, i) => `${String((i+1)*20).padStart(4,"0")}.mp3,WORK_${(i+1)*20}`).join("\n")};
       }
       if (url === "https://pipe.jspsych.org/api/condition/") return {status:200,json:async () => ({condition})};
       assert.equal(url, "https://pipe.jspsych.org/api/data/");
@@ -473,23 +473,39 @@ test("normal/skip timelines in both conditions keep demographics first and Big F
   }
 });
 
-test("startup samples 63 distinct clips once from the full pool and reserves disjoint 3/30/30 batches", async () => {
-  for (const condition of [0,1]) {
-    const {app,state} = makeApp({condition,skip:false,poolSize:4831,sample:(pool,count)=>pool.slice(-count).reverse()});
+test("startup samples 63 distinct numbers from 1–200, maps them by 20 and reserves disjoint 3/30/30 batches", async () => {
+  for (const condition of [0,1]) for (const reverse of [false,true]) {
+    const {app,state} = makeApp({condition,skip:false,sample:(pool,count)=>{
+      assert.deepEqual(Array.from(pool),Array.from({length:200},(_,i)=>i+1));
+      return reverse ? pool.slice(-count).reverse() : pool.slice(0,count);
+    }});
     await app.startExperiment();
-    assert.deepEqual(state.samplingRequests,[{size:4831,count:63}]);
+    assert.deepEqual(state.samplingRequests,[{size:200,count:63}]);
+    assert.equal(state.properties.stimulus_pool_size,200);
+    assert.equal(state.properties.stimulus_first_number,20);
     const {practiceAudioFiles,audioFiles,secondSessionAudioFiles} = app.experimentConfig;
     assert.deepEqual([practiceAudioFiles.length,audioFiles.length,secondSessionAudioFiles.length],[3,30,30]);
     assert.equal(new Set([...practiceAudioFiles,...audioFiles,...secondSessionAudioFiles]).size,63);
-    assert.deepEqual(Array.from(practiceAudioFiles),["audio/4831.mp3","audio/4830.mp3","audio/4829.mp3"]);
-    assert.equal(audioFiles[0],"audio/4828.mp3");
-    assert.equal(secondSessionAudioFiles.at(-1),"audio/4769.mp3");
+    assert.deepEqual(Array.from(practiceAudioFiles),reverse
+      ? ["audio/4000.mp3","audio/3980.mp3","audio/3960.mp3"]
+      : ["audio/0020.mp3","audio/0040.mp3","audio/0060.mp3"]);
+    assert.equal(audioFiles[0],reverse ? "audio/3940.mp3" : "audio/0080.mp3");
+    assert.equal(secondSessionAudioFiles.at(-1),reverse ? "audio/2760.mp3" : "audio/1260.mp3");
+    if (!reverse) assert.equal(secondSessionAudioFiles[16],"audio/1000.mp3");
     assert(![...practiceAudioFiles,...audioFiles,...secondSessionAudioFiles].includes("audio/practice.mp3"));
     const instructionsPosition = state.timeline.findIndex(trial=>trial.data?.task === "instructions");
     assert.deepEqual(Array.from(state.timeline[instructionsPosition + 1].audio),Array.from(practiceAudioFiles));
     const choicePosition = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
     assert.deepEqual(Array.from(state.timeline[choicePosition - 1].timeline[0].audio),Array.from(audioFiles));
     assert.deepEqual(Array.from(state.timeline[choicePosition + 1].timeline[0].timeline[0].audio),Array.from(secondSessionAudioFiles));
+    const firstSessionTrials = state.timeline[choicePosition - 1].timeline;
+    if (condition === 0) {
+      assert.equal(firstSessionTrials[1].timeline_variables[0].stimulusId,reverse ? "3940" : "0080");
+      assert.equal(firstSessionTrials[1].timeline_variables[0].workId,reverse ? "WORK_3940" : "WORK_80");
+    } else {
+      assert.equal(firstSessionTrials[1].data.stimulus_id,reverse ? "3940" : "0080");
+      assert.equal(firstSessionTrials[1].data.work_id,reverse ? "WORK_3940" : "WORK_80");
+    }
   }
 });
 
@@ -547,7 +563,24 @@ test("undersized pools, invalid sampling and overlapping practice clips fail exp
   const undersized = makeApp({skip:false,poolSize:62});
   await assert.rejects(undersized.app.startExperiment(),/STIMULUS_POOL_CONFIG_INVALID/);
   assert.equal(undersized.state.runs,0);
-  for (const sample of [(pool,count)=>pool.slice(0,count - 1),(pool,count)=>Array(count).fill(pool[0])]) {
+  for (const step of [0,-20,1.5,undefined,Number.MAX_SAFE_INTEGER]) {
+    const {app,state} = makeApp({skip:false});
+    app.experimentConfig.stimulusNumberStep = step;
+    await assert.rejects(app.startExperiment(),/STIMULUS_POOL_CONFIG_INVALID/);
+    assert.equal(state.metadataRequests,0);
+    assert.equal(state.runs,0);
+  }
+  const missingMetadata = makeApp({skip:false});
+  missingMetadata.app.experimentConfig.stimulusFirstNumber = 21;
+  await assert.rejects(missingMetadata.app.startExperiment(),/STIMULUS_METADATA_MISSING_CLIP/);
+  assert.equal(missingMetadata.state.runs,0);
+  for (const sample of [
+    (pool,count)=>pool.slice(0,count - 1),
+    (pool,count)=>Array(count).fill(pool[0]),
+    (pool,count)=>[0,...pool.slice(1,count)],
+    (pool,count)=>[201,...pool.slice(1,count)],
+    (pool,count)=>[1.5,...pool.slice(1,count)]
+  ]) {
     const {app,state} = makeApp({skip:false,sample});
     await assert.rejects(app.startExperiment(),/STIMULUS_SELECTION_INVALID/);
     assert.equal(state.runs,0);
@@ -703,7 +736,7 @@ test("actual trial callbacks time from clip end to familiarity submission across
     const {app,state} = makeApp({condition,skip:false});
     await app.startExperiment();
     const builder = condition === 0 ? app.buildCondition1Trials : app.buildCondition2Trials;
-    const trials = builder({audioFiles:["audio/0001.mp3"],phase});
+    const trials = builder({audioFiles:["audio/0020.mp3"],phase});
     const [listening,,familiarity] = condition === 0 ? trials[1].timeline : trials.slice(1,4);
     const listeningRow = {}, familiarityRow = {response:{familiarity:8}};
     assert.throws(()=>familiarity.on_finish(familiarityRow),/TIMING_INVALID/);
