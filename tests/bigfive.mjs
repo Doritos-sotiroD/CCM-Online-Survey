@@ -339,7 +339,7 @@ class DataCollection {
   }
 }
 function makeApp({language="kor", condition=0, skip=true, upload, archive=createResultsZip,
-  poolSize=200, sample=(pool,count)=>pool.slice(0,count),
+  poolSize=200, sample=(pool,count)=>pool.slice(0,count), shuffle=array=>[...array],
   load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"]),
   loadMusic=async language => structuredClone(gmsiDatasets[language === "eng" ? "en" : "ko"])} = {}) {
   const nodes = Object.fromEntries(["save-status","save-reference","save-retry","save-download","save-recovery-help"].map(id => [id, {
@@ -348,7 +348,7 @@ function makeApp({language="kor", condition=0, skip=true, upload, archive=create
   const display = {innerHTML:"", textContent:"", dataset:{}, querySelector(selector){assert(selector.slice(1) in nodes);return nodes[selector.slice(1)];}};
   const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, samplingRequests:[], runs:0, now:0, archives:[], revokedUrls:[]};
   const jsPsych = {
-    randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => {state.samplingRequests.push({size:pool.length,count});return sample(pool,count);}, shuffle:array => [...array]},
+    randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => {state.samplingRequests.push({size:pool.length,count});return sample(pool,count);}, shuffle},
     data: {addProperties(fields){Object.assign(state.properties,fields);for (const row of state.rows) Object.assign(row,fields);}, get:() => new DataCollection(state.rows)},
     getDisplayElement:() => display, run:timeline => {state.timeline=timeline;state.runs++;},
     timelineVariable:name => ({timelineVariable:name}), abortExperiment:message => {state.aborted=message;}
@@ -728,6 +728,75 @@ test("normal runs export 30/60 combined music trials for either condition and pr
     assert.equal(summary[1][2],String(sessions));
     assert.equal(summary[1][summary[0].indexOf("practice_sessions_completed")],"2");
     assert.deepEqual(state.rows,before);
+  }
+});
+
+test("main response counters follow presentation order, match within each clip and restart in each session", async () => {
+  for (const condition of [0,1]) for (const language of ["kor","eng"]) {
+    const {app,state,context} = makeApp({condition,language,skip:false,shuffle:array=>[...array].reverse()});
+    await app.startExperiment();
+    const counters = [];
+    const nodes = new Map();
+    state.display.querySelector = selector => {
+      if (!nodes.has(selector)) nodes.set(selector,{
+        value:"",textContent:"",disabled:false,
+        addEventListener(){},removeEventListener(){},replaceChildren(){},focus(){},
+        before(node){counters.push({selector,text:node.textContent,className:node.className});}
+      });
+      return nodes.get(selector);
+    };
+    state.display.addEventListener = () => {};
+    state.display.removeEventListener = () => {};
+    context.document.createElement = () => ({className:"",textContent:""});
+    context.navigator = {platform:"Win32"};
+
+    const choice = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
+    const sessions = [state.timeline[choice - 1],state.timeline[choice + 1].timeline[0]];
+    for (const session of sessions) {
+      const trials = session.timeline;
+      if (condition === 0) {
+        assert.equal(trials[1].randomize_order,true);
+        assert.throws(()=>trials[1].timeline[2].on_load(),/TRIAL_COUNTER_INVALID/);
+      } else {
+        // Shuffling changes source positions; the first displayed clip is still 1/30.
+        assert.equal(trials[1].data.source_index,30);
+      }
+      for (let index=0;index<30;index++) {
+        const [listening,emotion,familiarity] = condition === 0
+          ? trials[1].timeline : trials.slice(1 + index * 3,4 + index * 3);
+        counters.length = 0;
+        state.now = 10000 + index * 1000;
+        const listeningRow = {};
+        listening.on_finish(listeningRow);
+        assert.deepEqual(Object.keys(listeningRow),["excerpt_ended_at_ms"]);
+        emotion.on_start?.();
+        emotion.on_load();
+        familiarity.on_load();
+        assert.deepEqual(counters,[
+          {selector:condition === 0 ? "#jspsych-html-button-response-btngroup" : "#jspsych-survey-likert-next",text:`${index + 1}/30`,className:"trial-counter"},
+          {selector:"#jspsych-survey-likert-next",text:`${index + 1}/30`,className:"trial-counter"}
+        ]);
+        state.now += 500;
+        const familiarityRow = {response:{familiarity:4}};
+        familiarity.on_finish(familiarityRow);
+        assert.equal(familiarityRow.response_time_seconds,0.5);
+        assert.equal(familiarityRow.familiarity_rating_1_to_9,5);
+      }
+    }
+
+    counters.length = 0;
+    const position = state.timeline.findIndex(trial=>trial.data?.task === "instructions");
+    for (const attempt of state.timeline[position + 2].timeline) {
+      const responses = attempt.timeline.slice(1,-1);
+      const [,emotion,familiarity] = condition === 0 ? responses[0].timeline : responses;
+      emotion.on_start?.();
+      emotion.on_load();
+      familiarity.on_load();
+    }
+    for (const trial of state.timeline.filter(trial=>trial.data?.phase === "questionnaire")) {
+      trial.on_load?.();
+    }
+    assert.deepEqual(counters,[]);
   }
 });
 

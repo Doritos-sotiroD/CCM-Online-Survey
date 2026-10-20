@@ -38,6 +38,12 @@ checks, instructions/practice, session 1, the optional session 2, musical
 sophistication, Big Five, and debrief. Big Five runs once after the listening
 sessions, whether the participant accepts or declines session 2.
 
+During main trials, the emotion and familiarity pages show the same current
+clip number (`1/30` through `30/30`) centered immediately above the submission
+button. Numbering follows presentation order and restarts at `1/30` for session
+2, without displaying a session label. Listening screens, practice, and
+questionnaires do not show this counter. Saved data fields are unchanged.
+
 `experimentConfig.skipSessionsForVerification` in `index.html` replaces the
 old first-session-only toggle. It is currently `false`, enabling the normal
 listening workflow. When set to `true`, after consent, eligibility,

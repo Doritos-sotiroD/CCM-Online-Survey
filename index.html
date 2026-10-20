@@ -289,6 +289,13 @@
       font-size: 14px;
     }
 
+    .trial-counter {
+      margin: 0 0 10px;
+      color: #606b77;
+      font-size: 18px;
+      text-align: center;
+    }
+
     /* Give dimensional endpoint messages room for two lines of whole words. */
     .dimensional-rating {
       width: min(900px, calc(100vw - 40px));
@@ -1174,6 +1181,18 @@
     return [instructions, preloadPractice, { timeline: attempts }];
   }
 
+  function showTrialCounter(trialNumber, anchorSelector) {
+    if (!Number.isInteger(trialNumber) || trialNumber < 1 || trialNumber > 30) {
+      throw new Error("TRIAL_COUNTER_INVALID");
+    }
+    const anchor = jsPsych.getDisplayElement().querySelector(anchorSelector);
+    if (!anchor) throw new Error("TRIAL_COUNTER_BUTTON_MISSING");
+    const counter = document.createElement("div");
+    counter.className = "trial-counter";
+    counter.textContent = `${trialNumber}/30`;
+    anchor.before(counter);
+  }
+
   function finishExcerptResponseTiming(data, excerptEndedAtMs) {
     const completedAtMs = performance.now();
     if (!Number.isFinite(excerptEndedAtMs) || !Number.isFinite(completedAtMs) || completedAtMs < excerptEndedAtMs) {
@@ -1285,6 +1304,7 @@
       --------------------------------------------------------------- */
 
     let excerptEndedAtMs = null;
+    let trialNumber = 0;
     const listenToExcerpt = {
       type: jsPsychAudioKeyboardResponse,
 
@@ -1299,6 +1319,8 @@
       on_finish: function (data) {
         excerptEndedAtMs = performance.now();
         data.excerpt_ended_at_ms = excerptEndedAtMs;
+        // Count clips in presentation order, independently for each session.
+        if (phase === "main") trialNumber += 1;
       },
 
       prompt: `
@@ -1433,6 +1455,10 @@
 
         continueButton.textContent =
           `응답 완료 (${/Mac/i.test(navigator.platform) ? "cmd" : "ctrl"} + Enter)`;
+
+        if (phase === "main") {
+          showTrialCounter(trialNumber, "#jspsych-html-button-response-btngroup");
+        }
 
         function submitWithShortcut(event) {
           if (
@@ -1704,6 +1730,12 @@
 
         audio_file:
           jsPsych.timelineVariable("audioFile")
+      },
+
+      on_load: function () {
+        if (phase === "main") {
+          showTrialCounter(trialNumber, "#jspsych-survey-likert-next");
+        }
       },
 
       on_finish: function (data) {
@@ -2056,6 +2088,12 @@
             prompt: item.prompt,
             labels: [...item.labels]
           }))
+        },
+
+        on_load: function () {
+          if (phase === "main") {
+            showTrialCounter(metadata.excerpt_number, "#jspsych-survey-likert-next");
+          }
         },
 
         on_finish: function (data) {
