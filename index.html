@@ -416,6 +416,7 @@
   import { createGmsiCsv } from "./questionnaires/gmsi/export.js";
   import { createExperimentCsv, createProceduralCsv } from "./exports/study.js";
   import { createResultsZip } from "./exports/zip.js";
+  import { loadEmotionVocabulary, loadGuidedEmotionStyles, mountGuidedEmotionInput, normalizeEmotion, emotionResponseText } from "./guided-emotion.js";
 
   if (surveyStartup.failed) throw new Error("SURVEY_STARTUP_FAILED");
 
@@ -486,9 +487,10 @@
   const stimulusWorkIds = new Map();
   let bigFiveDataset;
   let gmsiDataset;
+  let emotionVocabulary;
 
   // Change this when you revise the experiment.
-  const experimentVersion = "ccm_draft_06";
+  const experimentVersion = "ccm_draft_07";
 
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
@@ -1216,6 +1218,11 @@
       );
     }
 
+    if (!emotionVocabulary || emotionVocabulary.language !== lang) {
+      throw new Error("EMOTION_VOCABULARY_NOT_LOADED");
+    }
+    const emotionText = emotionResponseText(lang);
+
     if (
       !Array.isArray(audioFiles) ||
       audioFiles.length === 0
@@ -1355,6 +1362,7 @@
     let keywordEvents = [];
     let responseScreenStart = null;
     let removeSubmitShortcut = null;
+    let guidedInput = null;
 
     const collectEmotionKeywords = {
       type: jsPsychHtmlButtonResponse,
@@ -1370,6 +1378,7 @@
 
     <label for="emotion-keyword-input">감정 단어</label>
 
+    <div class="emotion-input-anchor">
     <input
       id="emotion-keyword-input"
       class="keyword-input"
@@ -1378,6 +1387,12 @@
       autocomplete="off"
       spellcheck="false"
     >
+
+    <div id="emotion-suggestions" class="emotion-suggestions" hidden>
+      <div id="emotion-options" class="emotion-options" role="listbox"></div>
+      <div id="emotion-no-matches" class="emotion-no-matches" role="status" hidden></div>
+    </div>
+    </div>
 
     <p>한 단어를 입력한 뒤 Enter를 눌러 주세요.</p>
     <p>입력한 단어를 지우려면 옆의 ×를 눌러 주세요.</p>
@@ -1465,7 +1480,7 @@
             event.key !== "Enter" ||
             !(event.ctrlKey || event.metaKey) ||
             event.altKey || event.shiftKey ||
-            event.isComposing || event.keyCode === 229
+            event.isComposing || event.keyCode === 229 || guidedInput.isComposing()
           ) {
             return;
           }
@@ -1485,34 +1500,16 @@
         };
 
 
-        function normalizeKeyword(value) {
-          return value
-            .trim()
-            .replace(/\s+/g, " ");
-        }
-
-
-        function keywordsAreEqual(first, second) {
-          return first.localeCompare(
-            second,
-            "ko",
-            {
-              sensitivity: "base"
-            }
-          ) === 0;
-        }
-
-
         function updateContinueButton() {
           const hasSubmittedKeyword =
             emotionKeywords.length > 0;
 
           const hasUnsubmittedText =
-            normalizeKeyword(input.value) !== "";
+            normalizeEmotion(input.value) !== "";
 
           continueButton.disabled =
             !hasSubmittedKeyword ||
-            hasUnsubmittedText;
+            hasUnsubmittedText || guidedInput.isComposing();
         }
 
 
@@ -1539,7 +1536,7 @@
 
               removeButton.setAttribute(
                 "aria-label",
-                `${keyword} 삭제`
+                emotionText.remove(keyword)
               );
 
               removeButton.addEventListener(
@@ -1576,33 +1573,25 @@
           );
 
           countDisplay.textContent =
-            `입력한 감정 수 ${emotionKeywords.length}`;
+            emotionText.count(emotionKeywords.length);
 
           updateContinueButton();
         }
 
 
-        function addKeyword() {
-          const keyword =
-            normalizeKeyword(input.value);
-
-          if (keyword === "") {
+        function addKeyword(value) {
+          const keyword = emotionVocabulary.resolve(value);
+          if (!keyword) {
+            messageDisplay.textContent = emotionText.invalid;
+            updateContinueButton();
             return;
           }
 
-          const duplicateExists =
-            emotionKeywords.some(
-              function (existingKeyword) {
-                return keywordsAreEqual(
-                  existingKeyword,
-                  keyword
-                );
-              }
-            );
+          const duplicateExists = emotionKeywords.includes(keyword);
 
           if (duplicateExists) {
             messageDisplay.textContent =
-              "이미 입력한 감정입니다";
+              emotionText.duplicate;
 
             input.select();
             return;
@@ -1621,40 +1610,22 @@
 
           input.value = "";
           messageDisplay.textContent = "";
+          guidedInput.reset();
 
           renderKeywords();
           input.focus();
         }
 
 
-        input.addEventListener(
-          "keydown",
-          function (event) {
-            /*
-            * Do not treat Enter as submission while the Korean
-            * input method editor is still composing a syllable.
-            */
-            if (
-              event.key !== "Enter" ||
-              event.isComposing ||
-              event.keyCode === 229
-            ) {
-              return;
-            }
-
-            event.preventDefault();
-            addKeyword();
-          }
-        );
-
-
-        input.addEventListener(
-          "input",
-          function () {
+        guidedInput = mountGuidedEmotionInput({
+          display,
+          vocabulary: emotionVocabulary,
+          onSelect: addKeyword,
+          onInput: function () {
             messageDisplay.textContent = "";
             updateContinueButton();
           }
-        );
+        });
 
         renderKeywords();
         input.focus();
@@ -1663,6 +1634,14 @@
       on_finish: function (data) {
         removeSubmitShortcut();
         removeSubmitShortcut = null;
+        guidedInput.destroy();
+        guidedInput = null;
+
+        if (emotionKeywords.length === 0 ||
+            emotionKeywords.some(word => !emotionVocabulary.has(word)) ||
+            new Set(emotionKeywords).size !== emotionKeywords.length) {
+          throw new Error("EMOTION_RESPONSE_INVALID");
+        }
 
         data.emotion_keywords =
           emotionKeywords.slice();
@@ -2868,6 +2847,10 @@
         ? "condition_1"
         : "condition_2";
       jsPsych.data.addProperties({ condition: experimentConfig.condition });
+
+      if (!experimentConfig.skipSessionsForVerification && experimentConfig.condition === "condition_1") {
+        [emotionVocabulary] = await Promise.all([loadEmotionVocabulary(lang), loadGuidedEmotionStyles(document)]);
+      }
 
       timeline.push(
         ...buildConsentAndEligibility(),

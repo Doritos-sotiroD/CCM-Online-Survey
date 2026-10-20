@@ -14,17 +14,22 @@ import { createGmsiCsv } from "../questionnaires/gmsi/export.js";
 import { createExperimentCsv, createProceduralCsv } from "../exports/study.js";
 import { createResultsZip } from "../exports/zip.js";
 import { musicRows as experimentRows, practiceRows } from "./study-fixtures.mjs";
+import { parseEmotionVocabulary, mountGuidedEmotionInput, normalizeEmotion, emotionResponseText } from "../guided-emotion.js";
+import { createEmotionDom } from "./emotion-dom.mjs";
 
 const datasets = Object.fromEntries(await Promise.all(["en", "ko"].map(async language => [
   language, JSON.parse(await readFile(new URL(`../questionnaires/bigfive/data/${language}.json`, import.meta.url), "utf8"))
 ])));
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const emotionVocabularies = Object.fromEntries(await Promise.all(["kor", "eng"].map(async language => [
+  language, parseEmotionVocabulary(await readFile(new URL(`../${language === "kor" ? "korean" : "english"}_emotion_list.txt`, import.meta.url), "utf8"), language)
+])));
 const gmsiDatasets = Object.fromEntries(await Promise.all(["en", "ko"].map(async language => [
   language, JSON.parse(await readFile(new URL(`../questionnaires/gmsi/data/${language}.json`, import.meta.url), "utf8"))
 ])));
 const sessionId = "TEST_BIGFIVE_ONLY";
 const metadata = {
-  session_id: sessionId, experiment_version: "ccm_draft_06", condition: "condition_1",
+  session_id: sessionId, experiment_version: "ccm_draft_07", condition: "condition_1",
   sessions_completed: 0, verification_skip_sessions: true, completed_at: "2026-10-11T00:00:00.000Z"
 };
 
@@ -340,17 +345,18 @@ class DataCollection {
 }
 function makeApp({language="kor", condition=0, skip=true, upload, archive=createResultsZip,
   poolSize=200, sample=(pool,count)=>pool.slice(0,count), shuffle=array=>[...array],
+  loadEmotions=async language => emotionVocabularies[language], loadEmotionStyles=async () => {},
   load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"]),
   loadMusic=async language => structuredClone(gmsiDatasets[language === "eng" ? "en" : "ko"])} = {}) {
   const nodes = Object.fromEntries(["save-status","save-reference","save-retry","save-download","save-recovery-help"].map(id => [id, {
     textContent:"", hidden:true, disabled:false, listeners:{}, addEventListener(name, handler){this.listeners[name]=handler;}
   }]));
   const display = {innerHTML:"", textContent:"", dataset:{}, querySelector(selector){assert(selector.slice(1) in nodes);return nodes[selector.slice(1)];}};
-  const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, samplingRequests:[], runs:0, now:0, archives:[], revokedUrls:[]};
+  const state = {rows:[], properties:{}, requests:[], timers:new Map(), nextTimer:0, display, nodes, metadataRequests:0, samplingRequests:[], runs:0, now:0, archives:[], revokedUrls:[], emotionLanguages:[], emotionStyleRequests:0};
   const jsPsych = {
     randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => {state.samplingRequests.push({size:pool.length,count});return sample(pool,count);}, shuffle},
     data: {addProperties(fields){Object.assign(state.properties,fields);for (const row of state.rows) Object.assign(row,fields);}, get:() => new DataCollection(state.rows)},
-    getDisplayElement:() => display, run:timeline => {state.timeline=timeline;state.runs++;},
+    getDisplayElement:() => state.display, run:timeline => {state.timeline=timeline;state.runs++;},
     timelineVariable:name => ({timelineVariable:name}), abortExperiment:message => {state.aborted=message;}
   };
   const context = {
@@ -359,6 +365,9 @@ function makeApp({language="kor", condition=0, skip=true, upload, archive=create
     loadGmsi:loadMusic, buildGmsiTrials, createGmsiCsv,
     createExperimentCsv, createProceduralCsv, performance:{now:()=>state.now},
     createResultsZip:archive,
+    loadEmotionVocabulary:language => {state.emotionLanguages.push(language);return loadEmotions(language);},
+    loadGuidedEmotionStyles:document => {state.emotionStyleRequests++;return loadEmotionStyles(document);},
+    mountGuidedEmotionInput, normalizeEmotion, emotionResponseText,
     URL:{createObjectURL(blob){state.archives.push(blob);return `blob:TEST_${state.archives.length}`;},revokeObjectURL(url){state.revokedUrls.push(url);}},
     surveyStartup:{language,failed:false,stylesReady:Promise.resolve(),complete(){},fail(id){context.document.body.textContent="STARTUP_FAILED " + id;}},
     AbortController, TextEncoder, Date, location:{protocol:"http:"}, document:{body:{}}, console,
@@ -388,6 +397,87 @@ function makeApp({language="kor", condition=0, skip=true, upload, archive=create
   return {app,state,context};
 }
 async function flush() { await new Promise(resolve => setImmediate(resolve)); }
+
+test("emotion resources load once only for listening Condition 1 in the selected language", async () => {
+  for (const language of ["kor", "eng"]) for (const condition of [0, 1]) for (const skip of [false, true]) {
+    const {app, state} = makeApp({language, condition, skip});
+    await app.startExperiment();
+    const expected = condition === 0 && !skip;
+    assert.deepEqual(state.emotionLanguages, expected ? [language] : []);
+    assert.equal(state.emotionStyleRequests, Number(expected));
+  }
+  for (const failure of ["list", "styles"]) {
+    const {app, state, context} = makeApp({skip: false,
+      ...(failure === "list" ? {loadEmotions: async () => {throw new Error("TEST_EMOTION_LIST");}}
+        : {loadEmotionStyles: async () => {throw new Error("TEST_EMOTION_STYLES");}})
+    });
+    await assert.rejects(app.startExperiment(), /TEST_EMOTION_/);
+    assert.equal(state.runs, 0);
+    assert.equal(state.requests.length, 0);
+    assert(context.document.body.textContent.includes("STARTUP_FAILED"));
+    assert.equal(state.emotionLanguages.length, 1);
+  }
+});
+
+test("actual practice/main responses reject unlisted input and retain canonical expressions, events and shortcuts", async () => {
+  for (const language of ["kor", "eng"]) for (const phase of ["practice", "main"]) {
+    const {app, state, context} = makeApp({language, skip: false});
+    await app.startExperiment();
+    const dom = createEmotionDom();
+    state.display = dom.display;
+    context.document.createElement = dom.document.createElement;
+    context.navigator = {platform: "Win32"};
+    const [listening, response] = app.buildCondition1Trials({audioFiles: ["audio/0020.mp3"], phase})[1].timeline;
+    const [first, second] = language === "kor" ? ["가라앉은 기분", "중립"] : ["pride in family", "neutral"];
+    const fill = value => {dom.input.value = value; dom.input.fire("input");};
+    const enter = options => dom.input.fire("keydown", {key: "Enter", ...options});
+    const button = dom.node(".jspsych-btn");
+    let completed = 0;
+    button.addEventListener("click", () => completed++);
+    state.now = 10000;
+    listening.on_finish({});
+    response.on_start(); response.on_load();
+    fill("unlisted expression"); enter();
+    assert(button.disabled);
+    assert(dom.node("#emotion-keyword-message").textContent);
+    assert.equal(dom.node("#emotion-keyword-tags").children.length, 0);
+    fill(language === "kor" ? "은기" : "PRIDEINFAM");
+    dom.input.fire("keydown", {key: "ArrowDown"});
+    state.now = 11000;
+    enter();
+    assert.equal(dom.input.value, "");
+    state.now = 12000;
+    fill(language === "kor" ? second : second.toUpperCase()); enter();
+    fill(second); enter();
+    assert(dom.node("#emotion-keyword-message").textContent);
+    assert.equal(dom.node("#emotion-keyword-tags").children.length, 2);
+    state.now = 12500;
+    dom.node("#emotion-keyword-tags").children[0].children[1].click();
+    fill("bad pending input"); enter({ctrlKey: true});
+    assert.equal(completed, 0);
+    fill("");
+    dom.input.fire("compositionstart"); enter({ctrlKey: true});
+    assert(button.disabled);
+    assert.equal(completed, 0);
+    dom.input.fire("compositionend");
+    assert(!button.disabled);
+    enter({ctrlKey: true});
+    assert.equal(completed, 1);
+    const data = {};
+    response.on_finish(data);
+    assert.deepEqual(JSON.parse(JSON.stringify(data)), {
+      emotion_keywords: [second], keyword_count: 1,
+      keyword_events: [
+        {action: "add", keyword: first, rt: 1000},
+        {action: "add", keyword: second, rt: 2000},
+        {action: "remove", keyword: first, rt: 2500}
+      ]
+    });
+    assert(dom.node("#emotion-suggestions").hidden);
+    assert.equal(dom.input.listeners.get("keydown").length, 0);
+  }
+});
+
 function finishRows(state, language="kor", condition="condition_1", sessions=0) {
   const musicRows = buildGmsiTrials({
     dataset: gmsiDatasets[language === "eng" ? "en" : "ko"], plugin:function SurveyLikert(){}, condition
@@ -676,11 +766,11 @@ test("five successful files share ID; JSON retains all raw data; experiment/proc
     assert.equal(state.requests.length,5);
     assert.equal(app.finishSurveyAndSave(),pending);
     const [json,main,procedural,bigfive,gmsi] = state.requests.map(request => request.parsed);
-    assert.equal(json.filename,`CCM_ccm_draft_06_${sessionId}.json`);
-    assert.equal(main.filename,`CCM_ccm_draft_06_${sessionId}.csv`);
-    assert.equal(procedural.filename,`CCM_ccm_draft_06_${sessionId}_procedural.csv`);
-    assert.equal(bigfive.filename,`CCM_ccm_draft_06_${sessionId}_bigfive.csv`);
-    assert.equal(gmsi.filename,`CCM_ccm_draft_06_${sessionId}_gmsi.csv`);
+    assert.equal(json.filename,`CCM_ccm_draft_07_${sessionId}.json`);
+    assert.equal(main.filename,`CCM_ccm_draft_07_${sessionId}.csv`);
+    assert.equal(procedural.filename,`CCM_ccm_draft_07_${sessionId}_procedural.csv`);
+    assert.equal(bigfive.filename,`CCM_ccm_draft_07_${sessionId}_bigfive.csv`);
+    assert.equal(gmsi.filename,`CCM_ccm_draft_07_${sessionId}_gmsi.csv`);
     const envelope = JSON.parse(json.data);
     assert.deepEqual(envelope.trials, original);
     assert.equal(envelope.session_id, sessionId);
@@ -735,19 +825,9 @@ test("main response counters follow presentation order, match within each clip a
   for (const condition of [0,1]) for (const language of ["kor","eng"]) {
     const {app,state,context} = makeApp({condition,language,skip:false,shuffle:array=>[...array].reverse()});
     await app.startExperiment();
-    const counters = [];
-    const nodes = new Map();
-    state.display.querySelector = selector => {
-      if (!nodes.has(selector)) nodes.set(selector,{
-        value:"",textContent:"",disabled:false,
-        addEventListener(){},removeEventListener(){},replaceChildren(){},focus(){},
-        before(node){counters.push({selector,text:node.textContent,className:node.className});}
-      });
-      return nodes.get(selector);
-    };
-    state.display.addEventListener = () => {};
-    state.display.removeEventListener = () => {};
-    context.document.createElement = () => ({className:"",textContent:""});
+    const {display, document, counters} = createEmotionDom();
+    state.display = display;
+    context.document.createElement = document.createElement;
     context.navigator = {platform:"Win32"};
 
     const choice = state.timeline.findIndex(trial=>trial.data?.task === "second_session_choice");
@@ -970,7 +1050,7 @@ test("recovery ZIP contains all four CSVs and full JSON in both conditions/langu
       assert.equal(files[index].filename,state.requests[index].parsed.filename);
       assert.equal(files[index].data,state.requests[index].parsed.data);
     }
-    assert.equal(state.nodes["save-download"].download,`CCM_ccm_draft_06_${sessionId}.zip`);
+    assert.equal(state.nodes["save-download"].download,`CCM_ccm_draft_07_${sessionId}.zip`);
     assert.equal(state.nodes["save-download"].href,"blob:TEST_1");
     assert(state.nodes["save-recovery-help"].textContent.includes("ben701@kaist.ac.kr"));
     assert.deepEqual(state.rows,before);
