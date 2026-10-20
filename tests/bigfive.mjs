@@ -346,6 +346,7 @@ class DataCollection {
 function makeApp({language="kor", condition=0, skip=true, upload, archive=createResultsZip,
   poolSize=200, sample=(pool,count)=>pool.slice(0,count), shuffle=array=>[...array],
   loadEmotions=async language => emotionVocabularies[language], loadEmotionStyles=async () => {},
+  getAudioPlayer=async () => {throw new Error("TEST_UNEXPECTED_AUDIO_REQUEST");},
   load=async language => structuredClone(datasets[language === "eng" ? "en" : "ko"]),
   loadMusic=async language => structuredClone(gmsiDatasets[language === "eng" ? "en" : "ko"])} = {}) {
   const nodes = Object.fromEntries(["save-status","save-reference","save-retry","save-download","save-recovery-help"].map(id => [id, {
@@ -357,7 +358,10 @@ function makeApp({language="kor", condition=0, skip=true, upload, archive=create
     randomization: {randomID:() => sessionId, sampleWithoutReplacement:(pool, count) => {state.samplingRequests.push({size:pool.length,count});return sample(pool,count);}, shuffle},
     data: {addProperties(fields){Object.assign(state.properties,fields);for (const row of state.rows) Object.assign(row,fields);}, get:() => new DataCollection(state.rows)},
     getDisplayElement:() => state.display, run:timeline => {state.timeline=timeline;state.runs++;},
-    timelineVariable:name => ({timelineVariable:name}), abortExperiment:message => {state.aborted=message;}
+    pluginAPI:{getAudioPlayer,audioContext() {}},
+    timelineVariable:name => ({timelineVariable:name}),
+    evaluateTimelineVariable:name => {assert.equal(name,"audioFile");return state.currentAudioFile;},
+    abortExperiment:message => {state.aborted=message;}
   };
   const context = {
     initJsPsych:options => {state.options=options;return jsPsych;},
@@ -392,6 +396,7 @@ function makeApp({language="kor", condition=0, skip=true, upload, archive=create
   source += `\nglobalThis.app = {startExperiment,finishSurveyAndSave,uploadCompletedSession,experimentConfig,dataSavingConfig,buildParticipantQuestionnaires,buildConsentAndEligibility,buildIntroductionAndPractice,buildSecondSessionChoice,buildCondition1Trials,buildCondition2Trials,setCompleted:value=>{completedSessions=value;},getCompleted:()=>completedSessions,sessionId};`;
   vm.runInNewContext(source,context,{filename:"index.html"});
   const app = context.app;
+  state.currentAudioFile = "audio/0020.mp3";
   app.experimentConfig.skipSessionsForVerification = skip;
   app.experimentConfig.stimulusPoolSize = poolSize;
   return {app,state,context};
@@ -475,6 +480,127 @@ test("actual practice/main responses reject unlisted input and retain canonical 
     });
     assert(dom.node("#emotion-suggestions").hidden);
     assert.equal(dom.input.listeners.get("keydown").length, 0);
+  }
+});
+
+function loadReplayResponse(app, state, context, condition, phase, index = 0) {
+  const files = ["audio/0020.mp3", "audio/0040.mp3"];
+  const trials = (condition === 0 ? app.buildCondition1Trials : app.buildCondition2Trials)({audioFiles:files,phase});
+  const [listening,emotion,familiarity] = condition === 0 ? trials[1].timeline : trials.slice(1 + index * 3,4 + index * 3);
+  const dom = createEmotionDom();
+  state.display = dom.display;
+  state.currentAudioFile = files[index];
+  context.document.createElement = dom.document.createElement;
+  context.navigator = {platform:"Win32"};
+  listening.on_finish({});
+  emotion.on_start?.();
+  emotion.on_load();
+  if (condition === 0) {
+    dom.input.value = "neutral";
+    dom.input.fire("input");
+    dom.input.fire("keydown",{key:"Enter"});
+  }
+  const actions = dom.display.children.find(node=>node.className === "emotion-response-actions");
+  assert(actions);
+  const [anchor,button,error] = actions.children;
+  assert.equal(anchor.selector,condition === 0 ? "#jspsych-html-button-response-btngroup" : "#jspsych-survey-likert-next");
+  assert.equal(button.type,"button");
+  assert.equal(button.textContent,"다시 듣기");
+  assert.equal(error.hidden,true);
+  return {dom,emotion,familiarity,button,error};
+}
+
+test("replay waits 200 ms, plays the current clip once, resets per trial and preserves responses and timing", async () => {
+  for (const condition of [0,1]) for (const phase of ["main","practice"]) {
+    const requests = [];
+    let plays = 0, stops = 0;
+    const player = {play(){plays++;},stop(){stops++;},addEventListener(){},removeEventListener(){}};
+    const {app,state,context} = makeApp({condition,language:"eng",skip:false,
+      getAudioPlayer:async file=>{requests.push(file);return player;}});
+    await app.startExperiment();
+    for (let index=0;index<2;index++) {
+      state.now = 10000 + index * 20000;
+      const {dom,emotion,familiarity,button} = loadReplayResponse(app,state,context,condition,phase,index);
+      button.click();
+      assert.equal(button.disabled,true);
+      assert.equal(plays,index);
+      assert.equal(requests.length,index);
+      button.fire("click"); // The guard also rejects duplicate events during the delay.
+      assert.equal(state.timers.size,1);
+      const [id,timer] = [...state.timers][0];
+      assert.equal(timer.delay,200);
+      state.timers.delete(id);
+      state.now += 200;
+      await timer.callback();
+      assert.deepEqual(requests,["audio/0020.mp3","audio/0040.mp3"].slice(0,index+1));
+      assert.equal(plays,index+1);
+      button.fire("click");
+      assert.equal(state.timers.size,0);
+      assert.equal(button.disabled,true);
+      const response = {response:{pleasantness:4}};
+      emotion.on_finish(response);
+      assert.equal(stops,index+1);
+      if (condition === 0) assert.deepEqual(Array.from(response.emotion_keywords),["neutral"]);
+      else assert.equal(response.rating_pleasantness,5);
+      assert(!Object.keys(response).some(key=>key.includes("replay")));
+      state.display = createEmotionDom().display;
+      familiarity.on_load();
+      assert(!state.display.children.some(node=>node.className === "emotion-response-actions"));
+      state.now += 5500;
+      const familiarityRow = {response:{familiarity:4}};
+      familiarity.on_finish(familiarityRow);
+      assert.equal(familiarityRow.response_time_seconds,5.7);
+      assert.equal(familiarityRow.familiarity_rating_1_to_9,5);
+      if (condition === 0) assert.equal(dom.input.listeners.get("keydown").length,0);
+    }
+  }
+});
+
+test("submitting cancels replay during the delay or while the player is resolving", async () => {
+  for (const condition of [0,1]) for (const pendingLoad of [false,true]) {
+    let resolvePlayer, plays = 0, stops = 0, requests = 0;
+    const player = {play(){plays++;},stop(){stops++;},addEventListener(){},removeEventListener(){}};
+    const {app,state,context} = makeApp({condition,language:"eng",skip:false,
+      getAudioPlayer:()=>{requests++;return new Promise(resolve=>{resolvePlayer=resolve;});}});
+    await app.startExperiment();
+    const {emotion,button} = loadReplayResponse(app,state,context,condition,"main");
+    button.click();
+    let pending;
+    if (pendingLoad) {
+      const [id,timer] = [...state.timers][0];
+      state.timers.delete(id);
+      pending = timer.callback();
+    }
+    emotion.on_finish({response:{pleasantness:4}});
+    assert.equal(state.timers.size,0);
+    if (pendingLoad) {resolvePlayer(player);await pending;}
+    assert.equal(requests,Number(pendingLoad));
+    assert.equal(plays,0);
+    assert.equal(stops,0);
+  }
+});
+
+test("replay loading, playback and media errors are visible and never permit another replay", async () => {
+  for (const condition of [0,1]) for (const failure of ["load","play","media"]) {
+    const listeners = new Map();
+    const player = {play(){if (failure === "play") throw new Error("TEST_PLAY_FAILED");},stop(){},
+      addEventListener(name,handler){listeners.set(name,handler);},removeEventListener(name){listeners.delete(name);}};
+    const {app,state,context} = makeApp({condition,language:"eng",skip:false,
+      getAudioPlayer:async ()=>{if (failure === "load") throw new Error("TEST_LOAD_FAILED");return player;}});
+    await app.startExperiment();
+    const {emotion,button,error} = loadReplayResponse(app,state,context,condition,"main");
+    button.click();
+    const [id,timer] = [...state.timers][0];
+    state.timers.delete(id);
+    await timer.callback();
+    if (failure === "media") listeners.get("error")();
+    assert.equal(error.hidden,false);
+    assert.match(error.textContent,/could not be replayed/);
+    assert(button.disabled);
+    button.fire("click");
+    assert.equal(state.timers.size,0);
+    emotion.on_finish({response:{pleasantness:4}});
+    assert.equal(listeners.size,0);
   }
 });
 

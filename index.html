@@ -296,6 +296,35 @@
       text-align: center;
     }
 
+    .emotion-response-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .emotion-response-actions .jspsych-btn {
+      margin: 0;
+    }
+
+    .emotion-response-actions #jspsych-html-button-response-btngroup {
+      margin: 0;
+    }
+
+    .excerpt-replay:disabled {
+      background: #e5e7eb;
+      border-color: #d1d5db;
+      color: #6b7280;
+      cursor: default;
+    }
+
+    .excerpt-replay-error {
+      flex-basis: 100%;
+      margin: 0;
+      color: #b42318;
+    }
+
     /* Give dimensional endpoint messages room for two lines of whole words. */
     .dimensional-rating {
       width: min(900px, calc(100vw - 40px));
@@ -303,6 +332,7 @@
 
     .dimensional-rating #jspsych-survey-likert-form {
       overflow-x: auto;
+      padding-bottom: 40px;
     }
 
     .dimensional-rating .jspsych-survey-likert-opts {
@@ -1204,6 +1234,65 @@
     data.response_time_seconds = (completedAtMs - excerptEndedAtMs) / 1000;
   }
 
+  function mountExcerptReplay(audioFile, submitAnchor) {
+    if (typeof audioFile !== "string" || !audioFile.trim() || !submitAnchor) {
+      throw new Error("EXCERPT_REPLAY_CONFIGURATION_INVALID");
+    }
+    const actions = document.createElement("div");
+    actions.className = "emotion-response-actions";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "jspsych-btn excerpt-replay";
+    button.textContent = "다시 듣기";
+    const errorMessage = document.createElement("p");
+    errorMessage.className = "excerpt-replay-error";
+    errorMessage.setAttribute("role", "alert");
+    errorMessage.hidden = true;
+    submitAnchor.before(actions);
+    // Keep the free-response plugin's original button group intact.
+    actions.append(submitAnchor, button, errorMessage);
+
+    let used = false;
+    let disposed = false;
+    let timer = null;
+    let player = null;
+    let playbackStarted = false;
+    function showPlaybackError() {
+      if (disposed) return;
+      errorMessage.textContent = lang === "eng"
+        ? "The excerpt could not be replayed. Please contact the researcher."
+        : "음악을 다시 재생하지 못했습니다. 연구자에게 문의해 주세요.";
+      errorMessage.hidden = false;
+    }
+    function replay() {
+      if (used || disposed) return;
+      used = true;
+      button.disabled = true;
+      timer = setTimeout(async function () {
+        timer = null;
+        try {
+          const loadedPlayer = await jsPsych.pluginAPI.getAudioPlayer(audioFile);
+          if (disposed) return;
+          player = loadedPlayer;
+          jsPsych.pluginAPI.audioContext();
+          player.addEventListener("error", showPlaybackError);
+          player.play();
+          playbackStarted = true;
+        } catch (error) {
+          showPlaybackError();
+        }
+      }, 200);
+    }
+    button.addEventListener("click", replay);
+    return function () {
+      disposed = true;
+      clearTimeout(timer);
+      button.removeEventListener("click", replay);
+      if (player) player.removeEventListener("error", showPlaybackError);
+      if (playbackStarted) player.stop();
+    };
+  }
+
   function buildCondition1Trials({
     audioFiles = experimentConfig.audioFiles,
     phase = "main"
@@ -1362,6 +1451,7 @@
     let keywordEvents = [];
     let responseScreenStart = null;
     let removeSubmitShortcut = null;
+    let removeExcerptReplay = null;
     let guidedInput = null;
 
     const collectEmotionKeywords = {
@@ -1474,6 +1564,10 @@
         if (phase === "main") {
           showTrialCounter(trialNumber, "#jspsych-html-button-response-btngroup");
         }
+        removeExcerptReplay = mountExcerptReplay(
+          jsPsych.evaluateTimelineVariable("audioFile"),
+          display.querySelector("#jspsych-html-button-response-btngroup")
+        );
 
         function submitWithShortcut(event) {
           if (
@@ -1632,6 +1726,8 @@
       },
 
       on_finish: function (data) {
+        removeExcerptReplay();
+        removeExcerptReplay = null;
         removeSubmitShortcut();
         removeSubmitShortcut = null;
         guidedInput.destroy();
@@ -2030,6 +2126,7 @@
     // 3. REUSABLE RATING-PAGE BUILDER
     // Used for both the dimension page and the separate familiarity page.
     function makeRatingPage(items, preamble, buttonLabel, task, metadata) {
+      let removeExcerptReplay = null;
       return {
         type: jsPsychSurveyLikert,
         css_classes: task === "familiarity" ? ["familiarity-rating"] :
@@ -2073,9 +2170,19 @@
           if (phase === "main") {
             showTrialCounter(metadata.excerpt_number, "#jspsych-survey-likert-next");
           }
+          if (task === "dimensional_rating") {
+            removeExcerptReplay = mountExcerptReplay(
+              metadata.audio_file,
+              jsPsych.getDisplayElement().querySelector("#jspsych-survey-likert-next")
+            );
+          }
         },
 
         on_finish: function (data) {
+          if (task === "dimensional_rating") {
+            removeExcerptReplay();
+            removeExcerptReplay = null;
+          }
           if (task === "familiarity") {
             finishExcerptResponseTiming(data, excerptEndedAtMs);
             excerptEndedAtMs = null;

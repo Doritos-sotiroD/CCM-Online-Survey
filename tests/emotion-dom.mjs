@@ -33,7 +33,7 @@ export function createEmotionDom() {
     setAttribute(name, value) { this.attributes[name] = String(value); }
     removeAttribute(name) { delete this.attributes[name]; }
     append(...children) { children.forEach(child => this.appendChild(child)); }
-    appendChild(child) { child.parentElement = this; this.children.push(child); return child; }
+    appendChild(child) { child.remove(); child.parentElement = this; this.children.push(child); return child; }
     replaceChildren(...children) {
       this.children.forEach(child => { child.parentElement = null; });
       this.children = []; this._text = ""; this.append(...children);
@@ -43,7 +43,14 @@ export function createEmotionDom() {
       if (this.parentElement) this.parentElement.children.splice(this.parentElement.children.indexOf(this), 1);
       this.parentElement = null;
     }
-    before(node) { counters.push({selector: this.selector, text: node.textContent, className: node.className}); }
+    before(node) {
+      if (node.className === "trial-counter") {
+        counters.push({selector: this.selector, text: node.textContent, className: node.className});
+      }
+      node.remove();
+      node.parentElement = this.parentElement;
+      this.parentElement.children.splice(this.parentElement.children.indexOf(this), 0, node);
+    }
     addEventListener(name, callback, capture = false) {
       const handlers = this.listeners.get(name) ?? [];
       handlers.push({callback, capture}); this.listeners.set(name, handlers);
