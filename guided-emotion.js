@@ -8,7 +8,6 @@ const TEXT = {
     list: "일치하는 감정 표현",
     noMatch: "일치하는 감정 표현이 없습니다.",
     more: count => `일치하는 감정 표현 ${count}개 모두 보기`,
-    invalid: "목록에 있는 감정 표현을 선택하거나 정확히 입력해 주세요.",
     duplicate: "이미 입력한 감정입니다",
     count: count => `입력한 감정 수 ${count}`,
     remove: word => `${word} 삭제`
@@ -17,7 +16,6 @@ const TEXT = {
     list: "Matching emotion expressions",
     noMatch: "No matching emotion expressions.",
     more: count => `Show all ${count} matching expressions`,
-    invalid: "Select an expression from the list or type a complete listed expression.",
     duplicate: "This expression has already been added.",
     count: count => `Emotions added: ${count}`,
     remove: word => `Remove ${word}`

@@ -1454,6 +1454,10 @@
     let removeExcerptReplay = null;
     let guidedInput = null;
 
+    function keywordIdentity(keyword) {
+      return lang === "eng" ? keyword.toLocaleLowerCase("en") : keyword;
+    }
+
     const collectEmotionKeywords = {
       type: jsPsychHtmlButtonResponse,
 
@@ -1674,14 +1678,17 @@
 
 
         function addKeyword(value) {
-          const keyword = emotionVocabulary.resolve(value);
-          if (!keyword) {
-            messageDisplay.textContent = emotionText.invalid;
-            updateContinueButton();
-            return;
-          }
+          let keyword = normalizeEmotion(value);
+          if (keyword === "") return;
 
-          const duplicateExists = emotionKeywords.includes(keyword);
+          // Keep existing list spelling for recognized entries; free entries
+          // retain the participant's expression after the usual whitespace cleanup.
+          const listedKeyword = emotionVocabulary.resolve(keyword);
+          if (listedKeyword !== undefined) keyword = listedKeyword;
+
+          const duplicateExists = emotionKeywords.some(
+            existing => keywordIdentity(existing) === keywordIdentity(keyword)
+          );
 
           if (duplicateExists) {
             messageDisplay.textContent =
@@ -1734,8 +1741,8 @@
         guidedInput = null;
 
         if (emotionKeywords.length === 0 ||
-            emotionKeywords.some(word => !emotionVocabulary.has(word)) ||
-            new Set(emotionKeywords).size !== emotionKeywords.length) {
+            emotionKeywords.some(word => typeof word !== "string" || normalizeEmotion(word) === "") ||
+            new Set(emotionKeywords.map(keywordIdentity)).size !== emotionKeywords.length) {
           throw new Error("EMOTION_RESPONSE_INVALID");
         }
 

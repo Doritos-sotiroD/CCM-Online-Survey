@@ -424,7 +424,7 @@ test("emotion resources load once only for listening Condition 1 in the selected
   }
 });
 
-test("actual practice/main responses reject unlisted input and retain canonical expressions, events and shortcuts", async () => {
+test("actual practice/main responses accept unlisted input and retain expressions, events and shortcuts", async () => {
   for (const language of ["kor", "eng"]) for (const phase of ["practice", "main"]) {
     const {app, state, context} = makeApp({language, skip: false});
     await app.startExperiment();
@@ -434,6 +434,8 @@ test("actual practice/main responses reject unlisted input and retain canonical 
     context.navigator = {platform: "Win32"};
     const [listening, response] = app.buildCondition1Trials({audioFiles: ["audio/0020.mp3"], phase})[1].timeline;
     const [first, second] = language === "kor" ? ["가라앉은 기분", "중립"] : ["pride in family", "neutral"];
+    const custom = language === "kor" ? '차분하지만 "낯선" 느낌' : 'Curiously calm, with "mixed" feelings';
+    assert.equal(emotionVocabularies[language].resolve(custom), undefined);
     const fill = value => {dom.input.value = value; dom.input.fire("input");};
     const enter = options => dom.input.fire("keydown", {key: "Enter", ...options});
     const button = dom.node(".jspsych-btn");
@@ -442,10 +444,17 @@ test("actual practice/main responses reject unlisted input and retain canonical 
     state.now = 10000;
     listening.on_finish({});
     response.on_start(); response.on_load();
-    fill("unlisted expression"); enter();
+    fill(" \t "); enter();
     assert(button.disabled);
-    assert(dom.node("#emotion-keyword-message").textContent);
     assert.equal(dom.node("#emotion-keyword-tags").children.length, 0);
+    state.now = 10500;
+    fill(`  ${custom}  `); enter();
+    assert(!button.disabled);
+    assert.equal(dom.node("#emotion-keyword-message").textContent, "");
+    assert.equal(dom.node("#emotion-keyword-tags").children[0].children[0].textContent, custom);
+    fill(language === "eng" ? custom.toUpperCase() : custom); enter();
+    assert(dom.node("#emotion-keyword-message").textContent);
+    assert.equal(dom.node("#emotion-keyword-tags").children.length, 1);
     fill(language === "kor" ? "은기" : "PRIDEINFAM");
     dom.input.fire("keydown", {key: "ArrowDown"});
     state.now = 11000;
@@ -455,9 +464,9 @@ test("actual practice/main responses reject unlisted input and retain canonical 
     fill(language === "kor" ? second : second.toUpperCase()); enter();
     fill(second); enter();
     assert(dom.node("#emotion-keyword-message").textContent);
-    assert.equal(dom.node("#emotion-keyword-tags").children.length, 2);
+    assert.equal(dom.node("#emotion-keyword-tags").children.length, 3);
     state.now = 12500;
-    dom.node("#emotion-keyword-tags").children[0].children[1].click();
+    dom.node("#emotion-keyword-tags").children[1].children[1].click();
     fill("bad pending input"); enter({ctrlKey: true});
     assert.equal(completed, 0);
     fill("");
@@ -471,8 +480,9 @@ test("actual practice/main responses reject unlisted input and retain canonical 
     const data = {};
     response.on_finish(data);
     assert.deepEqual(JSON.parse(JSON.stringify(data)), {
-      emotion_keywords: [second], keyword_count: 1,
+      emotion_keywords: [custom, second], keyword_count: 2,
       keyword_events: [
+        {action: "add", keyword: custom, rt: 500},
         {action: "add", keyword: first, rt: 1000},
         {action: "add", keyword: second, rt: 2000},
         {action: "remove", keyword: first, rt: 2500}
