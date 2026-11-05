@@ -510,10 +510,12 @@ function loadReplayResponse(app, state, context, condition, phase, index = 0) {
     dom.input.fire("input");
     dom.input.fire("keydown",{key:"Enter"});
   }
-  const actions = dom.display.children.find(node=>node.className === "emotion-response-actions");
+  const actions = condition === 0
+    ? dom.display.children.find(node=>node.className === "emotion-response-actions")
+    : dom.nodes.get("#dimensional-replay-actions");
   assert(actions);
-  const [anchor,button,error] = actions.children;
-  assert.equal(anchor.selector,condition === 0 ? "#jspsych-html-button-response-btngroup" : "#jspsych-survey-likert-next");
+  if (condition === 0) assert.equal(actions.children[0].selector,"#jspsych-html-button-response-btngroup");
+  const [button,error] = actions.children.slice(condition === 0 ? 1 : 0);
   assert.equal(button.type,"button");
   assert.equal(button.textContent,"다시 듣기");
   assert.equal(error.hidden,true);
@@ -553,9 +555,11 @@ test("replay waits 200 ms, plays the current clip once, resets per trial and pre
       if (condition === 0) assert.deepEqual(Array.from(response.emotion_keywords),["neutral"]);
       else assert.equal(response.rating_pleasantness,5);
       assert(!Object.keys(response).some(key=>key.includes("replay")));
-      state.display = createEmotionDom().display;
+      const familiarityDom = createEmotionDom();
+      state.display = familiarityDom.display;
       familiarity.on_load();
       assert(!state.display.children.some(node=>node.className === "emotion-response-actions"));
+      assert(!familiarityDom.nodes.has("#dimensional-replay-actions"));
       state.now += 5500;
       const familiarityRow = {response:{familiarity:4}};
       familiarity.on_finish(familiarityRow);

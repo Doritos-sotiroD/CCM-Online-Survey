@@ -335,6 +335,10 @@
       padding-bottom: 40px;
     }
 
+    #dimensional-replay-actions {
+      margin-bottom: 20px;
+    }
+
     .dimensional-rating .jspsych-survey-likert-opts {
       position: relative;
       display: flex;
@@ -1077,7 +1081,7 @@
             <p>화면 아래에도 문항이 있으면 내려서 확인해 주세요.</p>
             <p>모든 문항에 답한 뒤 응답 완료를 눌러 주세요.</p>
             <p>응답이 완료되면 친숙도를 확인한 뒤 다음 음악을 재생합니다</p>
-            <p>페이지 아래의 [다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
+            <p>제목 바로 아래의 [다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
           `
       ]
     };
@@ -1236,12 +1240,10 @@
     data.response_time_seconds = (completedAtMs - excerptEndedAtMs) / 1000;
   }
 
-  function mountExcerptReplay(audioFile, submitAnchor) {
-    if (typeof audioFile !== "string" || !audioFile.trim() || !submitAnchor) {
+  function mountExcerptReplay(audioFile, actions) {
+    if (typeof audioFile !== "string" || !audioFile.trim() || !actions) {
       throw new Error("EXCERPT_REPLAY_CONFIGURATION_INVALID");
     }
-    const actions = document.createElement("div");
-    actions.className = "emotion-response-actions";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "jspsych-btn excerpt-replay";
@@ -1250,9 +1252,7 @@
     errorMessage.className = "excerpt-replay-error";
     errorMessage.setAttribute("role", "alert");
     errorMessage.hidden = true;
-    submitAnchor.before(actions);
-    // Keep the free-response plugin's original button group intact.
-    actions.append(submitAnchor, button, errorMessage);
+    actions.append(button, errorMessage);
 
     let used = false;
     let disposed = false;
@@ -1570,10 +1570,14 @@
         if (phase === "main") {
           showTrialCounter(trialNumber, "#jspsych-html-button-response-btngroup");
         }
-        removeExcerptReplay = mountExcerptReplay(
-          jsPsych.evaluateTimelineVariable("audioFile"),
-          display.querySelector("#jspsych-html-button-response-btngroup")
-        );
+        const submitGroup = display.querySelector("#jspsych-html-button-response-btngroup");
+        if (!submitGroup) throw new Error("EXCERPT_REPLAY_CONFIGURATION_INVALID");
+        const actions = document.createElement("div");
+        actions.className = "emotion-response-actions";
+        submitGroup.before(actions);
+        // Keep the free-response plugin's original button group intact.
+        actions.append(submitGroup);
+        removeExcerptReplay = mountExcerptReplay(jsPsych.evaluateTimelineVariable("audioFile"), actions);
 
         function submitWithShortcut(event) {
           if (
@@ -2058,7 +2062,8 @@
         loadError: "<p>음악 파일을 불러오지 못했습니다.</p>",
         listening: "<p>음악을 주의 깊게 들어 주세요.</p>",
 
-        ratingPreamble: "<h2>" + scaleText.questionStart + "</h2>",
+        ratingPreamble: `<h2>${scaleText.questionStart}</h2>
+          <div id="dimensional-replay-actions" class="emotion-response-actions"></div>`,
 
         familiarityPreamble: "<h2>음악의 친숙도</h2>",
         submitRatings: "응답 완료",
@@ -2182,7 +2187,7 @@
           if (task === "dimensional_rating") {
             removeExcerptReplay = mountExcerptReplay(
               metadata.audio_file,
-              jsPsych.getDisplayElement().querySelector("#jspsych-survey-likert-next")
+              jsPsych.getDisplayElement().querySelector("#dimensional-replay-actions")
             );
           }
         },

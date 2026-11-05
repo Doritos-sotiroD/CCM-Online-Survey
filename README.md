@@ -44,8 +44,9 @@ button. Numbering follows presentation order and restarts at `1/30` for session
 2, without displaying a session label. Listening screens, practice, and
 questionnaires do not show this counter. Saved data fields are unchanged.
 
-Both emotion response formats include a one-use `다시 듣기` button beside the
-submission button in practice and main trials. It becomes grey and disabled
+Both emotion response formats include a one-use `다시 듣기` button in practice
+and main trials. It appears beside the submission button in free response and
+directly below the title in dimensional response. It becomes grey and disabled
 immediately after clicking and replays that trial's excerpt after 200 ms.
 Submitting cancels a pending replay or stops playback before familiarity.
 Each new trial gets a fresh replay button; response timing continues from the
