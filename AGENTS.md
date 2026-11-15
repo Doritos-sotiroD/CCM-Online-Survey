@@ -11,9 +11,13 @@ Work conservatively. Preserve research validity, participant-data integrity, and
 - `index.html` contains the main application, experiment configuration, jsPsych timeline, response logic, and data-saving flow.
 - jsPsych and active plugins are currently loaded from pinned CDN URLs in `index.html`.
 - `jspsych/` contains checked-in jsPsych files, but these are not the current runtime source unless `index.html` is explicitly changed to use them.
-- `audio/` contains experiment audio and a small Python utility for producing clips.
+- `emotion/` contains the emotion-input module, its stylesheet, and both vocabulary lists. Their relative locations must remain consistent.
+- `data/metadata.csv` contains runtime stimulus metadata.
+- `audio/` contains the existing experiment audio. `tools/audio_clip_selector.py` prepares separate clips in the ignored root `audio_temp/` folder.
+- `docs/` contains detailed experiment documentation, audio-tool instructions, and reference material; it is not a participant-data directory.
 - `img/` contains static image assets.
-- The repository currently has no Node build system, package manifest, automated test suite, or CI workflow.
+- `tests/` contains dependency-free Node checks and Python audio-selector checks. `tests/experiment.mjs` covers the wider experiment, including Big Five.
+- The repository currently has no Node build system, package manifest, or CI workflow. See `README.md` for verification commands.
 
 Treat this section as a description of the current implementation, not a permanent architectural requirement.
 
@@ -107,7 +111,7 @@ Never commit secrets or real participant-response data.
 
 Do not invent commands that do not exist in the repository.
 
-Because there is currently no automated test/build system, verification should match the change:
+Use the existing checks in `tests/` and match additional verification to the change:
 
 - inspect the edited HTML/JavaScript for syntax and control-flow errors;
 - check that referenced local assets exist and paths remain valid;
@@ -116,7 +120,7 @@ Because there is currently no automated test/build system, verification should m
 - for condition-specific work, verify both the changed condition and that the other condition was not unintentionally altered;
 - for data changes, inspect the resulting jsPsych rows/payload shape and confirm raw data are preserved as intended;
 - for persistence changes, test explicit success and explicit failure paths; never accept an unconfirmed save as success;
-- for `audio/audio_5s_clipper.py`, run only when its Python/audio dependencies are available and the task concerns that utility.
+- for `tools/audio_clip_selector.py`, use the temporary-fixture tests when its Python/audio tools are available; preserve the real source audio, output clips, and progress records.
 
 If reliable verification cannot be performed, say exactly what was not verified and why.
 

@@ -4,11 +4,11 @@ import { readFile } from "node:fs/promises";
 import {
   parseEmotionVocabulary, loadEmotionVocabulary, loadGuidedEmotionStyles,
   mountGuidedEmotionInput
-} from "../guided-emotion.js";
+} from "../emotion/guided-emotion.js";
 import { createEmotionDom } from "./emotion-dom.mjs";
 
 const raw = Object.fromEntries(await Promise.all(["kor", "eng"].map(async language => [language,
-  await readFile(new URL(`../${language === "kor" ? "korean" : "english"}_emotion_list.txt`, import.meta.url), "utf8")
+  await readFile(new URL(`../emotion/${language === "kor" ? "korean" : "english"}_emotion_list.txt`, import.meta.url), "utf8")
 ])));
 
 test("both external vocabularies match anywhere, sort by language, and resolve only complete expressions", () => {
@@ -84,7 +84,7 @@ test("loader requests only the configured text file and rejects every unsuccessf
     });
     const vocabulary = await loadEmotionVocabulary(language);
     assert.equal(vocabulary.language, language);
-    assert(requested.endsWith(`/${language === "kor" ? "korean" : "english"}_emotion_list.txt`));
+    assert(requested.endsWith(`/emotion/${language === "kor" ? "korean" : "english"}_emotion_list.txt`));
     t.mock.restoreAll();
   }
   for (const response of [{ok: false}, {ok: true, text: async () => ""},

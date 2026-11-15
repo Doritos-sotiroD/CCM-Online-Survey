@@ -450,7 +450,7 @@
   import { createGmsiCsv } from "./questionnaires/gmsi/export.js";
   import { createExperimentCsv, createProceduralCsv } from "./exports/study.js";
   import { createResultsZip } from "./exports/zip.js";
-  import { loadEmotionVocabulary, loadGuidedEmotionStyles, mountGuidedEmotionInput, normalizeEmotion, emotionResponseText } from "./guided-emotion.js";
+  import { loadEmotionVocabulary, loadGuidedEmotionStyles, mountGuidedEmotionInput, normalizeEmotion, emotionResponseText } from "./emotion/guided-emotion.js";
 
   if (surveyStartup.failed) throw new Error("SURVEY_STARTUP_FAILED");
 
@@ -625,7 +625,7 @@
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
     try {
-      const response = await fetch("metadata.csv", { signal: controller.signal, cache: "no-store" });
+      const response = await fetch("data/metadata.csv", { signal: controller.signal, cache: "no-store" });
       if (!response.ok) throw new Error("STIMULUS_METADATA_HTTP_ERROR");
       const workIds = parseStimulusMetadata(await response.text());
       for (const audioFile of audioPool) {
@@ -1894,7 +1894,7 @@
       }
     }[lang];
 
-    // Copied from translation.txt: q_eng/q_kor, 1_eng/1_kor, 9_eng/9_kor.
+    // Copied from docs/reference/translation.txt: q_eng/q_kor, 1_eng/1_kor, 9_eng/9_kor.
     // Keep this dictionary in sync when the translation file is revised.
     const dimensionText = {
       pleasantness: {
