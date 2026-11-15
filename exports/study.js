@@ -1,6 +1,7 @@
 // Analysis CSVs are projections of the raw snapshot; never mutate collected rows.
 const DIMENSIONS = [
   ["arousal", "stimulation"], ["attention", "focus"], ["certainty", "certainty"],
+  ["predictability", "predictability"],
   ["commitment", "person_commitment"], ["dominance", "dominance"],
   ["identity", "group_identity"], ["obstruction", "obstruction"],
   ["safety", "safety"], ["valence", "pleasantness"]

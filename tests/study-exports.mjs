@@ -39,11 +39,37 @@ test("Condition 2 maps every renamed dimension in the requested order using 1–
   const {rows, metadata} = complete("condition_2", 1);
   const before = structuredClone(rows);
   const parsed = parseStudyCsv(createExperimentCsv(rows, metadata));
-  assert.deepEqual(parsed[0], ["trial_no", "work_id", "session_id", "arousal", "attention", "certainty", "commitment", "dominance", "identity", "obstruction", "safety", "valence", "familiarity", "response_time_seconds"]);
+  assert.deepEqual(parsed[0], ["trial_no", "work_id", "session_id", "arousal", "attention", "certainty", "predictability", "commitment", "dominance", "identity", "obstruction", "safety", "valence", "familiarity", "response_time_seconds"]);
   assert.equal(parsed.length, 31);
-  assert.deepEqual(parsed[1].slice(3, 12).map(Number), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-  assert.equal(Number(parsed[9][12]), 9);
+  assert.deepEqual(parsed[1].slice(3, 13).map(Number), [1, 2, 3, 4, 5, 6, 7, 8, 9, 1]);
+  assert.equal(Number(parsed[9][13]), 9);
   assert.deepEqual(rows, before);
+});
+
+test("predictability exports all nine positions and rejects missing, invalid or inconsistent scores", () => {
+  for (let raw = 0; raw <= 8; raw++) {
+    const {rows, metadata} = complete("condition_2", 1);
+    const emotion = rows.find(row => row.task === "dimensional_rating");
+    emotion.response.predictability = raw;
+    emotion.rating_predictability = raw + 1;
+    const before = structuredClone(rows);
+    const parsed = parseStudyCsv(createExperimentCsv(rows, metadata));
+    assert.equal(Number(parsed[1][parsed[0].indexOf("predictability")]), raw + 1);
+    assert.deepEqual(rows, before);
+  }
+  const mutations = [
+    row => { delete row.response.predictability; },
+    row => { delete row.rating_predictability; },
+    ...[null, -1, 9, 1.5, "4"].map(value => row => { row.response.predictability = value; }),
+    row => { row.rating_predictability = 0; },
+    row => { row.rating_predictability = row.response.predictability + 2; }
+  ];
+  for (const mutate of mutations) {
+    const {rows, metadata} = complete("condition_2", 1);
+    mutate(rows.find(row => row.task === "dimensional_rating"));
+    assert.throws(() => createExperimentCsv(rows, metadata), /STUDY_EXPORT_RATING_INVALID/);
+    assert.throws(() => createProceduralCsv(rows, metadata), /STUDY_EXPORT_RATING_INVALID/);
+  }
 });
 
 test("procedural CSV contains just one summary with final counts and durations in minutes", () => {

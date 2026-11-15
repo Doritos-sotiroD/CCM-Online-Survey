@@ -524,7 +524,7 @@
   let emotionVocabulary;
 
   // Change this when you revise the experiment.
-  const experimentVersion = "ccm_draft_07";
+  const experimentVersion = "ccm_draft_08";
 
   // Attach these fields to every trial row.
   jsPsych.data.addProperties({
@@ -1060,10 +1060,9 @@
         `
             <h2>감정 단어 입력</h2>
             <p>음악을 듣는 동안 실제로 느낀 감정을 한 단어씩 입력해 주세요.</p>
-            <p>단어를 입력한 뒤 Enter를 누르면 응답이 추가됩니다.</p>
-            <p>다른 감정도 같은 방법으로 입력할 수 있으며, 입력하는 응답의 개수는 제한이 없습니다.</p>
+            <p>단어를 입력한 뒤 Enter를 누르면 응답이 추가되며, 응답의 개수에는 제한이 없습니다.</p>
             <p>제출한 응답을 지우고 싶으시면 단어 옆의 x를 눌러 주세요.</p>
-            <p>단어를 입력하면 추천목록이 뜨며, 추천목록에 포함되지 않은 단어도 입력할 수 있습니다.</p>
+            <p>단어를 입력하면 추천목록이 뜨며, 추천목록에 포함되지 않은 단어도 자유롭게 입력할 수 있습니다.</p>
             <p>[다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
           `
       ],
@@ -1077,11 +1076,10 @@
         `
             <h2>응답 방법</h2>
             <p>각 문장마다 하나의 응답을 선택해 주세요.</p>
-            <p>제출 전에는 선택을 바꿀 수 있습니다.</p>
-            <p>화면 아래에도 문항이 있으면 내려서 확인해 주세요.</p>
+            <p>화면 아래에도 문항이 있을 수 있으니 내려서 확인해 주세요.</p>
             <p>모든 문항에 답한 뒤 응답 완료를 눌러 주세요.</p>
             <p>응답이 완료되면 친숙도를 확인한 뒤 다음 음악을 재생합니다</p>
-            <p>제목 바로 아래의 [다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
+            <p>[다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
           `
       ]
     };
@@ -1093,7 +1091,7 @@
         `
             <h2>실험 안내</h2>
             <p>본 실험은 5초 길이의 음악을 듣고 느껴지는 감정을 답하는 실험입니다.</p>
-            <p>음악 재생이 끝나면 응답 화면이 나타납니다.</p>
+            <p>30개의 시행으로 이루어진 세션을 최대 2회 수행할 수 있으며, 세션당 예상 소요 시간은 30~40분입니다.</p>
             <p>정답은 없으니 자신의 느낌대로 답해 주세요.</p>
           `,
 
@@ -1102,7 +1100,7 @@
 
         `
             <h2>${condition === "condition_2" ? "연습시행" : "연습 시행"}</h2>
-            <p>먼저 음악 한 곡으로 이 과정을 연습합니다.</p>
+            <p>먼저 연습 시행을 실시하겠습니다.</p>
             <p>연습은 최대 3회까지 할 수 있으며, 원하실 경우 3회를 전부 마치지 않았더라도 본 실험으로 진행할 수 있습니다.</p>
             <p>3회 연습을 마치면 본 실험으로 진행합니다.</p>
           `
@@ -1240,10 +1238,12 @@
     data.response_time_seconds = (completedAtMs - excerptEndedAtMs) / 1000;
   }
 
-  function mountExcerptReplay(audioFile, actions) {
-    if (typeof audioFile !== "string" || !audioFile.trim() || !actions) {
+  function mountExcerptReplay(audioFile, submitAnchor) {
+    if (typeof audioFile !== "string" || !audioFile.trim() || !submitAnchor) {
       throw new Error("EXCERPT_REPLAY_CONFIGURATION_INVALID");
     }
+    const actions = document.createElement("div");
+    actions.className = "emotion-response-actions";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "jspsych-btn excerpt-replay";
@@ -1252,7 +1252,9 @@
     errorMessage.className = "excerpt-replay-error";
     errorMessage.setAttribute("role", "alert");
     errorMessage.hidden = true;
-    actions.append(button, errorMessage);
+    submitAnchor.before(actions);
+    // Keep the free-response plugin's original button group intact.
+    actions.append(submitAnchor, button, errorMessage);
 
     let used = false;
     let disposed = false;
@@ -1570,14 +1572,10 @@
         if (phase === "main") {
           showTrialCounter(trialNumber, "#jspsych-html-button-response-btngroup");
         }
-        const submitGroup = display.querySelector("#jspsych-html-button-response-btngroup");
-        if (!submitGroup) throw new Error("EXCERPT_REPLAY_CONFIGURATION_INVALID");
-        const actions = document.createElement("div");
-        actions.className = "emotion-response-actions";
-        submitGroup.before(actions);
-        // Keep the free-response plugin's original button group intact.
-        actions.append(submitGroup);
-        removeExcerptReplay = mountExcerptReplay(jsPsych.evaluateTimelineVariable("audioFile"), actions);
+        removeExcerptReplay = mountExcerptReplay(
+          jsPsych.evaluateTimelineVariable("audioFile"),
+          display.querySelector("#jspsych-html-button-response-btngroup")
+        );
 
         function submitWithShortcut(event) {
           if (
@@ -1889,7 +1887,7 @@
         neutral: "neutral"
       },
       kor: {
-        questionStart: "이 음악을 들으면...",
+        questionStart: "이 음악을 들으면...<br>To what extent does this make you feel...",
         neutral: "중립"
       }
     }[lang];
@@ -1904,9 +1902,9 @@
           anchor9: "very pleasant"
         },
         kor: {
-          prompt: "얼마나 유쾌한 느낌이 듭니까?",
-          anchor1: "매우 불쾌하다",
-          anchor9: "매우 유쾌하다"
+          prompt: "얼마나 유쾌한 느낌이 듭니까?<br>...Pleasant?",
+          anchor1: "매우 불쾌하다<br>very unpleasant",
+          anchor9: "매우 유쾌하다<br>very pleasant"
         }
       },
       stimulation: {
@@ -1916,9 +1914,9 @@
           anchor9: "more stimulated"
         },
         kor: {
-          prompt: "얼마나 각성되는 느낌이 듭니까?",
-          anchor1: "전혀 각성되는 느낌이 들지 않는다",
-          anchor9: "매우 각성된 느낌이 든다"
+          prompt: "얼마나 각성되는 느낌이 듭니까?<br>...Stimulated?",
+          anchor1: "전혀 각성되는 느낌이 들지 않는다<br>more subdued",
+          anchor9: "매우 각성된 느낌이 든다<br>more stimulated"
         }
       },
       dominance: {
@@ -1928,9 +1926,9 @@
           anchor9: "more dominant"
         },
         kor: {
-          prompt: "얼마나 통제하고 있다는 느낌이 듭니까?",
-          anchor1: "전혀 통제하고 있다는<br>느낌이 들지 않는다",
-          anchor9: "매우 통제하는 느낌이 든다"
+          prompt: "얼마나 지배하고 있다는 느낌이 듭니까?<br>...Dominant?",
+          anchor1: "매우 순종적인 느낌이 든다<br>more submissive",
+          anchor9: "매우 지배적인 느낌이 든다<br>more dominant"
         }
       },
       focus: {
@@ -1940,9 +1938,9 @@
           anchor9: "more focused"
         },
         kor: {
-          prompt: "얼마나 집중되는 느낌이 듭니까?",
-          anchor1: "전혀 집중되지 않는다",
-          anchor9: "매우 집중된다"
+          prompt: "이 음악에 얼마나 집중했습니까?<br>...Focused?",
+          anchor1: "전혀 집중하지 않았다<br>more unfocused",
+          anchor9: "매우 집중했다<br>more focused"
         }
       },
       certainty: {
@@ -1952,9 +1950,21 @@
           anchor9: "very certain"
         },
         kor: {
-          prompt: "얼마나 확신이 듭니까?",
-          anchor1: "매우 불확실한 느낌이 든다",
-          anchor9: "매우 확실한 느낌이 든다"
+          prompt: "얼마나 불확실한 느낌이 듭니까?<br>...Uncertain?",
+          anchor1: "매우 불확실한 느낌이 든다<br>very uncertain",
+          anchor9: "매우 확실한 느낌이 든다<br>very certain"
+        }
+      },
+      predictability: {
+        eng: {
+          prompt: "...Predictable?",
+          anchor1: "more unpredictable",
+          anchor9: "more predictable"
+        },
+        kor: {
+          prompt: "다음에 어떻게 흘러갈 지 예측할 수 있다<br>...Predictable?",
+          anchor1: "전혀 예측할 수 없다<br>more unpredictable",
+          anchor9: "매우 예측하기 쉽다<br>more predictable"
         }
       },
       obstruction: {
@@ -1964,9 +1974,9 @@
           anchor9: "very obstructed"
         },
         kor: {
-          prompt: "무언가에 가로막힌 느낌이 얼마나 듭니까?",
-          anchor1: "전혀 가로막히지<br>않은 느낌이 든다",
-          anchor9: "매우 가로막힌 느낌이 든다"
+          prompt: "무언가에 가로막힌 느낌이 얼마나 듭니까?<br>...Like you're obstructed by something?",
+          anchor1: "전혀 가로막히지<br>않은 느낌이 든다<br>very unobstructed",
+          anchor9: "매우 가로막힌 느낌이 든다<br>very obstructed"
         }
       },
       safety: {
@@ -1976,9 +1986,9 @@
           anchor9: "very safe"
         },
         kor: {
-          prompt: "얼마나 안전하다고 느낍니까?",
-          anchor1: "매우 안전하지 않은 느낌이 든다",
-          anchor9: "매우 안전한 느낌이 든다"
+          prompt: "얼마나 안전하다고 느낍니까?<br>...Safe?",
+          anchor1: "매우 안전하지 않은 느낌이 든다<br>very unsafe",
+          anchor9: "매우 안전한 느낌이 든다<br>very safe"
         }
       },
       group_identity: {
@@ -1988,9 +1998,9 @@
           anchor9: "strong group identity"
         },
         kor: {
-          prompt: "어떤 집단과 일체감을 얼마나 느낍니까?",
-          anchor1: "집단과의 일체감이 <br>전혀 느껴지지 않는다",
-          anchor9: "집단과의 일체감이 <br>매우 강하게 느껴진다"
+          prompt: "어떤 집단에 대한 소속감이 느껴집니까?<br>...Identity within a group?",
+          anchor1: "집단과에 대한 소속감이<br>전혀 느껴지지 않는다<br>lack of group identity",
+          anchor9: "집단과에 대한 소속감이<br>매우 강하게 느껴진다<br>strong group identity"
         }
       },
       person_commitment: {
@@ -2000,9 +2010,9 @@
           anchor9: "strong commitment to a person"
         },
         kor: {
-          prompt: "특정 사람에게 헌신하는 느낌이 얼마나 듭니까?",
-          anchor1: "특정 사람에게 헌신하는<br>느낌이 전혀 들지 않는다",
-          anchor9: "특정 사람에게 매우 헌신하는 느낌이 든다"
+          prompt: "특정 사람에게 헌신하는 느낌이 얼마나 듭니까?<br>...Commitment to a person?",
+          anchor1: "특정 사람에게 헌신하는<br>느낌이 전혀 들지 않는다<br>lack of commitment to a person",
+          anchor9: "특정 사람에게 매우 헌신하는 느낌이 든다<br>strong commitment to a person"
         }
       }
     };
@@ -2010,7 +2020,7 @@
     // 1. EDITABLE RATING SCHEME
     // Increment this version whenever prompts, anchors, or dimensions change.
     const settings = {
-      version: "dimensions_draft_03",
+      version: "dimensions_draft_04",
       randomizeExcerptOrder: true,
 
       // Edit this array to add, remove, or reorder dimensions.
@@ -2020,8 +2030,8 @@
         "stimulation",
         "dominance",
         "focus",
-        // Felt certainty, not confidence in the survey answer.
         "certainty",
+        "predictability",
         "obstruction",
         "safety",
         "group_identity",
@@ -2062,8 +2072,7 @@
         loadError: "<p>음악 파일을 불러오지 못했습니다.</p>",
         listening: "<p>음악을 주의 깊게 들어 주세요.</p>",
 
-        ratingPreamble: `<h2>${scaleText.questionStart}</h2>
-          <div id="dimensional-replay-actions" class="emotion-response-actions"></div>`,
+        ratingPreamble: "<h2>" + scaleText.questionStart + "</h2>",
 
         familiarityPreamble: "<h2>음악의 친숙도</h2>",
         submitRatings: "응답 완료",
@@ -2187,7 +2196,7 @@
           if (task === "dimensional_rating") {
             removeExcerptReplay = mountExcerptReplay(
               metadata.audio_file,
-              jsPsych.getDisplayElement().querySelector("#dimensional-replay-actions")
+              jsPsych.getDisplayElement().querySelector("#jspsych-survey-likert-next")
             );
           }
         },

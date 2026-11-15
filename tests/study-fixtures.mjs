@@ -1,6 +1,6 @@
 // Synthetic records only. These fixtures are never sent to DataPipe.
 export function musicRows(properties, sessions = 1) {
-  const dimensions = ["stimulation", "focus", "certainty", "person_commitment", "dominance",
+  const dimensions = ["stimulation", "focus", "certainty", "predictability", "person_commitment", "dominance",
     "group_identity", "obstruction", "safety", "pleasantness"];
   return Array.from({length: sessions * 30}, (_, i) => {
     const identity = {
