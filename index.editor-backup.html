@@ -1,0 +1,3017 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Music Emotion Survey</title>
+
+  <!-- Keep startup feedback independent of every external script and module. -->
+  <script id="survey-startup-guard">
+    const surveyStartup = (() => {
+      const language = "kor"; // "eng" or "kor"; shared by the entire survey.
+      document.documentElement.lang = language === "eng" ? "en" : "ko";
+      const text = language === "eng" ? {
+        loading: "The experiment is being loaded",
+        failure: "The experiment could not start. Please reload the page or contact ben701@kaist.ac.kr.",
+        reference: "Session ID: "
+      } : {
+        loading: "실험이 로딩중입니다",
+        failure: "실험을 시작하지 못했습니다. 페이지를 새로고침하거나 ben701@kaist.ac.kr로 문의해 주세요.",
+        reference: "세션 ID: "
+      };
+      let started = false;
+      let failed = false;
+      let reference = "";
+      let resolveStyles;
+      let rejectStyles;
+      const stylesReady = new Promise((resolve, reject) => {
+        resolveStyles = resolve;
+        rejectStyles = reject;
+      });
+      // Report early failures; the promise awaited by startup stays rejected.
+      stylesReady.catch(() => fail());
+
+      function render() {
+        const status = document.getElementById("survey-startup-status");
+        const message = failed
+          ? text.failure + (reference ? " " + text.reference + reference : "")
+          : text.loading;
+        if (status) status.textContent = message;
+        else if (failed && document.body) document.body.textContent = message;
+      }
+      function fail(sessionId) {
+        if (started || location.protocol === "file:") return;
+        failed = true;
+        if (typeof sessionId === "string") reference = sessionId;
+        render();
+        rejectStyles(new Error("SURVEY_STARTUP_FAILED"));
+      }
+      function onError() { fail(); }
+      window.addEventListener("error", onError, true);
+      window.addEventListener("unhandledrejection", onError);
+      document.addEventListener("DOMContentLoaded", render, { once: true });
+      return {
+        language, stylesReady, render, fail,
+        get failed() { return failed; },
+        stylesLoaded() { resolveStyles(); },
+        complete() {
+          if (failed) throw new Error("SURVEY_STARTUP_FAILED");
+          if (started) return;
+          started = true;
+          window.removeEventListener("error", onError, true);
+          window.removeEventListener("unhandledrejection", onError);
+          document.getElementById("survey-startup")?.remove();
+        }
+      };
+    })();
+  </script>
+
+  <!-- jsPsych core -->
+  <script defer src="https://unpkg.com/jspsych@8.3.0"></script>
+  <link rel="stylesheet" href="https://unpkg.com/jspsych@8.3.0/css/jspsych.css"
+        media="print" onload="this.media='all'; surveyStartup.stylesLoaded()" />
+
+  <!-- General experiment utilities -->
+  <script defer src="https://unpkg.com/@jspsych/plugin-preload@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-browser-check@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-fullscreen@2.1.0"></script>
+
+  <!-- Instructions and simple response screens -->
+  <script defer src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.2.0"></script>
+
+  <!-- Audio presentation -->
+  <script defer src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.2.0"></script>
+
+  <!-- Survey response formats -->
+  <script defer src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
+  <script defer src="https://unpkg.com/@jspsych/plugin-survey-likert@2.2.0"></script>
+
+  <style>
+    /* Keep global styling minimal. Add the final UI styles here later. */
+    .jspsych-content {
+      max-width: 900px;
+    }
+
+    .jspsych-display-element:has(.experiment-introduction) {
+      background: #f1f3f7;
+    }
+
+    .experiment-introduction {
+      width: min(1000px, calc(100vw - 40px));
+      max-width: 1000px;
+      padding: 32px 0;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .experiment-introduction .introduction-card {
+      margin-bottom: 20px;
+      padding: clamp(20px, 3vw, 32px);
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+      text-align: left;
+    }
+
+    .experiment-introduction h1 {
+      margin: 0 0 20px;
+      font-size: clamp(26px, 3.2vw, 34px);
+      line-height: 1.4;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    .experiment-introduction .introduction-card p {
+      margin: 0 0 18px;
+    }
+
+    .experiment-introduction .introduction-card > p:last-child {
+      margin-bottom: 0;
+    }
+
+    .experiment-introduction .introduction-privacy {
+      padding-left: 20px;
+    }
+
+    .eligibility-questionnaire fieldset {
+      border: 0;
+    }
+
+    .contact-information {
+      width: min(600px, calc(100vw - 40px));
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .contact-information .contact-description,
+    .contact-information .contact-fields {
+      text-align: left;
+    }
+
+    .contact-information input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #aeb7c2;
+      border-radius: 5px;
+      font: inherit;
+    }
+
+    .contact-information .phone-number-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) auto minmax(0, 4fr) auto minmax(0, 4fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .contact-information .phone-number-fields input {
+      text-align: center;
+    }
+
+    /* jsPsych's button display rule otherwise overrides the hidden attribute. */
+    #save-retry[hidden], #save-download[hidden] {
+      display: none;
+    }
+
+    .bigfive-questionnaire,
+    .gmsi-questionnaire {
+      width: min(900px, calc(100vw - 40px));
+    }
+
+    .bigfive-questionnaire .jspsych-survey-likert-statement,
+    .gmsi-questionnaire .jspsych-survey-likert-statement {
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .bigfive-questionnaire .jspsych-survey-likert-opt-label,
+    .gmsi-questionnaire .jspsych-survey-likert-opt-label {
+      line-height: 1.5;
+      word-break: keep-all;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .bigfive-questionnaire .jspsych-survey-likert-opts::before,
+      .gmsi-questionnaire .jspsych-survey-likert-opts::before {
+        display: none;
+      }
+
+      .bigfive-questionnaire .jspsych-survey-likert-opts li,
+      .gmsi-questionnaire .jspsych-survey-likert-opts li {
+        display: block;
+        width: 100% !important;
+        margin-bottom: 12px;
+      }
+
+      .bigfive-questionnaire .jspsych-survey-likert-opt-label,
+      .gmsi-questionnaire .jspsych-survey-likert-opt-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+      }
+
+      .bigfive-questionnaire .jspsych-survey-likert-opts li input[type="radio"],
+      .gmsi-questionnaire .jspsych-survey-likert-opts li input[type="radio"] {
+        position: static;
+        flex-shrink: 0;
+        margin: 0;
+      }
+    }
+
+    /* Condition 1: emotion-keyword entry */
+
+    .keyword-response {
+      width: min(700px, 90vw);
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .keyword-input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #aeb7c2;
+      border-radius: 5px;
+      font-size: 18px;
+    }
+
+    .keyword-input:focus {
+      border-color: #3b73b9;
+      outline: 2px solid rgba(59, 115, 185, 0.2);
+    }
+
+    .keyword-tags {
+      display: flex;
+      flex-wrap: wrap;
+      min-height: 52px;
+      gap: 8px;
+      margin: 18px 0;
+      padding: 10px;
+      border: 1px solid #d5dae0;
+      border-radius: 5px;
+      background: #f7f8fa;
+    }
+
+    .keyword-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid #9db9dc;
+      border-radius: 16px;
+      background: #eaf2fb;
+      color: #173f6d;
+    }
+
+    .keyword-remove {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #52677d;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .keyword-message {
+      min-height: 24px;
+      margin-top: 8px;
+      color: #b42318;
+    }
+
+    .keyword-count {
+      color: #606b77;
+      font-size: 14px;
+    }
+
+    .trial-counter {
+      margin: 0 0 10px;
+      color: #606b77;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .emotion-response-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .emotion-response-actions .jspsych-btn {
+      margin: 0;
+    }
+
+    .emotion-response-actions #jspsych-html-button-response-btngroup {
+      margin: 0;
+    }
+
+    .excerpt-replay:disabled {
+      background: #e5e7eb;
+      border-color: #d1d5db;
+      color: #6b7280;
+      cursor: default;
+    }
+
+    .excerpt-replay-error {
+      flex-basis: 100%;
+      margin: 0;
+      color: #b42318;
+    }
+
+    /* Give dimensional endpoint messages room for two lines of whole words. */
+    .dimensional-rating {
+      width: min(900px, calc(100vw - 40px));
+    }
+
+    .dimensional-rating #jspsych-survey-likert-form {
+      overflow-x: auto;
+      padding-bottom: 40px;
+    }
+
+    #dimensional-replay-actions {
+      margin-bottom: 20px;
+    }
+
+    .dimensional-rating .jspsych-survey-likert-opts {
+      position: relative;
+      display: flex;
+      width: calc(100% - 260px);
+      min-width: 360px;
+      margin-inline: 130px;
+    }
+
+    .dimensional-rating .jspsych-survey-likert-opts::before {
+      position: absolute;
+      top: 8px;
+      left: calc(100% / 18);
+      width: calc(100% * 8 / 9);
+    }
+
+    .dimensional-rating .jspsych-survey-likert-opt-label {
+      display: block;
+      text-align: center;
+      line-height: 1.5;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+
+    .dimensional-rating .dimensional-anchor {
+      display: block;
+    }
+
+    .dimensional-rating .jspsych-survey-likert-opts li:first-child .dimensional-anchor,
+    .dimensional-rating .jspsych-survey-likert-opts li:last-child .dimensional-anchor {
+      position: relative;
+      left: 50%;
+      width: 260px;
+      transform: translateX(-50%);
+    }
+
+    /* Larger familiarity controls in both conditions, including practice. */
+    .familiarity-rating {
+      width: min(760px, calc(100vw - 40px));
+    }
+
+    .familiarity-rating .jspsych-survey-likert-statement {
+      font-size: 20px;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .familiarity-rating .jspsych-survey-likert-opts {
+      position: relative;
+      display: flex;
+      width: 100%;
+      padding-bottom: 40px;
+    }
+
+    /* Keep the connecting line centered behind the enlarged circles. */
+    .familiarity-rating .jspsych-survey-likert-opts::before {
+      position: absolute;
+      top: 12px;
+      left: calc(100% / 18);
+      width: calc(100% * 8 / 9);
+    }
+
+    .familiarity-rating .jspsych-survey-likert-opt-label {
+      display: block;
+      font-size: 16px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .familiarity-rating .jspsych-survey-likert-opts li input[type="radio"] {
+      width: 28px;
+      height: 28px;
+      left: auto;
+      margin: 0 auto 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="survey-startup" style="max-width: 700px; margin: 60px auto; padding: 20px; font-family: sans-serif; line-height: 1.6;">
+    <p id="survey-startup-status" role="status" aria-live="polite">실험이 로딩중입니다</p>
+    <noscript>실험을 시작하려면 JavaScript를 활성화해 주세요. / Please enable JavaScript to start the experiment.</noscript>
+  </div>
+  <script>surveyStartup.render();</script>
+</body>
+
+<!-- This must run before module imports: file:// blocks those imports entirely. -->
+<script id="local-preview-check">
+  if (location.protocol === "file:") {
+    document.body.innerHTML = `
+      <div style="max-width: 700px; margin: 60px auto; padding: 20px; font-family: sans-serif; line-height: 1.6;">
+        <h2>로컬 웹 서버로 설문을 열어 주세요.</h2>
+        <p>HTML 파일을 직접 열면 브라우저가 설문 파일을 불러오지 못합니다.</p>
+        <p>설문 폴더에서 로컬 웹 서버를 실행한 뒤 아래 주소를 열어 주세요.</p>
+        <pre>python -m http.server 8765 --bind 127.0.0.1</pre>
+        <p><a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a></p>
+        <p>Open the survey through the local web server above, rather than opening the HTML file directly.</p>
+      </div>
+    `;
+  }
+</script>
+
+<script type="module">
+  "use strict";
+
+  import { loadBigFive, buildBigFiveTrials } from "./questionnaires/bigfive/questionnaire.js";
+  import { createBigFiveCsv } from "./questionnaires/bigfive/export.js";
+  import { loadGmsi, buildGmsiTrials } from "./questionnaires/gmsi/questionnaire.js";
+  import { createGmsiCsv } from "./questionnaires/gmsi/export.js";
+  import { createExperimentCsv, createProceduralCsv } from "./exports/study.js";
+  import { createResultsZip } from "./exports/zip.js";
+  import { loadEmotionVocabulary, loadGuidedEmotionStyles, mountGuidedEmotionInput, normalizeEmotion, emotionResponseText } from "./guided-emotion.js";
+
+  if (surveyStartup.failed) throw new Error("SURVEY_STARTUP_FAILED");
+
+  /* ------------------------------------------------------------------
+     1. INITIALIZE JSPSYCH
+     ------------------------------------------------------------------ */
+
+  const jsPsych = initJsPsych({
+    // Use WebAudio for more precise audio presentation.
+    use_webaudio: true,
+
+    // Display overall experiment progress.
+    show_progress_bar: true,
+    auto_update_progress_bar: true,
+    message_progress_bar: "진행률",
+
+    on_trial_start: function () { surveyStartup.complete(); },
+
+    // Do not add an automatic delay between trials.
+    // Timing gaps should be defined explicitly within the timeline.
+    default_iti: 0,
+
+    // Treat uppercase and lowercase keyboard responses identically.
+    case_sensitive_responses: false,
+
+    // Runs when the complete experiment ends.
+    on_finish: function () {
+      // Keep submission pending until DataPipe confirms the OSF upload.
+      return finishSurveyAndSave();
+    }
+  });
+
+  const timeline = [];
+
+  /* ------------------------------------------------------------------
+     2. EXPERIMENT CONFIGURATION
+     ------------------------------------------------------------------ */
+
+  // Language for Condition 2, the second-session choice, GMSI, Big Five, and saving.
+  const lang = surveyStartup.language;
+
+  const maxPracticeAttempts = 3;
+  const experimentConfig = {
+    // Assigned from DataPipe before instructions, practice, or main trials.
+    condition: null,
+
+    // TEMPORARY: keep consent/demographics, then go directly to questionnaires.
+    // Set false to run calibration, practice, and the normal listening sessions.
+    skipSessionsForVerification: false,
+
+    // Sample numbers 1–200; each maps to its number multiplied by 20.
+    // The 200 eligible files are 0020, 0040, ..., 4000.mp3.
+    stimulusPoolSize: 200,
+    stimulusFirstNumber: 20,
+    stimulusNumberStep: 20,
+
+    // Filled once at startup with disjoint batches of 3, 30, and 30.
+    practiceAudioFiles: [],
+    audioFiles: [],
+    secondSessionAudioFiles: [],
+    calibrationAudioFile: "audio/calibration.mp3"
+  };
+
+  // Generate one identifier for this survey run.
+  const sessionId = jsPsych.randomization.randomID(16);
+  let completedSessions = 0;
+  let continueToSecondSession = false;
+  const stimulusWorkIds = new Map();
+  let bigFiveDataset;
+  let gmsiDataset;
+  let emotionVocabulary;
+
+  // Change this when you revise the experiment.
+  const experimentVersion = "ccm_draft_07";
+
+  // Attach these fields to every trial row.
+  jsPsych.data.addProperties({
+    session_id: sessionId,
+    sessions_completed: completedSessions,
+    experiment_version: experimentVersion,
+    session_started_at: new Date().toISOString()
+  });
+
+  const dataSavingConfig = {
+    // This public experiment ID is not an OSF credential.
+    endpoint: "https://pipe.jspsych.org/api/data/",
+    experimentID: "RWxInotIIqbc",
+
+    // Maximum time to wait for each upload attempt.
+    timeoutMs: 30000,
+    retryDelayMs: 5000
+  };
+
+  // Retrieved once before assigning the condition and assembling the timeline.
+  let retrievedConditionNumber;
+
+  function parseStimulusMetadata(csv) {
+    // Read CSV quoting, including commas, escaped quotes, and line breaks.
+    const rows = [];
+    let row = [], field = "", quoted = false, closedQuote = false;
+    const input = csv.replace(/^\uFEFF/, "");
+
+    for (let index = 0; index < input.length; index++) {
+      const character = input[index];
+      if (quoted) {
+        if (character === '"') {
+          if (input[index + 1] === '"') {
+            field += '"';
+            index++;
+          } else {
+            quoted = false;
+            closedQuote = true;
+          }
+        } else {
+          field += character;
+        }
+      } else if (character === '"') {
+        if (field !== "" || closedQuote) throw new Error("STIMULUS_METADATA_CSV_INVALID");
+        quoted = true;
+      } else if ([",", "\n", "\r"].includes(character)) {
+        row.push(field);
+        field = "";
+        closedQuote = false;
+        if (character !== ",") {
+          rows.push(row);
+          row = [];
+          if (character === "\r" && input[index + 1] === "\n") index++;
+        }
+      } else {
+        if (closedQuote) throw new Error("STIMULUS_METADATA_CSV_INVALID");
+        field += character;
+      }
+    }
+
+    if (quoted) throw new Error("STIMULUS_METADATA_CSV_INVALID");
+    if (row.length || field !== "" || closedQuote) {
+      row.push(field);
+      rows.push(row);
+    }
+
+    const header = rows.shift();
+    if (!header || new Set(header).size !== header.length ||
+        !header.includes("clip_filename") || !header.includes("work_id")) {
+      throw new Error("STIMULUS_METADATA_HEADER_INVALID");
+    }
+
+    const clipColumn = header.indexOf("clip_filename");
+    const workColumn = header.indexOf("work_id");
+    const workIds = new Map();
+    for (const values of rows) {
+      if (values.length === 1 && values[0] === "") continue;
+      const filename = values[clipColumn];
+      const workId = values[workColumn];
+      if (values.length !== header.length || !/^\d{4,}\.mp3$/.test(filename) ||
+          typeof workId !== "string" || !workId.trim() || workIds.has(filename)) {
+        throw new Error("STIMULUS_METADATA_ROW_INVALID");
+      }
+      workIds.set(filename, workId);
+    }
+    return workIds;
+  }
+
+  async function selectSessionStimuli() {
+    const pool = Array.from({ length: experimentConfig.stimulusPoolSize }, (_, index) => index + 1);
+    const audioFileForNumber = number =>
+      `audio/${String(experimentConfig.stimulusFirstNumber + (number - 1) * experimentConfig.stimulusNumberStep).padStart(4, "0")}.mp3`;
+    const audioPool = pool.map(audioFileForNumber);
+    if (audioPool.includes(experimentConfig.calibrationAudioFile)) {
+      throw new Error("STIMULUS_POOL_INCLUDES_SETUP_AUDIO");
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch("metadata.csv", { signal: controller.signal, cache: "no-store" });
+      if (!response.ok) throw new Error("STIMULUS_METADATA_HTTP_ERROR");
+      const workIds = parseStimulusMetadata(await response.text());
+      for (const audioFile of audioPool) {
+        const workId = workIds.get(audioFile.split("/").pop());
+        if (workId === undefined) throw new Error("STIMULUS_METADATA_MISSING_CLIP");
+        stimulusWorkIds.set(audioFile, workId);
+      }
+
+      const selectedNumbers = jsPsych.randomization.sampleWithoutReplacement(pool, maxPracticeAttempts + 60);
+      if (selectedNumbers.length !== maxPracticeAttempts + 60 ||
+          new Set(selectedNumbers).size !== selectedNumbers.length ||
+          selectedNumbers.some(number => !pool.includes(number))) {
+        throw new Error("STIMULUS_SELECTION_INVALID");
+      }
+      const selected = selectedNumbers.map(audioFileForNumber);
+      experimentConfig.practiceAudioFiles = selected.slice(0, maxPracticeAttempts);
+      experimentConfig.audioFiles = selected.slice(maxPracticeAttempts, maxPracticeAttempts + 30);
+      experimentConfig.secondSessionAudioFiles = selected.slice(maxPracticeAttempts + 30);
+      jsPsych.data.addProperties({
+        stimulus_pool_size: experimentConfig.stimulusPoolSize,
+        stimulus_first_number: experimentConfig.stimulusFirstNumber
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function getStimulusWorkId(audioFile) {
+    if (!stimulusWorkIds.has(audioFile)) throw new Error("STIMULUS_WORK_ID_MISSING");
+    return stimulusWorkIds.get(audioFile);
+  }
+
+  async function retrieveConditionNumber() {
+    if (
+      typeof dataSavingConfig.experimentID !== "string" ||
+      !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID)
+    ) {
+      throw new Error("CONDITION_EXPERIMENT_ID_INVALID");
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      // DataPipe must have sequential assignment enabled with two conditions.
+      // Request once: another request would consume the next assignment.
+      const response = await fetch("https://pipe.jspsych.org/api/condition/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ experimentID: dataSavingConfig.experimentID }),
+        signal: controller.signal
+      });
+
+      if (response.status !== 200) {
+        throw new Error("CONDITION_HTTP_ERROR");
+      }
+
+      const result = await response.json();
+      if (result?.error != null || ![0, 1].includes(result?.condition)) {
+        throw new Error("CONDITION_RESPONSE_INVALID");
+      }
+
+      return result.condition;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  // One completion operation per page session, including failed attempts.
+  let submissionPromise = null;
+
+  function submissionError(code, state = "rejected", httpStatus = null) {
+    return Object.assign(new Error(code), {
+      submissionCode: code,
+      submissionState: state,
+      httpStatus
+    });
+  }
+
+  // Internal diagnostic codes never appear on the participant's screen.
+  // Unrecognized server errors get SAVE_REMOTE_UNKNOWN, not raw response text.
+  const dataPipeErrorCodes = new Set([
+    "MISSING_PARAMETER", "EXPERIMENT_NOT_FOUND", "EXPERIMENT_DATA_NOT_FOUND",
+    "DATA_COLLECTION_NOT_ACTIVE", "BASE64DATA_COLLECTION_NOT_ACTIVE",
+    "CONDITION_ASSIGNMENT_NOT_ACTIVE", "SESSION_LIMIT_REACHED",
+    "INVALID_DATA", "INVALID_BASE64_DATA", "USER_DATA_NOT_FOUND", "INVALID_OWNER",
+    "INVALID_OSF_TOKEN", "INVALID_REFRESH_TOKEN", "NOT_USING_OAUTH",
+    "OAUTH_NOT_SETUP", "TOKEN_RESOLUTION_ERROR", "FILE_EXISTS",
+    "UPLOAD_ERROR", "UPLOAD_EXCEPTION", "PROVIDER_NOT_CONNECTED",
+    "PROVIDER_TOKEN_EXPIRED", "EXPERIMENT_FINALIZED", "INVALID_METADATA_ERROR",
+    "OSF_METADATA_UPLOAD_ERROR", "METADATA_ERROR", "DATA_PERSIST_ERROR",
+    "UNKNOWN_ERROR_GETTING_CONDITION"
+  ]);
+
+  function validateDataSavingConfig() {
+    if (dataSavingConfig.endpoint !== "https://pipe.jspsych.org/api/data/") {
+      throw submissionError("SAVE_CONFIG_ENDPOINT");
+    }
+    if (
+      typeof dataSavingConfig.experimentID !== "string" ||
+      !/^[A-Za-z0-9]+$/.test(dataSavingConfig.experimentID)
+    ) {
+      throw submissionError("SAVE_CONFIG_EXPERIMENT_ID");
+    }
+    if (!Number.isInteger(dataSavingConfig.timeoutMs) || dataSavingConfig.timeoutMs <= 0) {
+      throw submissionError("SAVE_CONFIG_TIMEOUT");
+    }
+    if (!Number.isInteger(dataSavingConfig.retryDelayMs) || dataSavingConfig.retryDelayMs < 5000) {
+      throw submissionError("SAVE_CONFIG_RETRY_DELAY");
+    }
+    if (typeof fetch !== "function") {
+      throw submissionError("SAVE_BROWSER_FETCH");
+    }
+    if (typeof AbortController !== "function") {
+      throw submissionError("SAVE_BROWSER_ABORT");
+    }
+    if (typeof TextEncoder !== "function") {
+      throw submissionError("SAVE_BROWSER_ENCODING");
+    }
+  }
+
+  // Validate local settings before any trials. Remote setup requires a pilot.
+  try {
+    validateDataSavingConfig();
+  } catch (error) {
+    surveyStartup.fail(sessionId);
+    throw error;
+  }
+
+  /* ------------------------------------------------------------------
+     3. WORKFLOW SECTIONS
+
+     Each function returns an array of jsPsych trials. Add the relevant
+     trial objects after the participant-facing text has been finalized.
+     ------------------------------------------------------------------ */
+
+  function buildConsentAndEligibility() {
+    // Suggested plugin: jsPsychSurveyHtmlForm
+    const consent = {
+      type: jsPsychSurveyHtmlForm,
+      css_classes: ["experiment-introduction"],
+
+      preamble: `
+        <div class="introduction-card">
+          <h1>음악 감정 평가 실험 안내</h1>
+          <p>안녕하세요! 실험에 관심 가져 주셔서 감사합니다. 본 실험은 짧은 음악 클립을 듣고 느껴지는 감정을 평가하는 실험입니다.</p>
+          <p>본 실험은 파일럿 단계의 실험으로, 실험 결과는 연구에 사용되지 않습니다.</p>
+          <p>본 실험에서 수집되는 개인정보는 다음과 같으며, 연구 이외의 목적으로 사용되지 않습니다.</p>
+          <div class="introduction-privacy">
+            <p><strong>수집․이용하려는 개인정보의 항목</strong> : 나이, 성별, 학력, 설문 응답 데이터, 참여자 확인 및 연락에 사용하는 이메일과 전화번호</p>
+            <p><strong>개인정보의 수집 이용 목적</strong> : 연구 참여 자격 확인, 개인별 특성이 및 음악의 다양한 변수들이 음악을 듣고 느끼는 감정에 미치는 영향 검증</p>
+          </div>
+          <p>[다음]을 누르시면 위 개인정보의 수집 및 활용에 동의하는 것으로 간주하고 실험을 진행합니다.<br>
+          동의하지 않으실 경우 실험을 종료해주시면 됩니다.</p>
+        </div>
+      `,
+
+      html: `
+        <input type="hidden" name="consent_decision" value="agree">
+      `,
+
+      button_label: "다음",
+
+      data: {
+        task: "consent"
+      },
+
+      on_finish: function (data) {
+        const consented =
+          data.response.consent_decision === "agree";
+
+        data.consented = consented;
+
+        if (!consented) {
+          jsPsych.abortExperiment(
+            "[연구 참여에 동의하지 않아 실험이 종료되었습니다.]"
+          );
+        }
+      }
+    };
+
+    const eligibility = {
+      type: jsPsychSurveyHtmlForm,
+      css_classes: ["eligibility-questionnaire"],
+
+      preamble: `
+        <div class="survey-section">
+          <h2>연구 참여자 적격성 검증표</h2>
+        </div>
+      `,
+
+      html: `
+        <fieldset>
+          <legend>1. 만 20세 이상 64세 이하입니까?</legend>
+
+          <label>
+            <input
+              type="radio"
+              name="eligibility_1"
+              value="yes"
+              required
+            >
+            예
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="eligibility_1"
+              value="no"
+              required
+            >
+            아니오
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. 청력 때문에 일상 생활에 장애를 겪습니까?</legend>
+
+          <label>
+            <input
+              type="radio"
+              name="eligibility_2"
+              value="yes"
+              required
+            >
+            예
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="eligibility_2"
+              value="no"
+              required
+            >
+            아니오
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>3. 손 움직임의 불편함 때문에 일상 생활에 장애를 겪습니까?</legend>
+
+          <label>
+            <input type="radio" name="eligibility_3" value="yes" required>
+            예
+          </label>
+
+          <label>
+            <input type="radio" name="eligibility_3" value="no" required>
+            아니오
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>4. 과거 또는 현재 신경/정신 관련 질환을 겪은 적이 있습니까?</legend>
+
+          <label>
+            <input type="radio" name="eligibility_4" value="yes" required>
+            예
+          </label>
+
+          <label>
+            <input type="radio" name="eligibility_4" value="no" required>
+            아니오
+          </label>
+        </fieldset>
+
+      `,
+
+      button_label: "다음",
+
+      data: {
+        task: "eligibility"
+      }
+    };
+
+    return [consent, eligibility];
+
+  }
+
+  function buildHeadphoneCheckAndCalibration() {
+    // Suggested plugins:
+    // jsPsychHtmlButtonResponse, jsPsychAudioKeyboardResponse,
+    // jsPsychSurveyHtmlForm
+    const headphoneConfirmation = {
+      type: jsPsychSurveyHtmlForm,
+
+      preamble: `
+          <div class="survey-section">
+            <h2>헤드폰 착용 확인</h2>
+            <p>본 실험은 음악을 듣고 느껴지는 감정을 보고하는 실험으로, 실험 진행을 위해 헤드폰 혹은 이어폰 착용이 필요합니다.</p>
+          </div>
+        `,
+
+      html: `
+          <p>헤드폰 혹은 이어폰을 착용하였다면 [다음]을 눌러 진행해주세요</p>
+        `,
+
+      button_label: "다음",
+
+      data: {
+        task: "headphone_confirmation"
+      }
+    };
+
+    const calibrationInstructions = {
+      type: jsPsychHtmlButtonResponse,
+
+      stimulus: `
+          <div class="survey-section">
+            <h2>음량 조절</h2>
+            <p>[시작하기]를 눌러 음악이 재생되면 장치의 볼륨을 적절한 수준으로 조절해주세요</p>
+          </div>
+        `,
+
+      choices: ["시작하기"],
+
+      data: {
+        task: "calibration_instructions"
+      }
+    };
+
+    let calibrationPlayer = null;
+    let calibrationActive = false;
+    const calibrationConfirmation = {
+      type: jsPsychSurveyHtmlForm,
+
+      preamble: `
+          <p id="calibration-playing" hidden>음악이 재생중입니다</p>
+          <p>듣기 편한 음량으로 조절해주세요</p>
+          <p>음량 조절이 완료되었으면 [확인]을 눌러 다음으로 넘어가세요</p>
+        `,
+
+      html: `
+          <audio id="calibration-audio" loop preload="auto"></audio>
+          <input type="hidden" name="calibration_decision" value="continue">
+        `,
+
+      button_label: "확인",
+
+      data: {
+        task: "calibration_confirmation",
+        audio_file: experimentConfig.calibrationAudioFile
+      },
+
+      on_load: function () {
+        const display = jsPsych.getDisplayElement();
+        const confirm = display.querySelector("input[type='submit']");
+        const playing = display.querySelector("#calibration-playing");
+        calibrationPlayer = display.querySelector("#calibration-audio");
+        calibrationActive = true;
+        confirm.disabled = true;
+
+        function failCalibration() {
+          if (!calibrationActive) return;
+          calibrationActive = false;
+          calibrationPlayer.pause();
+          // Reuse the existing audio-loading error; never proceed without sound.
+          jsPsych.abortExperiment(preloadCalibration.error_message);
+        }
+
+        calibrationPlayer.addEventListener("error", failCalibration, { once: true });
+        calibrationPlayer.src = experimentConfig.calibrationAudioFile;
+        calibrationPlayer.play().then(() => {
+          if (!calibrationActive) return;
+          playing.hidden = false;
+          confirm.disabled = false;
+        }).catch(failCalibration);
+      },
+
+      on_finish: function () {
+        calibrationActive = false;
+        calibrationPlayer.pause();
+      }
+    };
+
+    const preloadCalibration = {
+      type: jsPsychPreload,
+
+      audio: [experimentConfig.calibrationAudioFile],
+
+      max_load_time: 60000,
+      continue_after_error: false,
+      show_detailed_errors: false,
+
+      message: "<p>음량 조절용 소리를 불러오고 있습니다.</p>",
+
+      error_message: `
+    <p>소리를 불러오지 못했습니다.</p>
+    <p>인터넷 연결을 확인한 뒤 연구자에게 문의해 주세요.</p>
+  `,
+
+      data: {
+        task: "calibration_preload"
+      }
+    };
+
+    return [
+      headphoneConfirmation,
+      preloadCalibration,
+      calibrationInstructions,
+      calibrationConfirmation
+    ];
+  }
+
+  function buildIntroductionAndPractice() {
+    // 1. VALIDATE THE ASSIGNED CONDITION AND RESERVED PRACTICE FILES
+    // The condition must already be assigned before timeline assembly.
+    const condition = experimentConfig.condition;
+    const practiceFiles = experimentConfig.practiceAudioFiles;
+
+    if (!["condition_1", "condition_2"].includes(condition)) {
+      throw new Error(
+        "Assign condition_1 or condition_2 before building practice."
+      );
+    }
+
+    if (!Array.isArray(practiceFiles) || practiceFiles.length !== maxPracticeAttempts ||
+        new Set(practiceFiles).size !== maxPracticeAttempts ||
+        practiceFiles.some(audioFile => !stimulusWorkIds.has(audioFile) ||
+          experimentConfig.audioFiles.includes(audioFile) ||
+          experimentConfig.secondSessionAudioFiles.includes(audioFile))) {
+      throw new Error("PRACTICE_STIMULI_INVALID");
+    }
+
+    // 2. SHOW INSTRUCTIONS ONLY FOR THE ASSIGNED RESPONSE FORMAT
+    // All Korean text below is editable draft wording.
+    // No emotion examples are supplied to the free-response group.
+    const conditionPages = {
+      condition_1: [
+        `
+            <h2>감정 단어 입력</h2>
+            <p>음악을 듣는 동안 실제로 느낀 감정을 한 단어씩 입력해 주세요.</p>
+            <p>단어를 입력한 뒤 Enter를 누르면 응답이 추가되며, 응답의 개수에는 제한이 없습니다.</p>
+            <p>제출한 응답을 지우고 싶으시면 단어 옆의 x를 눌러 주세요.</p>
+            <p>단어를 입력하면 추천목록이 뜨며, 추천목록에 포함되지 않은 단어도 자유롭게 입력할 수 있습니다.</p>
+            <p>[다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
+          `
+      ],
+
+      condition_2: [
+        `
+            <h2>느낌 평가</h2>
+            <p>음악을 듣고 느낀 감정을 떠올리며 각 문장에 대해 평가해 주세요.</p>
+            <p>화면에 표시된 기준을 보고 1부터 9까지 중 하나를 선택해 주세요.</p>
+          `,
+        `
+            <h2>응답 방법</h2>
+            <p>각 문장마다 하나의 응답을 선택해 주세요.</p>
+            <p>화면 아래에도 문항이 있을 수 있으니 내려서 확인해 주세요.</p>
+            <p>모든 문항에 답한 뒤 응답 완료를 눌러 주세요.</p>
+            <p>응답이 완료되면 친숙도를 확인한 뒤 다음 음악을 재생합니다</p>
+            <p>[다시 듣기]를 누르면 음악을 1회 다시 들을 수 있습니다.</p>
+          `
+      ]
+    };
+
+    const instructions = {
+      type: jsPsychInstructions,
+
+      pages: [
+        `
+            <h2>실험 안내</h2>
+            <p>본 실험은 5초 길이의 음악을 듣고 느껴지는 감정을 답하는 실험입니다.</p>
+            <p>30개의 시행으로 이루어진 세션을 최대 2회 수행할 수 있으며, 세션당 예상 소요 시간은 30~40분입니다.</p>
+            <p>정답은 없으니 자신의 느낌대로 답해 주세요.</p>
+          `,
+
+        // Insert only the assigned condition's instruction pages.
+        ...conditionPages[condition],
+
+        `
+            <h2>${condition === "condition_2" ? "연습시행" : "연습 시행"}</h2>
+            <p>먼저 연습 시행을 실시하겠습니다.</p>
+            <p>연습은 최대 3회까지 할 수 있으며, 원하실 경우 3회를 전부 마치지 않았더라도 본 실험으로 진행할 수 있습니다.</p>
+            <p>3회 연습을 마치면 본 실험으로 진행합니다.</p>
+          `
+      ],
+
+      show_clickable_nav: true,
+      allow_backward: true,
+      allow_keys: false,
+
+      button_label_previous: "이전",
+      button_label_next: "다음",
+
+      post_trial_gap: 0,
+
+      data: {
+        task: "instructions",
+        phase: "practice",
+        condition: condition
+      }
+    };
+
+    // 3. REUSE THE ASSIGNED CONDITION'S ACTUAL TRIAL BUILDER
+    // A separate builder call creates fresh trial objects and response state.
+    const buildAssignedTrials = condition === "condition_1"
+      ? buildCondition1Trials
+      : buildCondition2Trials;
+
+    const practiceSets = practiceFiles.map(practiceFile => {
+      const [preload, ...trials] = buildAssignedTrials({
+        audioFiles: [practiceFile],
+        phase: "practice"
+      });
+      if (preload?.type !== jsPsychPreload || preload.audio?.length !== 1 ||
+          preload.audio[0] !== practiceFile || preload.data?.phase !== "practice" || !trials.length) {
+        throw new Error("PRACTICE_TRIALS_INVALID");
+      }
+      return { preload, trials };
+    });
+    const preloadPractice = { ...practiceSets[0].preload, audio: [...practiceFiles] };
+
+    // 4. LABEL EACH ATTEMPT WHILE PRESERVING RESPONSE-SAVING CALLBACKS
+    function addAttemptNumber(node, attemptNumber) {
+      // Condition 1 has a nested timeline.
+      // Condition 2 currently returns individual trials.
+      if (Array.isArray(node.timeline)) {
+        return {
+          ...node,
+          timeline: node.timeline.map(child => addAttemptNumber(child, attemptNumber))
+        };
+      }
+
+      const originalOnFinish = node.on_finish;
+
+      return {
+        ...node,
+
+        on_finish: function (data) {
+          // Preserve keyword saving, rating conversion, and other existing work.
+          if (typeof originalOnFinish === "function") {
+            originalOnFinish.call(this, data);
+          }
+
+          data.practice_attempt = attemptNumber;
+        }
+      };
+    }
+
+    // 5. RUN ONE REQUIRED ATTEMPT AND AT MOST TWO OPTIONAL ATTEMPTS
+    let continuePractice = true;
+    const attempts = practiceSets.map(({ trials }, index) => {
+      const attemptNumber = index + 1;
+      const lastAttempt = attemptNumber === maxPracticeAttempts;
+      const startAttempt = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <h2>연습 ${attemptNumber}/${maxPracticeAttempts}</h2>
+          <p>준비가 되면 연습 시작을 눌러 주세요.</p>
+        `,
+        choices: ["연습 시작"],
+        post_trial_gap: 0,
+        data: { task: "practice_start", phase: "practice", condition },
+        on_finish: function (data) { data.practice_attempt = attemptNumber; }
+      };
+      const repeatDecision = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <h2>연습 ${attemptNumber}회를 마쳤습니다.</h2>
+          ${lastAttempt
+            ? "<p>3회의 연습을 모두 마쳤습니다. 본 실험 시작을 눌러 진행해 주세요.</p>"
+            : `<p>다른 음악으로 다시 연습하거나 본 실험을 시작할 수 있습니다.</p><p>${maxPracticeAttempts - attemptNumber}회의 추가 연습이 가능합니다.</p>`}
+        `,
+        choices: ["다시 연습하기", "본 실험 시작"],
+        button_html: function (choice, choiceIndex) {
+          return `<button class="jspsych-btn"${lastAttempt && choiceIndex === 0 ? " disabled" : ""}>${choice}</button>`;
+        },
+        post_trial_gap: 0,
+        data: { task: "practice_decision", phase: "practice", condition },
+        on_finish: function (data) {
+          if (![0, 1].includes(data.response) || (lastAttempt && data.response === 0)) {
+            throw new Error("PRACTICE_DECISION_INVALID");
+          }
+          data.practice_attempt = attemptNumber;
+          data.repeat_practice = !lastAttempt && data.response === 0;
+          continuePractice = data.repeat_practice;
+        }
+      };
+      return {
+        timeline: [startAttempt, ...trials.map(node => addAttemptNumber(node, attemptNumber)), repeatDecision],
+        conditional_function: function () { return continuePractice; }
+      };
+    });
+
+    // All three clips stay reserved, including any skipped optional attempts.
+    return [instructions, preloadPractice, { timeline: attempts }];
+  }
+
+  function showTrialCounter(trialNumber, anchorSelector) {
+    if (!Number.isInteger(trialNumber) || trialNumber < 1 || trialNumber > 30) {
+      throw new Error("TRIAL_COUNTER_INVALID");
+    }
+    const anchor = jsPsych.getDisplayElement().querySelector(anchorSelector);
+    if (!anchor) throw new Error("TRIAL_COUNTER_BUTTON_MISSING");
+    const counter = document.createElement("div");
+    counter.className = "trial-counter";
+    counter.textContent = `${trialNumber}/30`;
+    anchor.before(counter);
+  }
+
+  function finishExcerptResponseTiming(data, excerptEndedAtMs) {
+    const completedAtMs = performance.now();
+    if (!Number.isFinite(excerptEndedAtMs) || !Number.isFinite(completedAtMs) || completedAtMs < excerptEndedAtMs) {
+      throw new Error("EXCERPT_RESPONSE_TIMING_INVALID");
+    }
+    data.familiarity_completed_at_ms = completedAtMs;
+    data.response_time_seconds = (completedAtMs - excerptEndedAtMs) / 1000;
+  }
+
+  function mountExcerptReplay(audioFile, submitAnchor) {
+    if (typeof audioFile !== "string" || !audioFile.trim() || !submitAnchor) {
+      throw new Error("EXCERPT_REPLAY_CONFIGURATION_INVALID");
+    }
+    const actions = document.createElement("div");
+    actions.className = "emotion-response-actions";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "jspsych-btn excerpt-replay";
+    button.textContent = "다시 듣기";
+    const errorMessage = document.createElement("p");
+    errorMessage.className = "excerpt-replay-error";
+    errorMessage.setAttribute("role", "alert");
+    errorMessage.hidden = true;
+    submitAnchor.before(actions);
+    // Keep the free-response plugin's original button group intact.
+    actions.append(submitAnchor, button, errorMessage);
+
+    let used = false;
+    let disposed = false;
+    let timer = null;
+    let player = null;
+    let playbackStarted = false;
+    function showPlaybackError() {
+      if (disposed) return;
+      errorMessage.textContent = lang === "eng"
+        ? "The excerpt could not be replayed. Please contact the researcher."
+        : "음악을 다시 재생하지 못했습니다. 연구자에게 문의해 주세요.";
+      errorMessage.hidden = false;
+    }
+    function replay() {
+      if (used || disposed) return;
+      used = true;
+      button.disabled = true;
+      timer = setTimeout(async function () {
+        timer = null;
+        try {
+          const loadedPlayer = await jsPsych.pluginAPI.getAudioPlayer(audioFile);
+          if (disposed) return;
+          player = loadedPlayer;
+          jsPsych.pluginAPI.audioContext();
+          player.addEventListener("error", showPlaybackError);
+          player.play();
+          playbackStarted = true;
+        } catch (error) {
+          showPlaybackError();
+        }
+      }, 200);
+    }
+    button.addEventListener("click", replay);
+    return function () {
+      disposed = true;
+      clearTimeout(timer);
+      button.removeEventListener("click", replay);
+      if (player) player.removeEventListener("error", showPlaybackError);
+      if (playbackStarted) player.stop();
+    };
+  }
+
+  function buildCondition1Trials({
+    audioFiles = experimentConfig.audioFiles,
+    phase = "main"
+  } = {}) {
+    /* ---------------------------------------------------------------
+      1. CONFIGURATION VALIDATION
+      --------------------------------------------------------------- */
+
+    if (experimentConfig.condition !== "condition_1") {
+      throw new Error(
+        'buildCondition1Trials() can only be used with "condition_1".'
+      );
+    }
+
+    if (!emotionVocabulary || emotionVocabulary.language !== lang) {
+      throw new Error("EMOTION_VOCABULARY_NOT_LOADED");
+    }
+    const emotionText = emotionResponseText(lang);
+
+    if (
+      !Array.isArray(audioFiles) ||
+      audioFiles.length === 0
+    ) {
+      throw new Error(
+        "audioFiles must contain at least one audio file."
+      );
+    }
+
+    const invalidAudioFiles = audioFiles.filter(
+      function (audioFile) {
+        return (
+          typeof audioFile !== "string" ||
+          audioFile.trim() === ""
+        );
+      }
+    );
+
+    if (invalidAudioFiles.length > 0) {
+      throw new Error(
+        "Every item in experimentConfig.audioFiles must be a valid string."
+      );
+    }
+
+
+    /* ---------------------------------------------------------------
+      2. CONSTRUCT TIMELINE VARIABLES
+      --------------------------------------------------------------- */
+
+    const condition1Stimuli =
+      audioFiles.map(
+        function (audioFile, index) {
+          const fileName = audioFile.split("/").pop();
+
+          const stimulusId = fileName.replace(
+            /\.[^/.]+$/,
+            ""
+          );
+
+          return {
+            audioFile: audioFile,
+            stimulusId: stimulusId,
+            sourceIndex: index + 1,
+            ...(phase === "main" ? { workId: getStimulusWorkId(audioFile) } : {})
+          };
+        }
+      );
+
+
+    /* ---------------------------------------------------------------
+      3. PRELOAD ALL CONDITION 1 AUDIO
+      --------------------------------------------------------------- */
+
+    const preloadCondition1Audio = {
+      type: jsPsychPreload,
+
+      // Use the files passed into this function.
+      // This works for both main trials and practice.
+      audio: [...audioFiles],
+
+      // Allow up to 60 seconds for loading.
+      // This does not change the excerpt playback duration.
+      max_load_time: 60000,
+
+      // Stop here if loading fails.
+      continue_after_error: false,
+      show_detailed_errors: false,
+
+      message: `
+    <p>음악 파일을 불러오고 있습니다. 잠시 기다려 주세요.</p>
+  `,
+
+      error_message: `
+    <p>음악 파일을 불러오지 못했습니다.</p>
+    <p>인터넷 연결을 확인한 뒤 연구자에게 문의해 주세요.</p>
+  `,
+
+      data: {
+        task: "preload",
+        phase: phase,
+        condition: "condition_1"
+      }
+    };
+    /* ---------------------------------------------------------------
+      4. PRESENT THE FIVE-SECOND EXCERPT
+      --------------------------------------------------------------- */
+
+    let excerptEndedAtMs = null;
+    let trialNumber = 0;
+    const listenToExcerpt = {
+      type: jsPsychAudioKeyboardResponse,
+
+      stimulus: jsPsych.timelineVariable("audioFile"),
+
+      choices: "NO_KEYS",
+
+      response_allowed_while_playing: false,
+
+      trial_ends_after_audio: true,
+
+      on_finish: function (data) {
+        excerptEndedAtMs = performance.now();
+        data.excerpt_ended_at_ms = excerptEndedAtMs;
+        // Count clips in presentation order, independently for each session.
+        if (phase === "main") trialNumber += 1;
+      },
+
+      prompt: `
+          <div class="listening-screen">
+            <p>음악이 재생중입니다</p>
+          </div>
+        `,
+
+      data: {
+        task: "excerpt_listening",
+        phase: phase,
+        condition: "condition_1",
+        ...(phase === "main" ? { work_id: jsPsych.timelineVariable("workId") } : {}),
+
+        stimulus_id:
+          jsPsych.timelineVariable("stimulusId"),
+
+        source_index:
+          jsPsych.timelineVariable("sourceIndex"),
+
+        audio_file:
+          jsPsych.timelineVariable("audioFile")
+      }
+    };
+
+
+    /* ---------------------------------------------------------------
+      5. COLLECT EMOTION KEYWORDS
+      --------------------------------------------------------------- */
+
+    let emotionKeywords = [];
+    let keywordEvents = [];
+    let responseScreenStart = null;
+    let removeSubmitShortcut = null;
+    let removeExcerptReplay = null;
+    let guidedInput = null;
+
+    function keywordIdentity(keyword) {
+      return lang === "eng" ? keyword.toLocaleLowerCase("en") : keyword;
+    }
+
+    const collectEmotionKeywords = {
+      type: jsPsychHtmlButtonResponse,
+
+      stimulus: `
+      <div class="keyword-response">
+    <h2>느낀 감정</h2>
+
+    <p>
+      음악을 듣는 동안 실제로 느낀 감정을
+      한 단어씩 입력해 주세요.
+    </p>
+
+    <label for="emotion-keyword-input">감정 단어</label>
+
+    <div class="emotion-input-anchor">
+    <input
+      id="emotion-keyword-input"
+      class="keyword-input"
+      type="text"
+      maxlength="50"
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <div id="emotion-suggestions" class="emotion-suggestions" hidden>
+      <div id="emotion-options" class="emotion-options" role="listbox"></div>
+      <div id="emotion-no-matches" class="emotion-no-matches" role="status" hidden></div>
+    </div>
+    </div>
+
+    <p>한 단어를 입력한 뒤 Enter를 눌러 주세요.</p>
+    <p>입력한 단어를 지우려면 옆의 ×를 눌러 주세요.</p>
+
+    <div
+      id="emotion-keyword-tags"
+      class="keyword-tags"
+      role="list"
+      aria-label="입력한 감정 단어"
+    ></div>
+
+    <div
+      id="emotion-keyword-count"
+      class="keyword-count"
+      aria-live="polite"
+    ></div>
+
+    <div
+      id="emotion-keyword-message"
+      class="keyword-message"
+      aria-live="polite"
+    ></div>
+  </div>
+`,
+
+      choices: ["응답 완료"],
+
+      data: {
+        task: "free_response",
+        phase: phase,
+        condition: "condition_1",
+        ...(phase === "main" ? { work_id: jsPsych.timelineVariable("workId") } : {}),
+
+        stimulus_id:
+          jsPsych.timelineVariable("stimulusId"),
+
+        source_index:
+          jsPsych.timelineVariable("sourceIndex"),
+
+        audio_file:
+          jsPsych.timelineVariable("audioFile")
+      },
+
+      on_start: function () {
+        // Reset the response variables before every excerpt.
+        emotionKeywords = [];
+        keywordEvents = [];
+        responseScreenStart = null;
+      },
+
+      on_load: function () {
+        responseScreenStart = performance.now();
+
+        const display = jsPsych.getDisplayElement();
+
+        const input = display.querySelector(
+          "#emotion-keyword-input"
+        );
+
+        const tagsContainer = display.querySelector(
+          "#emotion-keyword-tags"
+        );
+
+        const countDisplay = display.querySelector(
+          "#emotion-keyword-count"
+        );
+
+        const messageDisplay = display.querySelector(
+          "#emotion-keyword-message"
+        );
+
+        const continueButton = display.querySelector(
+          ".jspsych-btn"
+        );
+
+        continueButton.textContent =
+          `응답 완료 (${/Mac/i.test(navigator.platform) ? "cmd" : "ctrl"} + Enter)`;
+
+        if (phase === "main") {
+          showTrialCounter(trialNumber, "#jspsych-html-button-response-btngroup");
+        }
+        removeExcerptReplay = mountExcerptReplay(
+          jsPsych.evaluateTimelineVariable("audioFile"),
+          display.querySelector("#jspsych-html-button-response-btngroup")
+        );
+
+        function submitWithShortcut(event) {
+          if (
+            event.key !== "Enter" ||
+            !(event.ctrlKey || event.metaKey) ||
+            event.altKey || event.shiftKey ||
+            event.isComposing || event.keyCode === 229 || guidedInput.isComposing()
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (!event.repeat && !continueButton.disabled) {
+            continueButton.click();
+          }
+        }
+
+        // Capture the shortcut before the input's Enter-to-add handler.
+        display.addEventListener("keydown", submitWithShortcut, true);
+        removeSubmitShortcut = function () {
+          display.removeEventListener("keydown", submitWithShortcut, true);
+        };
+
+
+        function updateContinueButton() {
+          const hasSubmittedKeyword =
+            emotionKeywords.length > 0;
+
+          const hasUnsubmittedText =
+            normalizeEmotion(input.value) !== "";
+
+          continueButton.disabled =
+            !hasSubmittedKeyword ||
+            hasUnsubmittedText || guidedInput.isComposing();
+        }
+
+
+        function renderKeywords() {
+          tagsContainer.replaceChildren();
+
+          emotionKeywords.forEach(
+            function (keyword, index) {
+              const tag = document.createElement("span");
+              tag.className = "keyword-tag";
+              tag.setAttribute("role", "listitem");
+
+              const keywordText =
+                document.createElement("span");
+
+              keywordText.textContent = keyword;
+
+              const removeButton =
+                document.createElement("button");
+
+              removeButton.type = "button";
+              removeButton.className = "keyword-remove";
+              removeButton.textContent = "×";
+
+              removeButton.setAttribute(
+                "aria-label",
+                emotionText.remove(keyword)
+              );
+
+              removeButton.addEventListener(
+                "click",
+                function () {
+                  const removedKeyword =
+                    emotionKeywords[index];
+
+                  emotionKeywords.splice(index, 1);
+
+                  keywordEvents.push({
+                    action: "remove",
+                    keyword: removedKeyword,
+                    rt: Math.round(
+                      performance.now() -
+                      responseScreenStart
+                    )
+                  });
+
+                  messageDisplay.textContent = "";
+
+                  renderKeywords();
+                  input.focus();
+                }
+              );
+
+              tag.append(
+                keywordText,
+                removeButton
+              );
+
+              tagsContainer.appendChild(tag);
+            }
+          );
+
+          countDisplay.textContent =
+            emotionText.count(emotionKeywords.length);
+
+          updateContinueButton();
+        }
+
+
+        function addKeyword(value) {
+          let keyword = normalizeEmotion(value);
+          if (keyword === "") return;
+
+          // Keep existing list spelling for recognized entries; free entries
+          // retain the participant's expression after the usual whitespace cleanup.
+          const listedKeyword = emotionVocabulary.resolve(keyword);
+          if (listedKeyword !== undefined) keyword = listedKeyword;
+
+          const duplicateExists = emotionKeywords.some(
+            existing => keywordIdentity(existing) === keywordIdentity(keyword)
+          );
+
+          if (duplicateExists) {
+            messageDisplay.textContent =
+              emotionText.duplicate;
+
+            input.select();
+            return;
+          }
+
+          emotionKeywords.push(keyword);
+
+          keywordEvents.push({
+            action: "add",
+            keyword: keyword,
+            rt: Math.round(
+              performance.now() -
+              responseScreenStart
+            )
+          });
+
+          input.value = "";
+          messageDisplay.textContent = "";
+          guidedInput.reset();
+
+          renderKeywords();
+          input.focus();
+        }
+
+
+        guidedInput = mountGuidedEmotionInput({
+          display,
+          vocabulary: emotionVocabulary,
+          onSelect: addKeyword,
+          onInput: function () {
+            messageDisplay.textContent = "";
+            updateContinueButton();
+          }
+        });
+
+        renderKeywords();
+        input.focus();
+      },
+
+      on_finish: function (data) {
+        removeExcerptReplay();
+        removeExcerptReplay = null;
+        removeSubmitShortcut();
+        removeSubmitShortcut = null;
+        guidedInput.destroy();
+        guidedInput = null;
+
+        if (emotionKeywords.length === 0 ||
+            emotionKeywords.some(word => typeof word !== "string" || normalizeEmotion(word) === "") ||
+            new Set(emotionKeywords.map(keywordIdentity)).size !== emotionKeywords.length) {
+          throw new Error("EMOTION_RESPONSE_INVALID");
+        }
+
+        data.emotion_keywords =
+          emotionKeywords.slice();
+
+        data.keyword_count =
+          emotionKeywords.length;
+
+        data.keyword_events =
+          keywordEvents.slice();
+      }
+    };
+
+
+    /* ---------------------------------------------------------------
+      6. COLLECT FAMILIARITY
+      --------------------------------------------------------------- */
+
+    const collectFamiliarity = {
+      type: jsPsychSurveyLikert,
+      css_classes: ["familiarity-rating"],
+
+      preamble: `
+          <div class="survey-section">
+            <h2>음악의 친숙도</h2>
+          </div>
+        `,
+
+      questions: [
+        {
+          prompt: "방금 들은 음악이 얼마나 친숙했나요?",
+
+          name: "familiarity",
+
+          labels: [
+            "전혀 친숙하지 않음",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "매우 친숙함"
+          ],
+
+          required: true
+        }
+      ],
+
+      randomize_question_order: false,
+
+      button_label: "다음",
+
+      data: {
+        task: "familiarity",
+        phase: phase,
+        condition: "condition_1",
+        ...(phase === "main" ? { work_id: jsPsych.timelineVariable("workId") } : {}),
+
+        stimulus_id:
+          jsPsych.timelineVariable("stimulusId"),
+
+        source_index:
+          jsPsych.timelineVariable("sourceIndex"),
+
+        audio_file:
+          jsPsych.timelineVariable("audioFile")
+      },
+
+      on_load: function () {
+        if (phase === "main") {
+          showTrialCounter(trialNumber, "#jspsych-survey-likert-next");
+        }
+      },
+
+      on_finish: function (data) {
+        finishExcerptResponseTiming(data, excerptEndedAtMs);
+        excerptEndedAtMs = null;
+        const raw = data.response?.familiarity;
+
+        // Preserve the original response and save a separate 1–9 score.
+        // Missing or invalid responses remain null.
+        data.familiarity_rating_1_to_9 =
+          Number.isInteger(raw) && raw >= 0 && raw <= 8
+            ? raw + 1
+            : null;
+      }
+    };
+
+
+    /* ---------------------------------------------------------------
+      7. COMBINE THE THREE STEPS
+      --------------------------------------------------------------- */
+
+    const condition1Procedure = {
+      timeline: [
+        listenToExcerpt,
+        collectEmotionKeywords,
+        collectFamiliarity
+      ],
+
+      // Repeat the configured clips to make 30 complete main trials.
+      timeline_variables: phase === "main"
+        ? Array.from({ length: 30 }, (_, index) =>
+          condition1Stimuli[index % condition1Stimuli.length])
+        : condition1Stimuli,
+
+      randomize_order: true,
+
+      repetitions: 1
+    };
+
+
+    /* ---------------------------------------------------------------
+      8. RETURN THE COMPLETE CONDITION
+      --------------------------------------------------------------- */
+
+    return [
+      preloadCondition1Audio,
+      condition1Procedure
+    ];
+  }
+
+  function buildCondition2Trials({
+    audioFiles = experimentConfig.audioFiles,
+    phase = "main"
+  } = {}) {
+    let excerptEndedAtMs = null;
+    if (lang !== "eng" && lang !== "kor") {
+      throw new Error('Set lang to "eng" or "kor" for Condition 2 ratings.');
+    }
+
+    const scaleText = {
+      eng: {
+        questionStart: "To what extent does this make you feel...",
+        neutral: "neutral"
+      },
+      kor: {
+        questionStart: "이 음악을 들으면...<br>To what extent does this make you feel...",
+        neutral: "중립"
+      }
+    }[lang];
+
+    // Copied from translation.txt: q_eng/q_kor, 1_eng/1_kor, 9_eng/9_kor.
+    // Keep this dictionary in sync when the translation file is revised.
+    const dimensionText = {
+      pleasantness: {
+        eng: {
+          prompt: "...Pleasant?",
+          anchor1: "very unpleasant",
+          anchor9: "very pleasant"
+        },
+        kor: {
+          prompt: "얼마나 유쾌한 느낌이 듭니까?<br>...Pleasant?",
+          anchor1: "매우 불쾌하다<br>very unpleasant",
+          anchor9: "매우 유쾌하다<br>very pleasant"
+        }
+      },
+      stimulation: {
+        eng: {
+          prompt: "...Stimulated?",
+          anchor1: "more subdued",
+          anchor9: "more stimulated"
+        },
+        kor: {
+          prompt: "얼마나 각성되는 느낌이 듭니까?<br>...Stimulated?",
+          anchor1: "전혀 각성되는 느낌이 들지 않는다<br>more subdued",
+          anchor9: "매우 각성된 느낌이 든다<br>more stimulated"
+        }
+      },
+      dominance: {
+        eng: {
+          prompt: "...Dominant?",
+          anchor1: "more submissive",
+          anchor9: "more dominant"
+        },
+        kor: {
+          prompt: "얼마나 지배하고 있다는 느낌이 듭니까?<br>...Dominant?",
+          anchor1: "매우 순종적인 느낌이 든다<br>more submissive",
+          anchor9: "매우 지배적인 느낌이 든다<br>more dominant"
+        }
+      },
+      focus: {
+        eng: {
+          prompt: "...Focused?",
+          anchor1: "more unfocused",
+          anchor9: "more focused"
+        },
+        kor: {
+          prompt: "얼마나 집중되는 느낌이 듭니까?",
+          anchor1: "전혀 집중되지 않는다",
+          anchor9: "매우 집중된다"
+        }
+      },
+      certainty: {
+        eng: {
+          prompt: "...Certain?",
+          anchor1: "very uncertain",
+          anchor9: "very certain"
+        },
+        kor: {
+          prompt: "얼마나 불확실한 느낌이 듭니까?<br>...Uncertain?",
+          anchor1: "매우 불확실한 느낌이 든다<br>very uncertain",
+          anchor9: "매우 확실한 느낌이 든다<br>very certain"
+        }
+      },
+      obstruction: {
+        eng: {
+          prompt: "...Like you're obstructed by something?",
+          anchor1: "very unobstructed",
+          anchor9: "very obstructed"
+        },
+        kor: {
+          prompt: "무언가에 가로막힌 느낌이 얼마나 듭니까?<br>...Like you're obstructed by something?",
+          anchor1: "전혀 가로막히지<br>않은 느낌이 든다<br>very unobstructed",
+          anchor9: "매우 가로막힌 느낌이 든다<br>very obstructed"
+        }
+      },
+      safety: {
+        eng: {
+          prompt: "...Safe?",
+          anchor1: "very unsafe",
+          anchor9: "very safe"
+        },
+        kor: {
+          prompt: "얼마나 안전하다고 느낍니까?<br>...Safe?",
+          anchor1: "매우 안전하지 않은 느낌이 든다<br>very unsafe",
+          anchor9: "매우 안전한 느낌이 든다<br>very safe"
+        }
+      },
+      group_identity: {
+        eng: {
+          prompt: "...Identity within a group?",
+          anchor1: "lack of group identity",
+          anchor9: "strong group identity"
+        },
+        kor: {
+          prompt: "어떤 집단에 대한 소속감이 느껴집니까?<br>...Identity within a group?",
+          anchor1: "집단과에 대한 소속감이<br>전혀 느껴지지 않는다<br>lack of group identity",
+          anchor9: "집단과에 대한 소속감이<br>매우 강하게 느껴진다<br>strong group identity"
+        }
+      },
+      person_commitment: {
+        eng: {
+          prompt: "...Commitment to a person?",
+          anchor1: "lack of commitment to a person",
+          anchor9: "strong commitment to a person"
+        },
+        kor: {
+          prompt: "특정 사람에게 헌신하는 느낌이 얼마나 듭니까?<br>...Commitment to a person?",
+          anchor1: "특정 사람에게 헌신하는<br>느낌이 전혀 들지 않는다<br>lack of commitment to a person",
+          anchor9: "특정 사람에게 매우 헌신하는 느낌이 든다<br>strong commitment to a person"
+        }
+      }
+    };
+
+    // 1. EDITABLE RATING SCHEME
+    // Increment this version whenever prompts, anchors, or dimensions change.
+    const settings = {
+      version: "dimensions_draft_03",
+      randomizeExcerptOrder: true,
+
+      // Edit this array to add, remove, or reorder dimensions.
+      // Keep IDs stable for wording edits; use a new ID for a new construct.
+      dimensions: [
+        "pleasantness",
+        "stimulation",
+        "dominance",
+        "focus",
+        "certainty",
+        "obstruction",
+        "safety",
+        "group_identity",
+        "person_commitment"
+      ].map(id => {
+        const text = dimensionText[id]?.[lang];
+        if (
+          !text ||
+          ["prompt", "anchor1", "anchor9"].some(
+            key => typeof text[key] !== "string" || !text[key].trim()
+          )
+        ) {
+          throw new Error("Missing dimensional text for " + id + " in " + lang);
+        }
+
+        return {
+          id: id,
+          prompt: text.prompt,
+          labels: [
+            "1<br>" + text.anchor1, "2", "3", "4", "5<br>" + scaleText.neutral,
+            "6", "7", "8", "9<br>" + text.anchor9
+          ]
+        };
+      }),
+
+      // Familiarity remains a separate screen and data row.
+      familiarity: {
+        id: "familiarity",
+        prompt: "방금 들은 음악이 얼마나 친숙했나요?",
+        labels: [
+          "1<br>전혀 친숙하지 않음", "2", "3", "4",
+          "5", "6", "7", "8", "9<br>매우 친숙함"
+        ]
+      },
+
+      text: {
+        loading: "<p>음악 파일을 불러오고 있습니다.</p>",
+        loadError: "<p>음악 파일을 불러오지 못했습니다.</p>",
+        listening: "<p>음악을 주의 깊게 들어 주세요.</p>",
+
+        ratingPreamble: "<h2>" + scaleText.questionStart + "</h2>",
+
+        familiarityPreamble: "<h2>음악의 친숙도</h2>",
+        submitRatings: "응답 완료",
+        submitFamiliarity: "다음"
+      }
+    };
+
+    // 2. READ AND VALIDATE THE EXISTING CONFIGURATION
+    const randomizeOrder = settings.randomizeExcerptOrder;
+
+    // Catch configuration mistakes before constructing any trials.
+    if (experimentConfig.condition !== "condition_2") {
+      throw new Error('Condition 2 requires condition: "condition_2".');
+    }
+
+    if (
+      !Array.isArray(audioFiles) ||
+      audioFiles.length === 0 ||
+      audioFiles.some(file => typeof file !== "string" || !file.trim())
+    ) {
+      throw new Error("audioFiles must contain non-empty audio paths.");
+    }
+
+    if (
+      !Array.isArray(settings.dimensions) ||
+      !settings.dimensions.length
+    ) {
+      throw new Error("Specify at least one dimension.");
+    }
+
+    // Copy item definitions so the constructed trials keep their own labels.
+    function prepareItems(items) {
+      const ids = new Set();
+
+      return items.map(item => {
+        if (
+          !item ||
+          typeof item.id !== "string" ||
+          !/^[a-z][a-z0-9_]*$/.test(item.id) ||
+          ids.has(item.id)
+        ) {
+          throw new Error(
+            "Each item needs a unique lowercase ID: " + item?.id
+          );
+        }
+
+        const labels = item.labels;
+
+        if (
+          typeof item.prompt !== "string" ||
+          !item.prompt.trim() ||
+          !Array.isArray(labels) ||
+          labels.length !== 9 ||
+          labels.some(label => typeof label !== "string")
+        ) {
+          throw new Error(
+            "Each item needs a prompt and nine labels: " + item.id
+          );
+        }
+
+        ids.add(item.id);
+
+        return {
+          id: item.id,
+          prompt: item.prompt,
+          labels: [...labels]
+        };
+      });
+    }
+
+    const dimensions = prepareItems(settings.dimensions);
+    const familiarity = prepareItems([settings.familiarity]);
+
+    // 3. REUSABLE RATING-PAGE BUILDER
+    // Used for both the dimension page and the separate familiarity page.
+    function makeRatingPage(items, preamble, buttonLabel, task, metadata) {
+      let removeExcerptReplay = null;
+      return {
+        type: jsPsychSurveyLikert,
+        css_classes: task === "familiarity" ? ["familiarity-rating"] :
+          task === "dimensional_rating" ? ["dimensional-rating"] : [],
+
+        preamble: preamble,
+
+        questions: items.map(item => ({
+          name: item.id,
+          prompt: item.prompt,
+          // Wrap only the displayed messages; preserve the saved label strings.
+          labels: task === "dimensional_rating"
+            ? item.labels.map(label => label.replace(
+              /<br>(.*)$/,
+              '<br><span class="dimensional-anchor">$1</span>'
+            ))
+            : [...item.labels],
+          required: true,
+          default_response: null // No preselected answer.
+        })),
+
+        // Keep the array's order across excerpts.
+        randomize_question_order: false,
+
+        button_label: buttonLabel,
+        post_trial_gap: 0,
+
+        data: {
+          ...metadata,
+          task: task,
+
+          // Save the actual prompts and anchors to document this draft's meaning.
+          rating_schema: items.map(item => ({
+            id: item.id,
+            prompt: item.prompt,
+            labels: [...item.labels]
+          }))
+        },
+
+        on_load: function () {
+          if (phase === "main") {
+            showTrialCounter(metadata.excerpt_number, "#jspsych-survey-likert-next");
+          }
+          if (task === "dimensional_rating") {
+            removeExcerptReplay = mountExcerptReplay(
+              metadata.audio_file,
+              jsPsych.getDisplayElement().querySelector("#jspsych-survey-likert-next")
+            );
+          }
+        },
+
+        on_finish: function (data) {
+          if (task === "dimensional_rating") {
+            removeExcerptReplay();
+            removeExcerptReplay = null;
+          }
+          if (task === "familiarity") {
+            finishExcerptResponseTiming(data, excerptEndedAtMs);
+            excerptEndedAtMs = null;
+          }
+          // jsPsych stores positions as 0–8. Retain those raw responses and
+          // also save named 1–9 columns that are convenient in a CSV export.
+          for (const item of items) {
+            const raw = data.response?.[item.id];
+
+            // Match Condition 1's familiarity column for comparison later.
+            const column = task === "familiarity"
+              ? "familiarity_rating_1_to_9"
+              : "rating_" + item.id;
+
+            data[column] =
+              Number.isInteger(raw) && raw >= 0 && raw <= 8
+                ? raw + 1
+                : null;
+          }
+
+          // The plugin's rt is submission time for the entire page, not per item.
+        }
+      };
+    }
+
+    // 4. PRELOAD AND DETERMINE EXCERPT ORDER
+    const preload = {
+      type: jsPsychPreload,
+
+      audio: [...audioFiles],
+      continue_after_error: false,
+
+      // Loading timeout only; not listening duration.
+      max_load_time: 60000,
+
+      message: settings.text.loading,
+      error_message: settings.text.loadError,
+      post_trial_gap: 0,
+
+      data: {
+        task: "preload",
+        phase: phase,
+        condition: "condition_2"
+      }
+    };
+
+    const stimuli = audioFiles.map((audioFile, index) => ({
+      audioFile: audioFile,
+
+      // Example: "audio/0001.mp3" becomes "0001".
+      stimulusId: audioFile
+        .split("/")
+        .pop()
+        .replace(/\.[^/.]+$/, ""),
+
+      // Original position in audioFiles.
+      sourceIndex: index + 1,
+      ...(phase === "main" ? { workId: getStimulusWorkId(audioFile) } : {})
+    }));
+
+    const orderedStimuli = randomizeOrder
+      ? jsPsych.randomization.shuffle(stimuli)
+      : stimuli;
+
+    // 5. REPEAT: LISTEN -> DIMENSIONS -> FAMILIARITY
+    // Each excerpt gets separate trial objects and matching identifiers.
+    const trials = [preload];
+
+    const trialCount = phase === "main" ? 30 : orderedStimuli.length;
+    for (let index = 0; index < trialCount; index++) {
+      const stimulus = orderedStimuli[index % orderedStimuli.length];
+      const metadata = {
+        condition: "condition_2",
+        phase: phase,
+        rating_scheme_version: settings.version,
+        stimulus_id: stimulus.stimulusId,
+        ...(phase === "main" ? { work_id: stimulus.workId } : {}),
+        audio_file: stimulus.audioFile,
+        source_index: stimulus.sourceIndex,
+
+        // Actual presentation position after shuffling.
+        excerpt_number: index + 1
+      };
+
+      const listening = {
+        type: jsPsychAudioKeyboardResponse,
+
+        stimulus: stimulus.audioFile,
+        prompt: settings.text.listening,
+
+        choices: "NO_KEYS",
+        response_ends_trial: false,
+        trial_ends_after_audio: true,
+        post_trial_gap: 0,
+
+        on_finish: function (data) {
+          excerptEndedAtMs = performance.now();
+          data.excerpt_ended_at_ms = excerptEndedAtMs;
+        },
+
+        data: {
+          ...metadata,
+          task: "excerpt_listening"
+        }
+
+        // Use prepared five-second files. This plays the entire file and then
+        // advances; it neither trims a longer file nor supplies replay controls.
+      };
+
+      const ratings = makeRatingPage(
+        dimensions,
+        settings.text.ratingPreamble,
+        settings.text.submitRatings,
+        "dimensional_rating",
+        metadata
+      );
+
+      const familiarityRating = makeRatingPage(
+        familiarity,
+        settings.text.familiarityPreamble,
+        settings.text.submitFamiliarity,
+        "familiarity",
+        metadata
+      );
+
+      // Edit this one line if the within-excerpt sequence changes later.
+      trials.push(listening, ratings, familiarityRating);
+    }
+
+    return trials;
+  }
+
+  function validateSessionConfiguration() {
+    if (typeof experimentConfig.skipSessionsForVerification !== "boolean") {
+      throw new Error("SESSION_VERIFICATION_TOGGLE_INVALID");
+    }
+
+    if (lang !== "eng" && lang !== "kor") {
+      throw new Error("SESSION_LANGUAGE_INVALID");
+    }
+
+    if (!Number.isSafeInteger(experimentConfig.stimulusPoolSize) ||
+        experimentConfig.stimulusPoolSize < maxPracticeAttempts + 60 ||
+        !Number.isSafeInteger(experimentConfig.stimulusFirstNumber) ||
+        experimentConfig.stimulusFirstNumber < 0 ||
+        !Number.isSafeInteger(experimentConfig.stimulusNumberStep) ||
+        experimentConfig.stimulusNumberStep < 1 ||
+        !Number.isSafeInteger(experimentConfig.stimulusFirstNumber +
+          (experimentConfig.stimulusPoolSize - 1) * experimentConfig.stimulusNumberStep)) {
+      throw new Error("STIMULUS_POOL_CONFIG_INVALID");
+    }
+  }
+
+  function buildMainSession(sessionNumber, audioFiles) {
+    const buildTrials = experimentConfig.condition === "condition_1"
+      ? buildCondition1Trials
+      : buildCondition2Trials;
+
+    return {
+      timeline: buildTrials({ audioFiles, phase: "main" }),
+      data: { session_number: sessionNumber },
+      on_timeline_finish: function () {
+        completedSessions += 1;
+        jsPsych.data.addProperties({ sessions_completed: completedSessions });
+      }
+    };
+  }
+
+  function buildSecondSessionChoice() {
+    const text = {
+      eng: {
+        stimulus: `
+          <p>You have finished the first session.<br>
+          Would you like to do a second session?</p>
+          <p>If you choose <strong>'Yes'</strong>, you will repeat another 30 trials, and will be rewarded accordingly</p>
+          <p>If you choose <strong>'No'</strong>, the experiment wil end after a short survey</p>
+        `,
+        choices: ["Yes", "No"]
+      },
+      kor: {
+        stimulus: `
+          <p>첫번째 세션을 마치셨습니다.<br>
+          두번째 세션을 진행하시겠습니까?</p>
+          <p><strong>'아니오'</strong>를 선택하신다면 짧은 설문 후 실험이 종료됩니다</p>
+          <p><strong>'예'</strong>를 선택하신다면 지금 진행한 30번의 시행을 한번 더 반복하며, 보수가 추가적으로 지급됩니다</p>
+        `,
+        choices: ["예", "아니오"]
+      }
+    }[lang];
+
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: text.stimulus,
+      choices: text.choices,
+      data: {
+        task: "second_session_choice",
+        phase: "session_choice",
+        condition: experimentConfig.condition
+      },
+      on_finish: function (data) {
+        if (![0, 1].includes(data.response)) {
+          throw new Error("SECOND_SESSION_RESPONSE_INVALID");
+        }
+        continueToSecondSession = data.response === 0;
+        data.continue_to_second_session = continueToSecondSession;
+      }
+    };
+  }
+
+  function buildDemographics() {
+    // Both conditions complete demographics after consent and eligibility.
+    // The plugin creates the form and submit button automatically.
+    const demographics = {
+      type: jsPsychSurveyHtmlForm,
+
+      preamble: "<h2>기본 정보</h2>",
+
+      html: `
+      <div style="max-width: 600px; margin: 0 auto; text-align: left;">
+        <p>
+          <label for="participant-age">나이 (만 나이)</label><br>
+          <input id="participant-age" name="age" type="number"
+                 min="0" step="1" required style="width: 100px;"> 세
+        </p>
+
+        <p>
+          <label for="participant-gender">성별</label><br>
+          <select id="participant-gender" name="gender" required>
+            <option value="" disabled selected>선택해 주세요</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+          </select>
+        </p>
+
+        <p id="education-help">
+          현재까지 졸업한 가장 높은 교육 단계를 선택해 주세요.<br>
+          재학 중이라면 이미 졸업한 단계를 선택해 주세요.
+        </p>
+
+        <p>
+          <label for="participant-education">최종학력</label><br>
+          <select id="participant-education" name="education"
+                  aria-describedby="education-help" required>
+            <option value="" disabled selected>선택해 주세요</option>
+            <option value="below_elementary">초등학교 졸업 미만</option>
+            <option value="elementary">초등학교 졸업</option>
+            <option value="middle_school">중학교 졸업</option>
+            <option value="high_school">고등학교 졸업</option>
+            <option value="associate">전문대학 졸업</option>
+            <option value="bachelor">대학교 졸업</option>
+            <option value="master">대학원 졸업 (석사)</option>
+            <option value="doctorate">대학원 졸업 (박사)</option>
+            <option value="other">기타</option>
+            <option value="prefer_not_to_say">응답하지 않음</option>
+          </select>
+        </p>
+      </div>
+    `,
+
+      button_label: "다음",
+      dataAsArray: false,
+      autocomplete: false,
+
+      data: {
+        task: "demographics",
+        phase: "questionnaire",
+        condition: experimentConfig.condition,
+        questionnaire_version: "draft_1"
+      },
+
+      on_finish: function (data) {
+        // Preserve the original response object.
+        // Add separate columns that are convenient when exporting to CSV.
+        const rawAge = String(data.response.age ?? "").trim();
+        const age = rawAge === "" ? null : Number(rawAge);
+
+        data.age_years =
+          Number.isInteger(age) && age >= 0 ? age : null;
+
+        data.gender = data.response.gender;
+        data.education = data.response.education;
+
+        // This records age; eligibility is handled earlier in the experiment.
+      }
+    };
+
+    return [demographics];
+  }
+
+  function buildParticipantQuestionnaires() {
+    // Both conditions complete these questionnaires after the listening trials.
+    // The array order determines the order of the questionnaire pages.
+    return [
+      ...buildGmsiTrials({
+        dataset: gmsiDataset,
+        plugin: jsPsychSurveyLikert,
+        condition: experimentConfig.condition
+      }),
+      ...buildBigFiveTrials({
+        dataset: bigFiveDataset,
+        plugin: jsPsychSurveyLikert,
+        condition: experimentConfig.condition
+      })
+    ];
+  }
+
+
+  function buildContactInformation() {
+    const contactInformation = {
+      type: jsPsychSurveyHtmlForm,
+      css_classes: ["contact-information"],
+
+      preamble: `
+        <h2>연락처 정보</h2>
+        <div class="contact-description">
+          <p>파일럿 실험에 참여한 분들을 대상으로 커피 기프티콘을 추첨하여 전달드리기 위해 다음의 연락처를 수집합니다.</p>
+          <p>연락처 정보 입력은 선택사항이며, 원하지 않는 분들은 입력하지 않으셔도 괜찮습니다.</p>
+        </div>
+      `,
+
+      html: `
+        <div class="contact-fields">
+          <p>
+            <label for="participant-phone-number">전화번호 (선택)</label><br>
+            <small id="participant-phone-format">000-0000-0000 형식으로 입력해 주세요.</small>
+            <span class="phone-number-fields">
+              <input id="participant-phone-number" name="phone_number_1" type="tel" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" placeholder="000" aria-label="전화번호 앞 3자리" aria-describedby="participant-phone-format">
+              <span aria-hidden="true">-</span>
+              <input id="participant-phone-number-2" name="phone_number_2" type="tel" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" aria-label="전화번호 가운데 4자리" aria-describedby="participant-phone-format">
+              <span aria-hidden="true">-</span>
+              <input id="participant-phone-number-3" name="phone_number_3" type="tel" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" aria-label="전화번호 마지막 4자리" aria-describedby="participant-phone-format">
+            </span>
+          </p>
+          <p>
+            <label for="participant-email-address">이메일 주소 (선택)</label><br>
+            <input id="participant-email-address" name="email_address" type="email">
+          </p>
+        </div>
+      `,
+
+      button_label: "다음",
+      dataAsArray: false,
+      autocomplete: false,
+
+      data: {
+        task: "contact_information",
+        phase: "questionnaire",
+        condition: experimentConfig.condition
+      },
+
+      on_load: function () {
+        const display = jsPsych.getDisplayElement();
+        const phoneFields = [
+          display.querySelector("#participant-phone-number"),
+          display.querySelector("#participant-phone-number-2"),
+          display.querySelector("#participant-phone-number-3")
+        ];
+        const focusOrder = [...phoneFields, display.querySelector("#participant-email-address")];
+
+        phoneFields.forEach((field, index) => {
+          field.addEventListener("input", function (event) {
+            if (event.isComposing) return;
+
+            const digits = field.value.replace(/[^0-9]/g, "").slice(0, field.maxLength);
+            if (field.value !== digits) field.value = digits;
+
+            const phoneStarted = phoneFields.some(input => input.value !== "");
+            phoneFields.forEach(input => { input.required = phoneStarted; });
+
+            if (field.value.length === field.maxLength && !event.inputType?.startsWith("delete")) {
+              focusOrder[index + 1].focus();
+            }
+          });
+        });
+      },
+
+      on_finish: function (data) {
+        const lengths = [3, 4, 4];
+        const parts = lengths.map((_, index) => data.response?.[`phone_number_${index + 1}`]);
+        if (parts.some(part => typeof part !== "string") ||
+            (parts.some(part => part !== "") &&
+             parts.some((part, index) => !new RegExp(`^[0-9]{${lengths[index]}}$`).test(part)))) {
+          throw new Error("CONTACT_PHONE_INVALID");
+        }
+        // Retain the raw segments and the existing combined export field.
+        data.response.phone_number = parts.join("");
+      }
+    };
+
+    return [contactInformation];
+  }
+
+  function buildDebrief() {
+    // Replace the draft explanation and contact placeholders later.
+    const debrief = {
+      type: jsPsychHtmlButtonResponse,
+
+      stimulus: `
+      <div style="max-width: 700px; margin: 0 auto; text-align: left;">
+        <h2>연구 안내 및 마무리</h2>
+
+        <p>
+          모든 문항에 대한 응답을 마쳤습니다.
+          참여해 주셔서 감사합니다.
+        </p>
+
+        <p>
+          이 연구는 음악을 들을 때 느끼는 감정을 단어 또는 여러 평가 척도로
+          수집하고, 응답 방식과 개인적 특성에 따른 차이를
+          살펴보기 위한 연구입니다.
+        </p>
+
+        <p>
+          응답에는 정답이나 오답이 없으며,
+          사람마다 느끼는 감정은 다를 수 있습니다.
+        </p>
+
+        <p>
+          연구에 관한 질문이 있으시면 아래 연락처로 문의해 주세요.<br>
+          연구자: 이현용<br>
+          연락처: ben701@kaist.ac.kr
+        </p>
+
+        <p>아래의 ‘마치기’ 버튼을 눌러 설문을 마무리해 주세요.</p>
+      </div>
+    `,
+
+      choices: ["마치기"],
+      response_ends_trial: true,
+
+      data: {
+        task: "debrief",
+        phase: "debrief",
+        condition: experimentConfig.condition,
+        debrief_version: "draft_1"
+      },
+
+      on_finish: function (data) {
+        // Records that the participant clicked the finishing button.
+        // This does not indicate whether data have been uploaded.
+        data.debrief_acknowledged = data.response === 0;
+      }
+    };
+
+    // As the final trial, this ends the timeline when its button is clicked.
+    // jsPsych then runs the on_finish callback defined in initJsPsych().
+    return [debrief];
+  }
+
+  async function uploadCompletedSession(requestBody) {
+    validateDataSavingConfig();
+
+    // Aborting our wait does not cancel a file already received by DataPipe.
+    const controller = new AbortController();
+
+    const timeout = setTimeout(
+      () => controller.abort(),
+      dataSavingConfig.timeoutMs
+    );
+
+    try {
+      let response;
+      try {
+        response = await fetch(dataSavingConfig.endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+          signal: controller.signal,
+          credentials: "omit",
+          redirect: "error"
+        });
+      } catch (error) {
+        // Fetch cannot distinguish offline, DNS, CORS, or blocked redirects.
+        throw submissionError(
+          controller.signal.aborted ? "SAVE_REQUEST_TIMEOUT" : "SAVE_CONNECTION",
+          "unconfirmed"
+        );
+      }
+
+      // HTTP 202 is accepted/queued, not confirmation of storage on OSF.
+      if (response.status === 202) {
+        throw submissionError("SAVE_QUEUED", "queued", response.status);
+      }
+      // A conflict must block retries even if the response body is unreadable.
+      if (response.status === 409) {
+        throw submissionError("SAVE_HTTP_CONFLICT", "duplicate", response.status);
+      }
+
+      let confirmation;
+      try {
+        confirmation = await response.json();
+      } catch (error) {
+        const rejected = response.status >= 400 && response.status < 500 &&
+          ![408, 429].includes(response.status);
+        const code = controller.signal.aborted ? "SAVE_RESPONSE_TIMEOUT" :
+          error?.name === "SyntaxError" ? "SAVE_RESPONSE_JSON" : "SAVE_RESPONSE_READ";
+        throw submissionError(code, rejected ? "rejected" : "unconfirmed", response.status);
+      }
+
+      if (confirmation?.queued === true) {
+        throw submissionError("SAVE_QUEUED", "queued", response.status);
+      }
+      if (confirmation?.error === "FILE_EXISTS") {
+        throw submissionError("DP_FILE_EXISTS", "duplicate", response.status);
+      }
+
+      // DataPipe's successful OSF write returns 201 and this exact message.
+      // It does not echo session_id. Never infer success from HTTP alone.
+      if (
+        response.status === 201 &&
+        confirmation?.message === "Success" &&
+        !Object.prototype.hasOwnProperty.call(confirmation, "error")
+      ) {
+        return;
+      }
+
+      // Explicit configuration/validation errors need researcher intervention.
+      // Transient transport/service errors may be retried with the same body.
+      const transientError = ["UPLOAD_ERROR", "UPLOAD_EXCEPTION"]
+        .includes(confirmation?.error);
+      const explicitError = typeof confirmation?.error === "string";
+      const rejected = (explicitError && !transientError) ||
+        (!transientError && response.status >= 400 && response.status < 500 &&
+          ![408, 429].includes(response.status));
+      if (explicitError) {
+        const code = dataPipeErrorCodes.has(confirmation.error) ?
+          `DP_${confirmation.error}` : "SAVE_REMOTE_UNKNOWN";
+        throw submissionError(code, rejected ? "rejected" : "unconfirmed", response.status);
+      }
+      if (response.status >= 400) {
+        throw submissionError("SAVE_HTTP_ERROR", rejected ? "rejected" : "unconfirmed", response.status);
+      }
+      throw submissionError("SAVE_CONFIRMATION", "unconfirmed", response.status);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function finishSurveyAndSave() {
+    if (submissionPromise !== null) return submissionPromise;
+
+    const text = lang === "eng" ? {
+      sending: "Sending results. Do not close the tab",
+      failure: "Submission could not be confirmed. Please record the session ID below and contact the researcher. Do not close or refresh this tab.",
+      blocked: "Submission could not be confirmed. Please record the session ID below and contact the researcher. Do not submit again or close or refresh this tab.",
+      retryHelp: "Check your connection. You may retry after five seconds.",
+      reference: "Session ID: ",
+      retry: "Retry submission",
+      download: "Download results ZIP",
+      recoveryHelp: "Download the ZIP and attach it to an email to ben701@kaist.ac.kr. Include the session ID above. Downloading does not confirm online submission.",
+      recoveryFailure: "The results ZIP could not be prepared. Keep this tab open and contact ben701@kaist.ac.kr with the session ID above.",
+      success: "Your responses have been saved. Thank you for participating."
+    } : {
+      sending: "결과를 전송중입니다. 창을 닫지 말고 잠시만 기다려 주십시오",
+      failure: "제출을 확인하지 못했습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 창을 닫거나 새로고침하지 말아 주세요.",
+      blocked: "제출을 확인하지 못했습니다. 아래 세션 ID를 기록하고 연구자에게 문의해 주세요. 다시 제출하거나 창을 닫거나 새로고침하지 말아 주세요.",
+      retryHelp: "인터넷 연결을 확인해 주세요. 5초 후 다시 제출할 수 있습니다.",
+      reference: "세션 ID: ",
+      retry: "다시 제출",
+      download: "결과 ZIP 다운로드",
+      recoveryHelp: "ZIP 파일을 다운로드한 뒤 ben701@kaist.ac.kr로 보내는 이메일에 첨부해 주세요. 위 세션 ID도 함께 알려 주세요. 다운로드는 온라인 제출 완료를 의미하지 않습니다.",
+      recoveryFailure: "결과 ZIP 파일을 준비하지 못했습니다. 이 창을 열어 둔 채 위 세션 ID와 함께 ben701@kaist.ac.kr로 문의해 주세요.",
+      success: "응답이 저장되었습니다. 참여해 주셔서 감사합니다."
+    };
+
+    let rows;
+    try {
+      rows = jsPsych.data.get().values();
+      if (!Array.isArray(rows) || rows.some(row => row === null || typeof row !== "object")) {
+        throw submissionError("SAVE_DATA_READ");
+      }
+    } catch (error) {
+      jsPsych.getDisplayElement().textContent =
+        text.failure + " " + text.reference + sessionId;
+      submissionPromise = new Promise(() => {});
+      return submissionPromise;
+    }
+    const finalRow = rows[rows.length - 1];
+
+    // abortExperiment() also triggers initJsPsych's on_finish.
+    // Submit only consented sessions that completed the debrief.
+    const consented = rows.some(
+      row => row.task === "consent" && row.consented === true
+    );
+    if (
+      !consented ||
+      finalRow?.task !== "debrief" ||
+      finalRow.debrief_acknowledged !== true
+    ) {
+      return;
+    }
+
+    let resolveSubmission;
+    submissionPromise = new Promise(resolve => { resolveSubmission = resolve; });
+    const display = jsPsych.getDisplayElement();
+    // Only the sending message is visible during preparation/upload.
+    display.innerHTML = `
+      <p id="save-status" role="status" aria-live="polite"></p>
+      <p id="save-reference" hidden></p>
+      <button id="save-retry" class="jspsych-btn" type="button" hidden></button>
+      <a id="save-download" class="jspsych-btn" hidden></a>
+      <p id="save-recovery-help" hidden></p>
+    `;
+    const status = display.querySelector("#save-status");
+    const reference = display.querySelector("#save-reference");
+    const retry = display.querySelector("#save-retry");
+    const download = display.querySelector("#save-download");
+    const recoveryHelp = display.querySelector("#save-recovery-help");
+    status.textContent = text.sending;
+    reference.textContent = text.reference + sessionId;
+    retry.textContent = text.retry;
+    download.textContent = text.download;
+
+    const files = [];
+    const baseName = `CCM_${experimentVersion}_${sessionId}`;
+    let preparationCode = "SAVE_DATA_SERIALIZE";
+    try {
+      validateDataSavingConfig();
+      // All five files use one snapshot. Exporting never modifies live rows.
+      const snapshot = jsPsych.data.get().readOnly();
+      const completedAt = new Date().toISOString();
+      const metadata = {
+        session_id: sessionId,
+        experiment_version: experimentVersion,
+        condition: experimentConfig.condition,
+        sessions_completed: completedSessions,
+        verification_skip_sessions: experimentConfig.skipSessionsForVerification,
+        completed_at: completedAt
+      };
+      const dataString = JSON.stringify({
+        ...metadata,
+        trials: snapshot.values()
+      });
+
+      preparationCode = "SAVE_BIGFIVE_SERIALIZE";
+      const bigFiveCsv = createBigFiveCsv(snapshot.values(), bigFiveDataset, metadata);
+
+      preparationCode = "SAVE_GMSI_SERIALIZE";
+      const gmsiCsv = createGmsiCsv(snapshot.values(), gmsiDataset, metadata);
+
+      preparationCode = "SAVE_CSV_SERIALIZE";
+      const csvString = createExperimentCsv(snapshot.values(), metadata);
+
+      preparationCode = "SAVE_PROCEDURAL_SERIALIZE";
+      const proceduralCsv = createProceduralCsv(snapshot.values(), metadata);
+
+      // Prepare and size-check ALL immutable requests before sending any file.
+      for (const [key, filename, data] of [
+        ["JSON", baseName + ".json", dataString],
+        ["CSV", baseName + ".csv", csvString],
+        ["PROCEDURAL_CSV", baseName + "_procedural.csv", proceduralCsv],
+        ["BIGFIVE_CSV", baseName + "_bigfive.csv", bigFiveCsv],
+        ["GMSI_CSV", baseName + "_gmsi.csv", gmsiCsv]
+      ]) {
+        preparationCode = "SAVE_REQUEST_SERIALIZE";
+        const requestBody = JSON.stringify({
+          experimentID: dataSavingConfig.experimentID, filename, data
+        });
+        preparationCode = "SAVE_REQUEST_ENCODING";
+        if (new TextEncoder().encode(requestBody).byteLength >= 32000000) {
+          throw submissionError("SAVE_REQUEST_TOO_LARGE");
+        }
+        files.push({ key, filename, data, requestBody, state: "pending" });
+      }
+    } catch (error) {
+      status.textContent = text.failure;
+      reference.hidden = false;
+      // Preserve a fixed diagnostic for researcher inspection without rendering it.
+      display.dataset.submissionCode = error?.submissionCode || preparationCode;
+      return submissionPromise;
+    }
+
+    let recoveryUrl = null;
+    function showRecoveryDownload() {
+      try {
+        if (recoveryUrl === null) recoveryUrl = URL.createObjectURL(createResultsZip(files));
+        download.href = recoveryUrl;
+        download.download = baseName + ".zip";
+        download.hidden = false;
+        recoveryHelp.textContent = text.recoveryHelp;
+        delete display.dataset.recoveryCode;
+      } catch (error) {
+        download.hidden = true;
+        recoveryHelp.textContent = text.recoveryFailure;
+        display.dataset.recoveryCode = "SAVE_ZIP_PREPARE";
+      }
+      recoveryHelp.hidden = false;
+    }
+
+    let state = "ready";
+    async function submit() {
+      // A single request at a time; terminal states cannot submit again.
+      if (state !== "ready") return;
+      state = "uploading";
+      retry.hidden = true;
+      retry.disabled = true;
+      reference.hidden = true;
+      download.hidden = true;
+      recoveryHelp.hidden = true;
+      delete display.dataset.submissionCode;
+      delete display.dataset.submissionFile;
+      delete display.dataset.submissionHttpStatus;
+      delete display.dataset.recoveryCode;
+      status.textContent = text.sending;
+
+      let activeFile;
+      try {
+        // Stop at the first failure. A manual retry skips confirmed files.
+        for (const file of files) {
+          if (file.state === "saved") continue;
+          activeFile = file;
+          file.state = "uploading";
+          await uploadCompletedSession(file.requestBody);
+          file.state = "saved";
+        }
+        state = "saved";
+        status.textContent = text.success;
+        if (recoveryUrl !== null) {
+          URL.revokeObjectURL(recoveryUrl);
+          recoveryUrl = null;
+        }
+        resolveSubmission();
+      } catch (error) {
+        state = error?.submissionState || "rejected";
+        if (activeFile) activeFile.state = state;
+        reference.hidden = false;
+        display.dataset.submissionCode = error?.submissionCode || "SAVE_UNEXPECTED";
+        display.dataset.submissionFile = activeFile?.key || "UPLOAD";
+        if (Number.isInteger(error?.httpStatus)) {
+          display.dataset.submissionHttpStatus = String(error.httpStatus);
+        }
+        status.textContent = state === "queued" || state === "duplicate"
+          ? text.blocked : text.failure;
+        showRecoveryDownload();
+        if (state === "unconfirmed") {
+          status.textContent += " " + text.retryHelp;
+          retry.hidden = false;
+          // This timer only enables a button; it never sends another request.
+          setTimeout(() => {
+            state = "ready";
+            retry.disabled = false;
+          }, dataSavingConfig.retryDelayMs);
+        }
+      }
+    }
+
+    retry.addEventListener("click", submit);
+    submit();
+    return submissionPromise;
+  }
+
+  /* ------------------------------------------------------------------
+     4. ASSEMBLE THE TIMELINE
+     ------------------------------------------------------------------ */
+
+
+  async function startExperiment() {
+    try {
+      if (location.protocol === "file:") {
+        throw new Error("LOCAL_WEB_SERVER_REQUIRED");
+      }
+      await surveyStartup.stylesReady;
+      if (surveyStartup.failed) throw new Error("SURVEY_STARTUP_FAILED");
+      validateSessionConfiguration();
+      [bigFiveDataset, gmsiDataset] = await Promise.all([loadBigFive(lang), loadGmsi(lang)]);
+      if (!experimentConfig.skipSessionsForVerification) await selectSessionStimuli();
+      retrievedConditionNumber = await retrieveConditionNumber();
+      experimentConfig.condition = retrievedConditionNumber === 0
+        ? "condition_1"
+        : "condition_2";
+      jsPsych.data.addProperties({ condition: experimentConfig.condition });
+
+      if (!experimentConfig.skipSessionsForVerification && experimentConfig.condition === "condition_1") {
+        [emotionVocabulary] = await Promise.all([loadEmotionVocabulary(lang), loadGuidedEmotionStyles(document)]);
+      }
+
+      timeline.push(
+        ...buildConsentAndEligibility(),
+        ...buildDemographics()
+      );
+
+      jsPsych.data.addProperties({
+        verification_skip_sessions: experimentConfig.skipSessionsForVerification
+      });
+      if (!experimentConfig.skipSessionsForVerification) {
+        timeline.push(
+          ...buildHeadphoneCheckAndCalibration(),
+          ...buildIntroductionAndPractice(),
+          buildMainSession(1, experimentConfig.audioFiles),
+          buildSecondSessionChoice(),
+          {
+            timeline: [buildMainSession(2, experimentConfig.secondSessionAudioFiles)],
+            conditional_function: function () {
+              return continueToSecondSession;
+            }
+          }
+        );
+      }
+
+      timeline.push(
+        ...buildParticipantQuestionnaires(),
+        ...buildContactInformation(),
+        ...buildDebrief()
+      );
+
+      /* ------------------------------------------------------------------
+         5. RUN THE EXPERIMENT
+
+         Leave this disabled until at least one trial has been added.
+         ------------------------------------------------------------------ */
+
+      await jsPsych.run(timeline);
+    } catch (error) {
+      surveyStartup.fail(sessionId);
+      throw error;
+    }
+  }
+
+  startExperiment();
+</script>
+
+</html>

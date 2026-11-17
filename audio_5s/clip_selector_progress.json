@@ -1,0 +1,2811 @@
+{
+  "version": 1,
+  "source_directory": "C:\\Users\\Hyeonyong\\OneDrive\\KAIST\\04. MuBL\\03. URP\\05. Adjusted Audio",
+  "clip_seconds": 5.0,
+  "sources": [
+    {
+      "filename": "Aaron Copland_Three Latin American Sketches.mp3",
+      "size": 25811565,
+      "mtime_ns": 1791502503267953300,
+      "duration_seconds": 645.2245
+    },
+    {
+      "filename": "Alain Bancquart_Labyrinthemiroir.mp3",
+      "size": 36923565,
+      "mtime_ns": 1791494961294757100,
+      "duration_seconds": 923.028042
+    },
+    {
+      "filename": "Alain Louvier_Triangle.mp3",
+      "size": 15918765,
+      "mtime_ns": 1791508107471875600,
+      "duration_seconds": 397.909333
+    },
+    {
+      "filename": "Alberto Posadas_Hylé.mp3",
+      "size": 49153965,
+      "mtime_ns": 1791487013823003800,
+      "duration_seconds": 1228.8
+    },
+    {
+      "filename": "Aldo Clementi_Replica.mp3",
+      "size": 7802925,
+      "mtime_ns": 1791509919722939400,
+      "duration_seconds": 195.001188
+    },
+    {
+      "filename": "Alex Mincek_Poco a Poco.mp3",
+      "size": 33460845,
+      "mtime_ns": 1791497361851849300,
+      "duration_seconds": 836.458667
+    },
+    {
+      "filename": "Alfred Schnittke_Five Aphorisms.mp3",
+      "size": 32448045,
+      "mtime_ns": 1791498014106655900,
+      "duration_seconds": 811.142688
+    },
+    {
+      "filename": "Alfred Schnittke_Sérénade.mp3",
+      "size": 24919725,
+      "mtime_ns": 1791503222083989300,
+      "duration_seconds": 622.921729
+    },
+    {
+      "filename": "Alvin Curran_VSTO.mp3",
+      "size": 46342125,
+      "mtime_ns": 1791489502389014100,
+      "duration_seconds": 1158.501604
+    },
+    {
+      "filename": "Anders Eliasson_Disegno.mp3",
+      "size": 18655725,
+      "mtime_ns": 1791507014985388400,
+      "duration_seconds": 466.326354
+    },
+    {
+      "filename": "André Jolivet_Air de bravoure.mp3",
+      "size": 3086445,
+      "mtime_ns": 1791510137071948700,
+      "duration_seconds": 77.09025
+    },
+    {
+      "filename": "André Jolivet_Symphonie n°1.mp3",
+      "size": 60450285,
+      "mtime_ns": 1791482101914325000,
+      "duration_seconds": 1511.189479
+    },
+    {
+      "filename": "Anton Webern_Rondo.mp3",
+      "size": 16373805,
+      "mtime_ns": 1791507907754286700,
+      "duration_seconds": 409.286542
+    },
+    {
+      "filename": "Arthur Lavandier_Le Livre 1.mp3",
+      "size": 27521710,
+      "mtime_ns": 1791501298247908400,
+      "duration_seconds": 687.984036
+    },
+    {
+      "filename": "Augusta Read Thomas_Magic Box.mp3",
+      "size": 20395500,
+      "mtime_ns": 1791506058035039200,
+      "duration_seconds": 509.817324
+    },
+    {
+      "filename": "Aureliano Cattaneo_Blut.mp3",
+      "size": 44682285,
+      "mtime_ns": 1791490304564264400,
+      "duration_seconds": 1116.984979
+    },
+    {
+      "filename": "Beat Furrer_Concerto.mp3",
+      "size": 44831085,
+      "mtime_ns": 1791490236633427900,
+      "duration_seconds": 1120.722729
+    },
+    {
+      "filename": "Benjamin Britten_Four Sea Interludes from Peter Grimes.mp3",
+      "size": 40807725,
+      "mtime_ns": 1791492547125149200,
+      "duration_seconds": 1020.133896
+    },
+    {
+      "filename": "Benjamin Britten_Symphony for Cello and Orchestra.mp3",
+      "size": 83489325,
+      "mtime_ns": 1791478942904446400,
+      "duration_seconds": 2087.172083
+    },
+    {
+      "filename": "Bernd Alois Zimmermann_Tempus loquendi.mp3",
+      "size": 28714984,
+      "mtime_ns": 1791500441608787300,
+      "duration_seconds": 717.798458
+    },
+    {
+      "filename": "Betsy Jolas_Musique de jour.mp3",
+      "size": 26075565,
+      "mtime_ns": 1791502344392007200,
+      "duration_seconds": 651.84
+    },
+    {
+      "filename": "Betsy Jolas_Épisode sixième.mp3",
+      "size": 18698925,
+      "mtime_ns": 1791507000432823500,
+      "duration_seconds": 467.406083
+    },
+    {
+      "filename": "Brian Ferneyhough_In nomine a 3.mp3",
+      "size": 5868525,
+      "mtime_ns": 1791510061048778800,
+      "duration_seconds": 146.645625
+    },
+    {
+      "filename": "Brian Ferneyhough_Time and Motion Study I.mp3",
+      "size": 24002925,
+      "mtime_ns": 1791503842548647500,
+      "duration_seconds": 600.003646
+    },
+    {
+      "filename": "Bruno Maderna_Pièce pour Ivry.mp3",
+      "size": 22743405,
+      "mtime_ns": 1791504758908083000,
+      "duration_seconds": 568.529
+    },
+    {
+      "filename": "Bruno Mantovani_Spirit of Alberti.mp3",
+      "size": 27087405,
+      "mtime_ns": 1791501591639466600,
+      "duration_seconds": 677.128708
+    },
+    {
+      "filename": "Camille Pépin_Aux confins de l'orage.mp3",
+      "size": 37398765,
+      "mtime_ns": 1791494683045468300,
+      "duration_seconds": 934.912
+    },
+    {
+      "filename": "Carola Bauckholt_Hirn & Ei.mp3",
+      "size": 28050428,
+      "mtime_ns": 1791500926275869400,
+      "duration_seconds": 701.19619
+    },
+    {
+      "filename": "Caroline Shaw_Thousandth Orange.mp3",
+      "size": 24506925,
+      "mtime_ns": 1791503485262534900,
+      "duration_seconds": 612.623688
+    },
+    {
+      "filename": "Charles Ives_Orchestral Set No. 1 - Three Places in New England.mp3",
+      "size": 44282925,
+      "mtime_ns": 1791490503262749700,
+      "duration_seconds": 1107.022958
+    },
+    {
+      "filename": "Charles Ives_Three Quarter-Tone Pieces.mp3",
+      "size": 31599405,
+      "mtime_ns": 1791498471121345600,
+      "duration_seconds": 789.93125
+    },
+    {
+      "filename": "Charlotte Bray_Voyage.mp3",
+      "size": 36808365,
+      "mtime_ns": 1791495043660718700,
+      "duration_seconds": 920.137146
+    },
+    {
+      "filename": "Christian Mason_Zwischen den Sternen.mp3",
+      "size": 94832685,
+      "mtime_ns": 1791478014872445000,
+      "duration_seconds": 2370.757375
+    },
+    {
+      "filename": "Christophe Bertrand_Mana.mp3",
+      "size": 24002925,
+      "mtime_ns": 1791503845281996200,
+      "duration_seconds": 600.003646
+    },
+    {
+      "filename": "Claire-Mélanie Sinnhuber_Qui-vive.mp3",
+      "size": 20980643,
+      "mtime_ns": 1791505709710386900,
+      "duration_seconds": 524.445896
+    },
+    {
+      "filename": "Claude Ledoux_Las Lagrimas de un Angel.mp3",
+      "size": 21207405,
+      "mtime_ns": 1791505576331408100,
+      "duration_seconds": 530.123188
+    },
+    {
+      "filename": "Conlon Nancarrow_String Quartet No. 3.mp3",
+      "size": 31324845,
+      "mtime_ns": 1791498642852279400,
+      "duration_seconds": 783.058146
+    },
+    {
+      "filename": "Dai Fujikura_Aquarius.mp3",
+      "size": 25151085,
+      "mtime_ns": 1791503051247892700,
+      "duration_seconds": 628.726729
+    },
+    {
+      "filename": "Dai Fujikura_Drunken Master.mp3",
+      "size": 16759725,
+      "mtime_ns": 1791507733092001000,
+      "duration_seconds": 418.922667
+    },
+    {
+      "filename": "Dai Fujikura_Lila.mp3",
+      "size": 21549165,
+      "mtime_ns": 1791505383433582400,
+      "duration_seconds": 538.668125
+    },
+    {
+      "filename": "Dai Fujikura_repetition recollection.mp3",
+      "size": 33647085,
+      "mtime_ns": 1791497225016596500,
+      "duration_seconds": 841.119646
+    },
+    {
+      "filename": "Dai Fujikura_Wind Skein.mp3",
+      "size": 21182445,
+      "mtime_ns": 1791505595803689300,
+      "duration_seconds": 529.493333
+    },
+    {
+      "filename": "Darius Milhaud_Jeu.mp3",
+      "size": 4332525,
+      "mtime_ns": 1791510121596073200,
+      "duration_seconds": 108.263042
+    },
+    {
+      "filename": "Darius Milhaud_String Quartet No. 8.mp3",
+      "size": 36511725,
+      "mtime_ns": 1791495237691143400,
+      "duration_seconds": 912.725333
+    },
+    {
+      "filename": "David Lang_boy.mp3",
+      "size": 8858925,
+      "mtime_ns": 1791509825691467800,
+      "duration_seconds": 221.402271
+    },
+    {
+      "filename": "David Lang_vent.mp3",
+      "size": 19145325,
+      "mtime_ns": 1791506721798076700,
+      "duration_seconds": 478.563271
+    },
+    {
+      "filename": "Dieter Mack_Mari Marie.mp3",
+      "size": 16669485,
+      "mtime_ns": 1791507786755846300,
+      "duration_seconds": 416.682104
+    },
+    {
+      "filename": "Dun Tan_Dew Fall Drops.mp3",
+      "size": 19555245,
+      "mtime_ns": 1791506516173352600,
+      "duration_seconds": 488.810667
+    },
+    {
+      "filename": "Edison Denisov_Sonata for Violin and Organ.mp3",
+      "size": 48646125,
+      "mtime_ns": 1791487915629978500,
+      "duration_seconds": 1216.085333
+    },
+    {
+      "filename": "Einar Torfi Einarsson_Quanta.mp3",
+      "size": 30630765,
+      "mtime_ns": 1791499044183628400,
+      "duration_seconds": 765.701229
+    },
+    {
+      "filename": "Elliott Carter_Caténaires.mp3",
+      "size": 9574125,
+      "mtime_ns": 1791509730714953400,
+      "duration_seconds": 239.281646
+    },
+    {
+      "filename": "Elliott Carter_Horn Concerto.mp3",
+      "size": 25402605,
+      "mtime_ns": 1791502865623786500,
+      "duration_seconds": 635.007729
+    },
+    {
+      "filename": "Elliott Carter_String Quartet No. 3.mp3",
+      "size": 51209325,
+      "mtime_ns": 1791485518034937900,
+      "duration_seconds": 1280.178896
+    },
+    {
+      "filename": "Enno Poppe_Altbau.mp3",
+      "size": 41979885,
+      "mtime_ns": 1791491837064877400,
+      "duration_seconds": 1049.429333
+    },
+    {
+      "filename": "Enno Poppe_Streik.mp3",
+      "size": 125564205,
+      "mtime_ns": 1791476335869017600,
+      "duration_seconds": 3139.036021
+    },
+    {
+      "filename": "Ernst Krenek_4 Pieces for Oboe and Piano.mp3",
+      "size": 17819565,
+      "mtime_ns": 1791507326206247700,
+      "duration_seconds": 445.416979
+    },
+    {
+      "filename": "Ernst Krenek_Piano Sonata No. 7.mp3",
+      "size": 27642285,
+      "mtime_ns": 1791501177518921200,
+      "duration_seconds": 691.008
+    },
+    {
+      "filename": "Ernst Krenek_Violin Concerto No. 1.mp3",
+      "size": 51415725,
+      "mtime_ns": 1791485372314882800,
+      "duration_seconds": 1285.340604
+    },
+    {
+      "filename": "Fabio Nieder_Oberton-Elegie in G.mp3",
+      "size": 5784045,
+      "mtime_ns": 1791510067424372500,
+      "duration_seconds": 144.533333
+    },
+    {
+      "filename": "Francesco Filidei_Stèle pour Vierne.mp3",
+      "size": 29563245,
+      "mtime_ns": 1791499801079297900,
+      "duration_seconds": 739.009896
+    },
+    {
+      "filename": "Francisco Guerrero Marín_Ars Combinatoria.mp3",
+      "size": 18418605,
+      "mtime_ns": 1791507105614740300,
+      "duration_seconds": 460.405271
+    },
+    {
+      "filename": "Franco Donatoni_Chantal.mp3",
+      "size": 28759725,
+      "mtime_ns": 1791500364121833100,
+      "duration_seconds": 718.924646
+    },
+    {
+      "filename": "Franco Donatoni_Movimento.mp3",
+      "size": 11292525,
+      "mtime_ns": 1791509452262074300,
+      "duration_seconds": 282.250167
+    },
+    {
+      "filename": "Franco Evangelisti_Aleatorio.mp3",
+      "size": 9447405,
+      "mtime_ns": 1791509751532529400,
+      "duration_seconds": 236.112979
+    },
+    {
+      "filename": "Friedrich Cerha_Sinfonie.mp3",
+      "size": 39792045,
+      "mtime_ns": 1791493219562321400,
+      "duration_seconds": 994.73125
+    },
+    {
+      "filename": "Félix Ibarrondo_Pakeruntz.mp3",
+      "size": 19349805,
+      "mtime_ns": 1791506610875031400,
+      "duration_seconds": 483.694896
+    },
+    {
+      "filename": "Galina Ustvolskaïa_Piano Sonata No. 4.mp3",
+      "size": 25288365,
+      "mtime_ns": 1791502959713899100,
+      "duration_seconds": 632.140063
+    },
+    {
+      "filename": "Georg Friedrich Haas_Anachronism.mp3",
+      "size": 34472685,
+      "mtime_ns": 1791496623261386600,
+      "duration_seconds": 861.750583
+    },
+    {
+      "filename": "Georg Friedrich Haas_solstices.mp3",
+      "size": 184647405,
+      "mtime_ns": 1791475453067018100,
+      "duration_seconds": 4616.128
+    },
+    {
+      "filename": "George Antheil_Symphony for Five Instruments.mp3",
+      "size": 28341165,
+      "mtime_ns": 1791500738438226000,
+      "duration_seconds": 708.475667
+    },
+    {
+      "filename": "George Crumb_Pastoral Drone.mp3",
+      "size": 16705965,
+      "mtime_ns": 1791507767306687900,
+      "duration_seconds": 417.578667
+    },
+    {
+      "filename": "George Lewis_The Will to Adorn.mp3",
+      "size": 36087405,
+      "mtime_ns": 1791495455573625300,
+      "duration_seconds": 902.122667
+    },
+    {
+      "filename": "Georges Aperghis_À bout de bras.mp3",
+      "size": 14280045,
+      "mtime_ns": 1791508682188786800,
+      "duration_seconds": 356.948771
+    },
+    {
+      "filename": "Giacinto Scelsi_Natura renovatur.mp3",
+      "size": 30212322,
+      "mtime_ns": 1791499311641192900,
+      "duration_seconds": 755.252245
+    },
+    {
+      "filename": "Giovanni Bertelli_Autoritratto in tre passaggi.mp3",
+      "size": 26412525,
+      "mtime_ns": 1791502124325091400,
+      "duration_seconds": 660.259417
+    },
+    {
+      "filename": "Graciane Finzi_Fantaisie romantique.mp3",
+      "size": 25720365,
+      "mtime_ns": 1791502575415346300,
+      "duration_seconds": 642.948938
+    },
+    {
+      "filename": "György Kurtág_Ligatura-Message to Frances-Marie.mp3",
+      "size": 8913122,
+      "mtime_ns": 1791509822007065000,
+      "duration_seconds": 222.749025
+    },
+    {
+      "filename": "György Ligeti_String Quartet No. 1.mp3",
+      "size": 49652205,
+      "mtime_ns": 1791486585733944300,
+      "duration_seconds": 1241.234292
+    },
+    {
+      "filename": "Gérard Pesson_Nebenstück.mp3",
+      "size": 22762605,
+      "mtime_ns": 1791504745008487800,
+      "duration_seconds": 569.005
+    },
+    {
+      "filename": "Hans Abrahamsen_Lied in Fall.mp3",
+      "size": 33452205,
+      "mtime_ns": 1791497388026544300,
+      "duration_seconds": 836.243458
+    },
+    {
+      "filename": "Hans Werner Henze_La mano sinistra.mp3",
+      "size": 6960208,
+      "mtime_ns": 1791510008385720700,
+      "duration_seconds": 173.94068
+    },
+    {
+      "filename": "Hans Werner Henze_Symphony No. 8.mp3",
+      "size": 59728365,
+      "mtime_ns": 1791482362262081300,
+      "duration_seconds": 1493.159188
+    },
+    {
+      "filename": "Heinz Holliger_Partita.mp3",
+      "size": 86428845,
+      "mtime_ns": 1791478644233328700,
+      "duration_seconds": 2160.663229
+    },
+    {
+      "filename": "Helena Tulve_stream 2.mp3",
+      "size": 30851565,
+      "mtime_ns": 1791498956198240300,
+      "duration_seconds": 771.227583
+    },
+    {
+      "filename": "Helmut Lachenmann_Souvenir.mp3",
+      "size": 33556845,
+      "mtime_ns": 1791497271626550800,
+      "duration_seconds": 838.867313
+    },
+    {
+      "filename": "Henri Pousseur_Mobile.mp3",
+      "size": 24469485,
+      "mtime_ns": 1791503494910616400,
+      "duration_seconds": 611.683271
+    },
+    {
+      "filename": "Henryk Mikolaj Gorecki_Quasi una Fantasia.mp3",
+      "size": 79862445,
+      "mtime_ns": 1791479416407127900,
+      "duration_seconds": 1996.498146
+    },
+    {
+      "filename": "Iannis Xenakis_Alax.mp3",
+      "size": 60446445,
+      "mtime_ns": 1791482110752565100,
+      "duration_seconds": 1511.096604
+    },
+    {
+      "filename": "Iannis Xenakis_Jonchaies.mp3",
+      "size": 38438445,
+      "mtime_ns": 1791494066443151000,
+      "duration_seconds": 960.899792
+    },
+    {
+      "filename": "Iannis Xenakis_Roscobeck.mp3",
+      "size": 19045485,
+      "mtime_ns": 1791506752904542700,
+      "duration_seconds": 476.067125
+    },
+    {
+      "filename": "Ichiro Nodaïra_Une autre.........lune.mp3",
+      "size": 18703725,
+      "mtime_ns": 1791506985798211700,
+      "duration_seconds": 467.541333
+    },
+    {
+      "filename": "Isabel Mundry_Depuis le jour (mit Blick auf Sweelinck).mp3",
+      "size": 52404525,
+      "mtime_ns": 1791485012732353100,
+      "duration_seconds": 1310.046625
+    },
+    {
+      "filename": "Isang Yun_Etüden.mp3",
+      "size": 58313325,
+      "mtime_ns": 1791482822126698500,
+      "duration_seconds": 1457.771979
+    },
+    {
+      "filename": "Isang Yun_Musik für sieben Instrumente.mp3",
+      "size": 24922605,
+      "mtime_ns": 1791503214957381400,
+      "duration_seconds": 623.014604
+    },
+    {
+      "filename": "Ivan Fedele_Air on air.mp3",
+      "size": 42531885,
+      "mtime_ns": 1791491470763380800,
+      "duration_seconds": 1063.230125
+    },
+    {
+      "filename": "Ivan Fedele_Modus.mp3",
+      "size": 22804845,
+      "mtime_ns": 1791504696702070600,
+      "duration_seconds": 570.0615
+    },
+    {
+      "filename": "Ivan Wyschnegradsky_Troisième fragment symphonique.mp3",
+      "size": 33152685,
+      "mtime_ns": 1791497633943195400,
+      "duration_seconds": 828.755021
+    },
+    {
+      "filename": "James Dillon_String Quartet No. 5.mp3",
+      "size": 34247085,
+      "mtime_ns": 1791496780715420900,
+      "duration_seconds": 856.119729
+    },
+    {
+      "filename": "James Tenney_Seegersong #1.mp3",
+      "size": 30202605,
+      "mtime_ns": 1791499312782713500,
+      "duration_seconds": 755.008021
+    },
+    {
+      "filename": "Jason Eckardt_Trespass.mp3",
+      "size": 34847490,
+      "mtime_ns": 1791496333001812200,
+      "duration_seconds": 871.119819
+    },
+    {
+      "filename": "Jean-Claude Eloy_Équivalences.mp3",
+      "size": 21215085,
+      "mtime_ns": 1791505561780609500,
+      "duration_seconds": 530.308938
+    },
+    {
+      "filename": "Joan Magrané Figuera_...secreta desolación.mp3",
+      "size": 33121965,
+      "mtime_ns": 1791497637090771900,
+      "duration_seconds": 827.988771
+    },
+    {
+      "filename": "John Adams_China Gates.mp3",
+      "size": 12170925,
+      "mtime_ns": 1791509252358212300,
+      "duration_seconds": 304.204646
+    },
+    {
+      "filename": "John Cage_Fifty-Eight.mp3",
+      "size": 108195885,
+      "mtime_ns": 1791476925073345600,
+      "duration_seconds": 2704.846083
+    },
+    {
+      "filename": "John Cage_Ophelia.mp3",
+      "size": 11714925,
+      "mtime_ns": 1791509367269106400,
+      "duration_seconds": 292.803646
+    },
+    {
+      "filename": "John Cage_Two Pastorales.mp3",
+      "size": 30583725,
+      "mtime_ns": 1791499089380926900,
+      "duration_seconds": 764.540229
+    },
+    {
+      "filename": "John Zorn_Carny.mp3",
+      "size": 29079405,
+      "mtime_ns": 1791500092412879100,
+      "duration_seconds": 726.933333
+    },
+    {
+      "filename": "Jonathan Dove_Piano Quintet.mp3",
+      "size": 50330925,
+      "mtime_ns": 1791485951418285600,
+      "duration_seconds": 1258.219688
+    },
+    {
+      "filename": "Jorge Torres Sáenz_“...y entreabro la puerta del jardín de los muertos”.mp3",
+      "size": 33202605,
+      "mtime_ns": 1791497580600141000,
+      "duration_seconds": 830.008896
+    },
+    {
+      "filename": "José María Sánchez-Verdú_El sueño de la razón produce monstruos.mp3",
+      "size": 7049325,
+      "mtime_ns": 1791509993568480700,
+      "duration_seconds": 176.170667
+    },
+    {
+      "filename": "Julia Purgina_Kammermusik II.mp3",
+      "size": 16983405,
+      "mtime_ns": 1791507658182454600,
+      "duration_seconds": 424.530438
+    },
+    {
+      "filename": "Julius Eastman_Piano 2.mp3",
+      "size": 41086125,
+      "mtime_ns": 1791492405564885800,
+      "duration_seconds": 1027.099875
+    },
+    {
+      "filename": "Jörg Widmann_Air.mp3",
+      "size": 20396205,
+      "mtime_ns": 1791506061884047100,
+      "duration_seconds": 509.840563
+    },
+    {
+      "filename": "Jörg Widmann_Sonatina facile.mp3",
+      "size": 28704045,
+      "mtime_ns": 1791500450081981900,
+      "duration_seconds": 717.546667
+    },
+    {
+      "filename": "Jürg Frey_Wen 25.mp3",
+      "size": 8322285,
+      "mtime_ns": 1791509887424447900,
+      "duration_seconds": 208.0
+    },
+    {
+      "filename": "Kaija Saariaho_Figura.mp3",
+      "size": 31059885,
+      "mtime_ns": 1791498838890711400,
+      "duration_seconds": 776.448
+    },
+    {
+      "filename": "Karl Amadeus Hartmann_String Quartet No. 1.mp3",
+      "size": 54561645,
+      "mtime_ns": 1791484169106362000,
+      "duration_seconds": 1363.989333
+    },
+    {
+      "filename": "Karlheinz Stockhausen_Knabenduett.mp3",
+      "size": 10882605,
+      "mtime_ns": 1791509522396341400,
+      "duration_seconds": 272.0
+    },
+    {
+      "filename": "Kevin Juillerat_Study on phonetics.mp3",
+      "size": 13560045,
+      "mtime_ns": 1791508911192753100,
+      "duration_seconds": 338.941688
+    },
+    {
+      "filename": "Klaus K. Hübler_String Quartet No. 3.mp3",
+      "size": 28706925,
+      "mtime_ns": 1791500437997286600,
+      "duration_seconds": 717.610667
+    },
+    {
+      "filename": "Klaus Lang_seven views of white.mp3",
+      "size": 91162605,
+      "mtime_ns": 1791478224810977000,
+      "duration_seconds": 2279.015333
+    },
+    {
+      "filename": "Krzysztof Penderecki_Przebudzenie Jakuba.mp3",
+      "size": 15805485,
+      "mtime_ns": 1791508165914257800,
+      "duration_seconds": 395.075938
+    },
+    {
+      "filename": "Laurent Petitgirard_Tryptique pour guitare.mp3",
+      "size": 24065325,
+      "mtime_ns": 1791503769845408200,
+      "duration_seconds": 601.570979
+    },
+    {
+      "filename": "Lionel Bord_Fantasmi.mp3",
+      "size": 36756518,
+      "mtime_ns": 1791495082126314400,
+      "duration_seconds": 918.836825
+    },
+    {
+      "filename": "Liza Lim_Mary Transcendence after Trauma.mp3",
+      "size": 51803565,
+      "mtime_ns": 1791485234699185400,
+      "duration_seconds": 1295.034938
+    },
+    {
+      "filename": "Lou Harrison_Concerto No. 1 for Flute and Percussion.mp3",
+      "size": 21442605,
+      "mtime_ns": 1791505467571548700,
+      "duration_seconds": 536.009438
+    },
+    {
+      "filename": "Louis Andriessen_Berceuse voor Annie van Os.mp3",
+      "size": 5336685,
+      "mtime_ns": 1791510087846923300,
+      "duration_seconds": 133.352208
+    },
+    {
+      "filename": "Luc Ferrari_String Quartet.mp3",
+      "size": 61327725,
+      "mtime_ns": 1791481971061535700,
+      "duration_seconds": 1533.143958
+    },
+    {
+      "filename": "Lucia Ronchetti_Requiem.mp3",
+      "size": 39241005,
+      "mtime_ns": 1791493565018162000,
+      "duration_seconds": 980.961833
+    },
+    {
+      "filename": "Luciano Berio_Ricorrenze.mp3",
+      "size": 34913325,
+      "mtime_ns": 1791496250615470100,
+      "duration_seconds": 872.768438
+    },
+    {
+      "filename": "Luigi Dallapiccola_Tartiniana seconda.mp3",
+      "size": 28607085,
+      "mtime_ns": 1791500543548766300,
+      "duration_seconds": 715.116563
+    },
+    {
+      "filename": "Lukas Foss_String Quartet no. 3.mp3",
+      "size": 51955245,
+      "mtime_ns": 1791485140408696200,
+      "duration_seconds": 1298.808979
+    },
+    {
+      "filename": "Magnus Lindberg_Play I.mp3",
+      "size": 26815725,
+      "mtime_ns": 1791501814021208200,
+      "duration_seconds": 670.336875
+    },
+    {
+      "filename": "Malika Kishino_Monochromer Garten VII.mp3",
+      "size": 34402605,
+      "mtime_ns": 1791496686698379900,
+      "duration_seconds": 860.009083
+    },
+    {
+      "filename": "Marc Monnet_Patatras !.mp3",
+      "size": 22764525,
+      "mtime_ns": 1791504732994038300,
+      "duration_seconds": 569.051438
+    },
+    {
+      "filename": "Mario Lavista_Canto del alba.mp3",
+      "size": 22971885,
+      "mtime_ns": 1791504585879400700,
+      "duration_seconds": 574.241104
+    },
+    {
+      "filename": "Mark Andre_un-fini I.mp3",
+      "size": 25546605,
+      "mtime_ns": 1791502773010559500,
+      "duration_seconds": 638.606813
+    },
+    {
+      "filename": "Martin Smolka_Slzy.mp3",
+      "size": 38084205,
+      "mtime_ns": 1791494284956644100,
+      "duration_seconds": 952.041375
+    },
+    {
+      "filename": "Matthew Shlomowitz_Grand Epic Fanfare.mp3",
+      "size": 50523885,
+      "mtime_ns": 1791485846792615600,
+      "duration_seconds": 1263.026229
+    },
+    {
+      "filename": "Maurice Ohana_Concerto.mp3",
+      "size": 62006445,
+      "mtime_ns": 1791481826373254100,
+      "duration_seconds": 1550.106125
+    },
+    {
+      "filename": "Maurice Ravel_String Quartet.mp3",
+      "size": 69003885,
+      "mtime_ns": 1791480831182572800,
+      "duration_seconds": 1725.045271
+    },
+    {
+      "filename": "Mauricio Kagel_Unguis incarnatus est.mp3",
+      "size": 15416685,
+      "mtime_ns": 1791508280865959800,
+      "duration_seconds": 385.358375
+    },
+    {
+      "filename": "Meredith Monk_Stringsongs.mp3",
+      "size": 48264045,
+      "mtime_ns": 1791488353247602000,
+      "duration_seconds": 1206.532083
+    },
+    {
+      "filename": "Michael Jarrell_Lied ohne Worte.mp3",
+      "size": 30014445,
+      "mtime_ns": 1791499413197406000,
+      "duration_seconds": 750.306396
+    },
+    {
+      "filename": "Michael Nyman_Time Will Pronounce.mp3",
+      "size": 49802925,
+      "mtime_ns": 1791486368823182000,
+      "duration_seconds": 1245.007542
+    },
+    {
+      "filename": "Mikel Urquiza_Les lueurs se sont multipliées.mp3",
+      "size": 29575725,
+      "mtime_ns": 1791499795510735300,
+      "duration_seconds": 739.323375
+    },
+    {
+      "filename": "Morton Feldman_Bass Clarinet and Percussion.mp3",
+      "size": 47527725,
+      "mtime_ns": 1791488981070475500,
+      "duration_seconds": 1188.141875
+    },
+    {
+      "filename": "Morton Feldman_String Quartet No. 2.mp3",
+      "size": 798146925,
+      "mtime_ns": 1791475411394749000,
+      "duration_seconds": 19953.621333
+    },
+    {
+      "filename": "Nadir Vassena_Triptych – Crucifixion.mp3",
+      "size": 26404845,
+      "mtime_ns": 1791502135119885800,
+      "duration_seconds": 660.050438
+    },
+    {
+      "filename": "Nico Muhly_One Line, Two Shapes.mp3",
+      "size": 16466925,
+      "mtime_ns": 1791507858680408900,
+      "duration_seconds": 411.608542
+    },
+    {
+      "filename": "Nicolaus A. Huber_Disappearances.mp3",
+      "size": 40834605,
+      "mtime_ns": 1791492530055637800,
+      "duration_seconds": 1020.8
+    },
+    {
+      "filename": "Nina Šenk_Quadrum.mp3",
+      "size": 77109165,
+      "mtime_ns": 1791479747813562900,
+      "duration_seconds": 1927.658667
+    },
+    {
+      "filename": "Olga Neuwirth_...ad auras.mp3",
+      "size": 27302445,
+      "mtime_ns": 1791501443895678000,
+      "duration_seconds": 682.492521
+    },
+    {
+      "filename": "Oliver Knussen_Sonya's Lullaby.mp3",
+      "size": 14964525,
+      "mtime_ns": 1791508397876970800,
+      "duration_seconds": 374.05025
+    },
+    {
+      "filename": "Olivier Messiaen_Le Banquet Céleste.mp3",
+      "size": 17691885,
+      "mtime_ns": 1791507375810772300,
+      "duration_seconds": 442.224979
+    },
+    {
+      "filename": "Ondřej Adámek_Lo que no’ contamo’.mp3",
+      "size": 40531245,
+      "mtime_ns": 1791492669363318900,
+      "duration_seconds": 1013.225958
+    },
+    {
+      "filename": "Pascal Dusapin_Clam.mp3",
+      "size": 27253485,
+      "mtime_ns": 1791501457000328600,
+      "duration_seconds": 681.285083
+    },
+    {
+      "filename": "Pascale Criton_Trans.mp3",
+      "size": 49899885,
+      "mtime_ns": 1791486259533206800,
+      "duration_seconds": 1247.445625
+    },
+    {
+      "filename": "Paul Hindemith_Ludus tonalis.mp3",
+      "size": 128892525,
+      "mtime_ns": 1791476262134095800,
+      "duration_seconds": 3222.244729
+    },
+    {
+      "filename": "Per Nørgård_Luna.mp3",
+      "size": 33643245,
+      "mtime_ns": 1791497239490709200,
+      "duration_seconds": 841.015167
+    },
+    {
+      "filename": "Peter Ablinger_Verkündigung.mp3",
+      "size": 44327085,
+      "mtime_ns": 1791490492437600900,
+      "duration_seconds": 1108.125896
+    },
+    {
+      "filename": "Philip Glass_Façades.mp3",
+      "size": 17654445,
+      "mtime_ns": 1791507408936218600,
+      "duration_seconds": 441.29525
+    },
+    {
+      "filename": "Philipp Maintz_upon a moment's shallow rim.mp3",
+      "size": 59804205,
+      "mtime_ns": 1791482339121533200,
+      "duration_seconds": 1495.04
+    },
+    {
+      "filename": "Philippe Hersant_Sept miniatures.mp3",
+      "size": 21320685,
+      "mtime_ns": 1791505529140447500,
+      "duration_seconds": 532.944979
+    },
+    {
+      "filename": "Philippe Hurel_Six miniatures en trompe-l'œil.mp3",
+      "size": 54429165,
+      "mtime_ns": 1791484218911731300,
+      "duration_seconds": 1360.67775
+    },
+    {
+      "filename": "Philippe Leroux_Masse(s)...Mémo(ire).mp3",
+      "size": 44845485,
+      "mtime_ns": 1791490235816883900,
+      "duration_seconds": 1121.088
+    },
+    {
+      "filename": "Philippe Schœller_Lune d’argent.mp3",
+      "size": 13023405,
+      "mtime_ns": 1791509076560741400,
+      "duration_seconds": 325.520563
+    },
+    {
+      "filename": "Pierre Boulez_Sonatine.mp3",
+      "size": 28536045,
+      "mtime_ns": 1791500599450639100,
+      "duration_seconds": 713.328979
+    },
+    {
+      "filename": "Raphaël Cendo_Ars Satura.mp3",
+      "size": 23151405,
+      "mtime_ns": 1791504447833654900,
+      "duration_seconds": 578.722542
+    },
+    {
+      "filename": "Rebecca Saunders_Hauch II.mp3",
+      "size": 21560685,
+      "mtime_ns": 1791505370614439200,
+      "duration_seconds": 538.946771
+    },
+    {
+      "filename": "Ricardo Nillni_Transeo Tandem.mp3",
+      "size": 10510125,
+      "mtime_ns": 1791509594184074300,
+      "duration_seconds": 262.687354
+    },
+    {
+      "filename": "Robin De Raaff_Der Einsame im Herbst.mp3",
+      "size": 42804525,
+      "mtime_ns": 1791491319789309400,
+      "duration_seconds": 1070.045188
+    },
+    {
+      "filename": "Rune Glerup_Concerto.mp3",
+      "size": 46294125,
+      "mtime_ns": 1791489526301553900,
+      "duration_seconds": 1157.282542
+    },
+    {
+      "filename": "Salvatore Sciarrino_4 Adagi.mp3",
+      "size": 57649005,
+      "mtime_ns": 1791483073035228600,
+      "duration_seconds": 1441.169708
+    },
+    {
+      "filename": "Salvatore Sciarrino_Il motivo degli oggetti di vetro.mp3",
+      "size": 14844525,
+      "mtime_ns": 1791508446504761200,
+      "duration_seconds": 371.043271
+    },
+    {
+      "filename": "Salvatore Sciarrino_Vento d'ombra.mp3",
+      "size": 28209645,
+      "mtime_ns": 1791500818428555400,
+      "duration_seconds": 705.173333
+    },
+    {
+      "filename": "Sarah Nemtsov_Unscheinbare Pforten Paris.mp3",
+      "size": 9029805,
+      "mtime_ns": 1791509804635976000,
+      "duration_seconds": 225.67475
+    },
+    {
+      "filename": "Simon Steen-Andersen_in-side-out-side-in.mp3",
+      "size": 23111085,
+      "mtime_ns": 1791504484269354200,
+      "duration_seconds": 577.724083
+    },
+    {
+      "filename": "Sofia Goubaïdoulina_Quaternion.mp3",
+      "size": 53857965,
+      "mtime_ns": 1791484377017651000,
+      "duration_seconds": 1346.385854
+    },
+    {
+      "filename": "Stefano Gervasoni_Studio di disabitudine.mp3",
+      "size": 35542125,
+      "mtime_ns": 1791495776779795400,
+      "duration_seconds": 888.488354
+    },
+    {
+      "filename": "Tania León_A La Par.mp3",
+      "size": 33477165,
+      "mtime_ns": 1791497356265414000,
+      "duration_seconds": 836.870396
+    },
+    {
+      "filename": "Tansy Davies_Iris.mp3",
+      "size": 38894445,
+      "mtime_ns": 1791493778500004600,
+      "duration_seconds": 972.289167
+    },
+    {
+      "filename": "Thierry Escaich_Choral's dream.mp3",
+      "size": 31353645,
+      "mtime_ns": 1791498632215404300,
+      "duration_seconds": 783.786667
+    },
+    {
+      "filename": "Thierry Pécou_Soleil-Feu.mp3",
+      "size": 17782125,
+      "mtime_ns": 1791507345463568200,
+      "duration_seconds": 444.499604
+    },
+    {
+      "filename": "Théo Loevendie_Ackermusik.mp3",
+      "size": 20486412,
+      "mtime_ns": 1791505991436923700,
+      "duration_seconds": 512.09288
+    },
+    {
+      "filename": "Toshi Ichiyanagi_Flowers Blooming in Summer.mp3",
+      "size": 18848685,
+      "mtime_ns": 1791506881417185000,
+      "duration_seconds": 471.168
+    },
+    {
+      "filename": "Toshio Hosokawa_Edi.mp3",
+      "size": 11189805,
+      "mtime_ns": 1791509461264449700,
+      "duration_seconds": 279.684354
+    },
+    {
+      "filename": "Toshio Hosokawa_Prayer.mp3",
+      "size": 56934765,
+      "mtime_ns": 1791483405756292800,
+      "duration_seconds": 1423.317333
+    },
+    {
+      "filename": "Toshio Hosokawa_Voyage VII.mp3",
+      "size": 37883565,
+      "mtime_ns": 1791494367252827400,
+      "duration_seconds": 947.025854
+    },
+    {
+      "filename": "Tristan Murail_MémoireErosion.mp3",
+      "size": 42203565,
+      "mtime_ns": 1791491696256749000,
+      "duration_seconds": 1055.033479
+    },
+    {
+      "filename": "Tōru Takemitsu_FantasmaCantos.mp3",
+      "size": 42084525,
+      "mtime_ns": 1791491759331387600,
+      "duration_seconds": 1052.061333
+    },
+    {
+      "filename": "Unsuk Chin_Alaraph ‘Ritus des Herzschlags’.mp3",
+      "size": 36858285,
+      "mtime_ns": 1791495027677463100,
+      "duration_seconds": 921.408
+    },
+    {
+      "filename": "Vincent David_Échos éclatés.mp3",
+      "size": 20929005,
+      "mtime_ns": 1791505742320759100,
+      "duration_seconds": 523.157208
+    },
+    {
+      "filename": "Vito Žuraj_Hawk-Eye.mp3",
+      "size": 43458285,
+      "mtime_ns": 1791490970535022700,
+      "duration_seconds": 1086.392021
+    },
+    {
+      "filename": "Witold Lutosławski_Bukoliki.mp3",
+      "size": 13639725,
+      "mtime_ns": 1791508887908273600,
+      "duration_seconds": 340.938604
+    },
+    {
+      "filename": "Witold Lutosławski_Symphony No.3.mp3",
+      "size": 72887085,
+      "mtime_ns": 1791480226109904100,
+      "duration_seconds": 1822.116292
+    },
+    {
+      "filename": "Wolfgang Rihm_Hekton.mp3",
+      "size": 19962285,
+      "mtime_ns": 1791506265438167200,
+      "duration_seconds": 498.985229
+    },
+    {
+      "filename": "Wolfgang Rihm_Sub-Kontur.mp3",
+      "size": 64110765,
+      "mtime_ns": 1791481478037570400,
+      "duration_seconds": 1602.699333
+    },
+    {
+      "filename": "Yann Robin_Extraction.mp3",
+      "size": 10127085,
+      "mtime_ns": 1791509654805832200,
+      "duration_seconds": 253.120729
+    },
+    {
+      "filename": "York Höller_Trias.mp3",
+      "size": 31236525,
+      "mtime_ns": 1791498749796014400,
+      "duration_seconds": 780.840979
+    }
+  ],
+  "accepted": [
+    {
+      "start_seconds": 576.8057171378425,
+      "actual_seconds": 5.016,
+      "sha256": "d8c1cef9edacd0750b7b6a8f312b783d9cdb6c872aa0d080cd479bf763299759",
+      "byte_size": 201645,
+      "output_filename": "0001.mp3",
+      "source_filename": "Aaron Copland_Three Latin American Sketches.mp3"
+    },
+    {
+      "start_seconds": 110.81360257076328,
+      "actual_seconds": 5.016,
+      "sha256": "ee109963a88a029e414f303a7957aaa3aad4d3469c5de6b0a67234de71d8f24d",
+      "byte_size": 201645,
+      "output_filename": "0002.mp3",
+      "source_filename": "Alain Bancquart_Labyrinthemiroir.mp3"
+    },
+    {
+      "start_seconds": 36.12512999255941,
+      "actual_seconds": 5.016,
+      "sha256": "c4b18be0f8a0c25f7e3f5b04cf025c405782c56356be54efab6e7990e4401507",
+      "byte_size": 201645,
+      "output_filename": "0003.mp3",
+      "source_filename": "Alain Louvier_Triangle.mp3"
+    },
+    {
+      "start_seconds": 1018.6918644795936,
+      "actual_seconds": 5.016,
+      "sha256": "772857f3df3c0ebc8c6e23f0aa6841de3ea145303cce9b9b2e64a37863253770",
+      "byte_size": 201645,
+      "output_filename": "0004.mp3",
+      "source_filename": "Alberto Posadas_Hylé.mp3"
+    },
+    {
+      "start_seconds": 170.56152629320906,
+      "actual_seconds": 5.04,
+      "sha256": "f423852283fd2190fbc38548f22743916650e56a4273c49927e8a9816a5c4183",
+      "byte_size": 202605,
+      "output_filename": "0005.mp3",
+      "source_filename": "Aldo Clementi_Replica.mp3"
+    },
+    {
+      "start_seconds": 328.55528967300364,
+      "actual_seconds": 5.04,
+      "sha256": "cdba7667b161779f5d6f8d8d112f46a5521416d1015f1beff5038ef99d497857",
+      "byte_size": 202605,
+      "output_filename": "0006.mp3",
+      "source_filename": "Alex Mincek_Poco a Poco.mp3"
+    },
+    {
+      "start_seconds": 330.7434795339202,
+      "actual_seconds": 5.04,
+      "sha256": "352d6182945a2fe01be06e11c30fda02d210a671ccbe7f6a434d2ddd69c6894e",
+      "byte_size": 202605,
+      "output_filename": "0007.mp3",
+      "source_filename": "Alfred Schnittke_Five Aphorisms.mp3"
+    },
+    {
+      "start_seconds": 528.2784831930114,
+      "actual_seconds": 5.016,
+      "sha256": "dc7da5a7ef1e20fb299e348c651aaad8f66da2eaf570d371d37af19623eb5749",
+      "byte_size": 201645,
+      "output_filename": "0008.mp3",
+      "source_filename": "Alfred Schnittke_Sérénade.mp3"
+    },
+    {
+      "start_seconds": 551.7316081240042,
+      "actual_seconds": 5.04,
+      "sha256": "2b4d51fa16898a7c1d30075357efa874827c097d9b03c4be990a6bbfd09fdf5c",
+      "byte_size": 202605,
+      "output_filename": "0009.mp3",
+      "source_filename": "Alvin Curran_VSTO.mp3"
+    },
+    {
+      "start_seconds": 43.027264598547205,
+      "actual_seconds": 5.04,
+      "sha256": "9216f09be8d92247f9d7a2f17db204ab9c974abd2610e621bb663e14c004de6b",
+      "byte_size": 202605,
+      "output_filename": "0010.mp3",
+      "source_filename": "Anders Eliasson_Disegno.mp3"
+    },
+    {
+      "start_seconds": 39.252142604635374,
+      "actual_seconds": 5.016,
+      "sha256": "57b11a7203c4a77155568af3774f3e16aeedcd6a403b2d8f4d04090cc4ee6007",
+      "byte_size": 201645,
+      "output_filename": "0011.mp3",
+      "source_filename": "André Jolivet_Air de bravoure.mp3"
+    },
+    {
+      "start_seconds": 332.2276415327519,
+      "actual_seconds": 5.04,
+      "sha256": "655fba2cc74154685a231e7be485febea5f28db2718e3502c64db30d3f9df0a8",
+      "byte_size": 202605,
+      "output_filename": "0012.mp3",
+      "source_filename": "André Jolivet_Symphonie n°1.mp3"
+    },
+    {
+      "start_seconds": 357.0327754185194,
+      "actual_seconds": 5.016,
+      "sha256": "290ce68fc268b7daee0bf8a33fded712549e303d9b0e4a1913f9b628172212c7",
+      "byte_size": 201645,
+      "output_filename": "0013.mp3",
+      "source_filename": "Anton Webern_Rondo.mp3"
+    },
+    {
+      "start_seconds": 49.825206850444935,
+      "actual_seconds": 5.01551,
+      "sha256": "2a826375d121983ae75259cf1df50cd6189bc828527a2632d797bc19b9c23f54",
+      "byte_size": 201808,
+      "output_filename": "0014.mp3",
+      "source_filename": "Arthur Lavandier_Le Livre 1.mp3"
+    },
+    {
+      "start_seconds": 13.570924322860224,
+      "actual_seconds": 5.01551,
+      "sha256": "3b02114caee5471dcd7ca844e17727d784eaa75b3bfcb92a68de7c78d6760dac",
+      "byte_size": 201802,
+      "output_filename": "0015.mp3",
+      "source_filename": "Augusta Read Thomas_Magic Box.mp3"
+    },
+    {
+      "start_seconds": 371.62890536820964,
+      "actual_seconds": 5.016,
+      "sha256": "b78bb8cacc73278e1e038d3fda32934a681164ebba311a684e703b5a93d866ae",
+      "byte_size": 201645,
+      "output_filename": "0016.mp3",
+      "source_filename": "Aureliano Cattaneo_Blut.mp3"
+    },
+    {
+      "start_seconds": 375.30239021282733,
+      "actual_seconds": 5.016,
+      "sha256": "b5dbdfa7bd81132d052544fadc86971664fda02341741fd7d8634afd67ea23c5",
+      "byte_size": 201645,
+      "output_filename": "0017.mp3",
+      "source_filename": "Beat Furrer_Concerto.mp3"
+    },
+    {
+      "start_seconds": 277.4319728201653,
+      "actual_seconds": 5.016,
+      "sha256": "38f3f81693d7a4fc7f6878eb5147daba05e672079ccff3a8cd3ae38f45dc2434",
+      "byte_size": 201645,
+      "output_filename": "0018.mp3",
+      "source_filename": "Benjamin Britten_Four Sea Interludes from Peter Grimes.mp3"
+    },
+    {
+      "start_seconds": 1905.705789822962,
+      "actual_seconds": 5.016,
+      "sha256": "8615f8115846746f6c2b87037ff63e71b8f375c6a1a959ecde90fdff11b57b04",
+      "byte_size": 201645,
+      "output_filename": "0019.mp3",
+      "source_filename": "Benjamin Britten_Symphony for Cello and Orchestra.mp3"
+    },
+    {
+      "start_seconds": 141.88346224128924,
+      "actual_seconds": 5.01551,
+      "sha256": "86a50195e74759f6a182f1271fe28289b9007a93fb98caedea1413710ecad4b5",
+      "byte_size": 201809,
+      "output_filename": "0020.mp3",
+      "source_filename": "Bernd Alois Zimmermann_Tempus loquendi.mp3"
+    },
+    {
+      "start_seconds": 480.9920893309384,
+      "actual_seconds": 5.016,
+      "sha256": "3efeb7b5070f9572526daa436ba8914d3a7146962bf74ab3f8f5458834561d40",
+      "byte_size": 201645,
+      "output_filename": "0021.mp3",
+      "source_filename": "Betsy Jolas_Musique de jour.mp3"
+    },
+    {
+      "start_seconds": 359.2475082009763,
+      "actual_seconds": 5.016,
+      "sha256": "8992b057ada87631d0f87d2f6990bbd1eb81ea2534f3e3ffb7581255a927ff6e",
+      "byte_size": 201645,
+      "output_filename": "0022.mp3",
+      "source_filename": "Betsy Jolas_Épisode sixième.mp3"
+    },
+    {
+      "start_seconds": 78.45757339916017,
+      "actual_seconds": 5.016,
+      "sha256": "8a937717e03250ae17677545f9b6d454026e608fc166b510aa7f724d399a1f0e",
+      "byte_size": 201645,
+      "output_filename": "0023.mp3",
+      "source_filename": "Brian Ferneyhough_In nomine a 3.mp3"
+    },
+    {
+      "start_seconds": 289.1717779971799,
+      "actual_seconds": 5.04,
+      "sha256": "66d9d76c9e17d6c7f2a5e9c7bed7f87d937b417a30ee08109c4dcabb0ee1fdf2",
+      "byte_size": 202605,
+      "output_filename": "0024.mp3",
+      "source_filename": "Brian Ferneyhough_Time and Motion Study I.mp3"
+    },
+    {
+      "start_seconds": 211.994754840878,
+      "actual_seconds": 5.016,
+      "sha256": "be7bc8d7cde5ed159060269237a363e833944e7a7528d176e221866583ea4de6",
+      "byte_size": 201645,
+      "output_filename": "0025.mp3",
+      "source_filename": "Bruno Maderna_Pièce pour Ivry.mp3"
+    },
+    {
+      "start_seconds": 67.92238211445677,
+      "actual_seconds": 5.016,
+      "sha256": "61a667f42c1dff9f11397dfdc999a52f0b0b4df9c23d76e36a17260d142a9087",
+      "byte_size": 201645,
+      "output_filename": "0026.mp3",
+      "source_filename": "Bruno Mantovani_Spirit of Alberti.mp3"
+    },
+    {
+      "start_seconds": 252.89976735159468,
+      "actual_seconds": 5.016,
+      "sha256": "334a8eeaa974bd139c71e3a4794076b1b24e5ce432bcb380d9016efc0b0f61d6",
+      "byte_size": 201645,
+      "output_filename": "0027.mp3",
+      "source_filename": "Camille Pépin_Aux confins de l'orage.mp3"
+    },
+    {
+      "start_seconds": 459.8243098758654,
+      "actual_seconds": 5.041633,
+      "sha256": "d38c915be37f5f7aafbf3d79325da01ea3d5581e9437ae186465415ab678e410",
+      "byte_size": 202854,
+      "output_filename": "0028.mp3",
+      "source_filename": "Carola Bauckholt_Hirn & Ei.mp3"
+    },
+    {
+      "start_seconds": 399.2690830750698,
+      "actual_seconds": 5.016,
+      "sha256": "5387dcfac56cd6111948c60bc3a7ff41f379b4890936fd2e526b9e8a3efc59f6",
+      "byte_size": 201645,
+      "output_filename": "0029.mp3",
+      "source_filename": "Caroline Shaw_Thousandth Orange.mp3"
+    },
+    {
+      "start_seconds": 212.1308086035427,
+      "actual_seconds": 5.04,
+      "sha256": "4d6be332741df5f0f5c285efbb4bf86cb4f3e85075b98b2339818a1e7490b4fd",
+      "byte_size": 202605,
+      "output_filename": "0030.mp3",
+      "source_filename": "Charles Ives_Orchestral Set No. 1 - Three Places in New England.mp3"
+    },
+    {
+      "start_seconds": 758.4714598414965,
+      "actual_seconds": 5.04,
+      "sha256": "1f59f741a28775d5373158399699d9cefbf3aa54617dc6369b3e484dc5e7f4e7",
+      "byte_size": 202605,
+      "output_filename": "0031.mp3",
+      "source_filename": "Charles Ives_Three Quarter-Tone Pieces.mp3"
+    },
+    {
+      "start_seconds": 250.62385002817308,
+      "actual_seconds": 5.016,
+      "sha256": "198beb652389b030274fae2932046de6e37f8fc0c78d6338b8ec81e756d0dfe2",
+      "byte_size": 201645,
+      "output_filename": "0032.mp3",
+      "source_filename": "Charlotte Bray_Voyage.mp3"
+    },
+    {
+      "start_seconds": 1240.1046062215262,
+      "actual_seconds": 5.04,
+      "sha256": "c7857d8a6c1fd79632a5b3d5d39058dff3dbd724aea03a364d031b4dbcd22901",
+      "byte_size": 202605,
+      "output_filename": "0033.mp3",
+      "source_filename": "Christian Mason_Zwischen den Sternen.mp3"
+    },
+    {
+      "start_seconds": 78.84911457061176,
+      "actual_seconds": 5.016,
+      "sha256": "1f290c86508df307e7b6d423e5d77e1bd6eec6a4887a5af5c1871b5e04a0c8be",
+      "byte_size": 201645,
+      "output_filename": "0034.mp3",
+      "source_filename": "Christophe Bertrand_Mana.mp3"
+    },
+    {
+      "start_seconds": 179.79045472794618,
+      "actual_seconds": 5.01551,
+      "sha256": "921969ad1f295acb359f7c39cecfecc47a73252fcd333d558599393ed2a56174",
+      "byte_size": 201803,
+      "output_filename": "0035.mp3",
+      "source_filename": "Claire-Mélanie Sinnhuber_Qui-vive.mp3"
+    },
+    {
+      "start_seconds": 396.24156010746685,
+      "actual_seconds": 5.016,
+      "sha256": "056e7ab8b813e3cbdd4072a2e528b187e3ac75a153f798edd5c4b02dc2d2326e",
+      "byte_size": 201645,
+      "output_filename": "0036.mp3",
+      "source_filename": "Claude Ledoux_Las Lagrimas de un Angel.mp3"
+    },
+    {
+      "start_seconds": 762.6680038598628,
+      "actual_seconds": 5.04,
+      "sha256": "a7c7c4a2cdb838d52a34f01e4f5a859dfb58521dca4c804c1b6e934645e8370d",
+      "byte_size": 202605,
+      "output_filename": "0037.mp3",
+      "source_filename": "Conlon Nancarrow_String Quartet No. 3.mp3"
+    },
+    {
+      "start_seconds": 421.8494805642239,
+      "actual_seconds": 5.016,
+      "sha256": "3bef67acdc0bc481885c6bc2c6698c7bd273cd417f9306de058a37c9d6ab7822",
+      "byte_size": 201645,
+      "output_filename": "0038.mp3",
+      "source_filename": "Dai Fujikura_Aquarius.mp3"
+    },
+    {
+      "start_seconds": 76.86191833391831,
+      "actual_seconds": 5.016,
+      "sha256": "088500eca22037466594eab9175b0ddd1a0bbf46fa5aef16c47317819c4c2439",
+      "byte_size": 201645,
+      "output_filename": "0039.mp3",
+      "source_filename": "Dai Fujikura_Drunken Master.mp3"
+    },
+    {
+      "start_seconds": 288.86472455469783,
+      "actual_seconds": 5.04,
+      "sha256": "6030d3e7a9b7b09c7b8117ecb60dcca7066768e106a1cc23feb429363db360af",
+      "byte_size": 202605,
+      "output_filename": "0040.mp3",
+      "source_filename": "Dai Fujikura_Lila.mp3"
+    },
+    {
+      "start_seconds": 566.3825388852856,
+      "actual_seconds": 5.016,
+      "sha256": "19171d5f73680ec359c8d16beafcff19624a872c3a9af56b12421004806c5ae4",
+      "byte_size": 201645,
+      "output_filename": "0041.mp3",
+      "source_filename": "Dai Fujikura_repetition recollection.mp3"
+    },
+    {
+      "start_seconds": 358.94590839678864,
+      "actual_seconds": 5.016,
+      "sha256": "902e8a0682e04e927b6c36ee3463f629568f152441b3dee1f388139665e7a847",
+      "byte_size": 201645,
+      "output_filename": "0042.mp3",
+      "source_filename": "Dai Fujikura_Wind Skein.mp3"
+    },
+    {
+      "start_seconds": 52.078358506377036,
+      "actual_seconds": 5.04,
+      "sha256": "36844d7a12b33219aac247142e24a03f23c99b346089d36ec97d5d083b73274c",
+      "byte_size": 202605,
+      "output_filename": "0043.mp3",
+      "source_filename": "Darius Milhaud_Jeu.mp3"
+    },
+    {
+      "start_seconds": 626.7082541479994,
+      "actual_seconds": 5.04,
+      "sha256": "274588846bfda66b5ad5ce6d4b2a9a940f5400ac470510f13811b519a30fbf51",
+      "byte_size": 202605,
+      "output_filename": "0044.mp3",
+      "source_filename": "Darius Milhaud_String Quartet No. 8.mp3"
+    },
+    {
+      "start_seconds": 161.44538577963004,
+      "actual_seconds": 5.04,
+      "sha256": "0dbff1349538c3cb0e3d66426ceee960f9d2e593a9cbe92c60acdfedd8ad2dbc",
+      "byte_size": 202605,
+      "output_filename": "0045.mp3",
+      "source_filename": "David Lang_boy.mp3"
+    },
+    {
+      "start_seconds": 61.831085931724544,
+      "actual_seconds": 5.016,
+      "sha256": "1551c85dee1d6aca1d7102d190d2239a6f4c58fc3584b980229ddb4d4e83c3df",
+      "byte_size": 201645,
+      "output_filename": "0046.mp3",
+      "source_filename": "David Lang_vent.mp3"
+    },
+    {
+      "start_seconds": 30.823707154113325,
+      "actual_seconds": 5.016,
+      "sha256": "397083c50702b7c4651d19c96a7bfb5e02d0f2ebb19f109bac44837f7d6e9b6a",
+      "byte_size": 201645,
+      "output_filename": "0047.mp3",
+      "source_filename": "Dieter Mack_Mari Marie.mp3"
+    },
+    {
+      "start_seconds": 278.192394795776,
+      "actual_seconds": 5.016,
+      "sha256": "163aa6b80e8f6475f809a86fe53cb10d6aabefa463d00dc296d953b180ae66e4",
+      "byte_size": 201645,
+      "output_filename": "0048.mp3",
+      "source_filename": "Dun Tan_Dew Fall Drops.mp3"
+    },
+    {
+      "start_seconds": 845.1722227680818,
+      "actual_seconds": 5.016,
+      "sha256": "045829283e9550fec4c89ba7c89e9b69df17bcb38a91bf1f533bb40e51f2d165",
+      "byte_size": 201645,
+      "output_filename": "0049.mp3",
+      "source_filename": "Edison Denisov_Sonata for Violin and Organ.mp3"
+    },
+    {
+      "start_seconds": 606.3776850019988,
+      "actual_seconds": 5.04,
+      "sha256": "cacccf1d0e478db22237c22441843c6def0403f94019aad53e4d8cb72eae75d2",
+      "byte_size": 202605,
+      "output_filename": "0050.mp3",
+      "source_filename": "Einar Torfi Einarsson_Quanta.mp3"
+    },
+    {
+      "start_seconds": 26.834558817522694,
+      "actual_seconds": 5.016,
+      "sha256": "4ad4f2c3d923be28e9095d5d6e946681895351710f4b2c3096cb06eb44977a85",
+      "byte_size": 201645,
+      "output_filename": "0051.mp3",
+      "source_filename": "Elliott Carter_Caténaires.mp3"
+    },
+    {
+      "start_seconds": 450.47764284606103,
+      "actual_seconds": 5.04,
+      "sha256": "d449ac3d99d183d9079d63030c1c7f901a343743309556be23fa2d19668b07ed",
+      "byte_size": 202605,
+      "output_filename": "0052.mp3",
+      "source_filename": "Elliott Carter_Horn Concerto.mp3"
+    },
+    {
+      "start_seconds": 1047.0033114921528,
+      "actual_seconds": 5.016,
+      "sha256": "f09939801760e7e2589f422a63cfdeb8af7128d3286fd71d60dc06f2a42fd4f8",
+      "byte_size": 201645,
+      "output_filename": "0053.mp3",
+      "source_filename": "Elliott Carter_String Quartet No. 3.mp3"
+    },
+    {
+      "start_seconds": 109.52472359570687,
+      "actual_seconds": 5.016,
+      "sha256": "c603b751e27fdcb037f137bbbed77823c7eed4dcd8a86d0ea2123af1abf1e867",
+      "byte_size": 201645,
+      "output_filename": "0054.mp3",
+      "source_filename": "Enno Poppe_Altbau.mp3"
+    },
+    {
+      "start_seconds": 412.9453204273282,
+      "actual_seconds": 5.016,
+      "sha256": "23de958ae4dc1d57c915072a69c4c79c18338a362ac6211f4bc1114b59965bc6",
+      "byte_size": 201645,
+      "output_filename": "0055.mp3",
+      "source_filename": "Enno Poppe_Streik.mp3"
+    },
+    {
+      "start_seconds": 191.526526782766,
+      "actual_seconds": 5.016,
+      "sha256": "9d011e28a3ba6370f58728fcfcdc4f3170e136eb377bd1d84d1b9010be78b049",
+      "byte_size": 201645,
+      "output_filename": "0056.mp3",
+      "source_filename": "Ernst Krenek_4 Pieces for Oboe and Piano.mp3"
+    },
+    {
+      "start_seconds": 57.45040651977897,
+      "actual_seconds": 5.04,
+      "sha256": "e99d374edd22581e6cb9ea48c05240ebb1c875ec7d4ddce4a4e9acc7ea26ebff",
+      "byte_size": 202605,
+      "output_filename": "0057.mp3",
+      "source_filename": "Ernst Krenek_Piano Sonata No. 7.mp3"
+    },
+    {
+      "start_seconds": 662.5370591214462,
+      "actual_seconds": 5.04,
+      "sha256": "65d6b49185f1a3c6ce16fea847182e850b4c607dc122ff647716ca90eddc8680",
+      "byte_size": 202605,
+      "output_filename": "0058.mp3",
+      "source_filename": "Ernst Krenek_Violin Concerto No. 1.mp3"
+    },
+    {
+      "start_seconds": 67.77615746505838,
+      "actual_seconds": 5.04,
+      "sha256": "e7dac4e855ad287db2dcf0309862a21c835e83b7bd603a229230f94465ddae75",
+      "byte_size": 202605,
+      "output_filename": "0059.mp3",
+      "source_filename": "Fabio Nieder_Oberton-Elegie in G.mp3"
+    },
+    {
+      "start_seconds": 91.78428031845907,
+      "actual_seconds": 5.016,
+      "sha256": "4565518cc92c7bb38fe908b0d5b8c344e46c266a44753da345076a2e520b2077",
+      "byte_size": 201645,
+      "output_filename": "0060.mp3",
+      "source_filename": "Francesco Filidei_Stèle pour Vierne.mp3"
+    },
+    {
+      "start_seconds": 301.504417473358,
+      "actual_seconds": 5.016,
+      "sha256": "c9db53b88976219e3055feffe7be5034516a1ae7dcb220a256e6733851e24401",
+      "byte_size": 201645,
+      "output_filename": "0061.mp3",
+      "source_filename": "Francisco Guerrero Marín_Ars Combinatoria.mp3"
+    },
+    {
+      "start_seconds": 423.3133095279687,
+      "actual_seconds": 5.016,
+      "sha256": "8ce16f14904ee5f801665ca76678e0249f9baa28299dd63e30adcf792f5ca611",
+      "byte_size": 201645,
+      "output_filename": "0062.mp3",
+      "source_filename": "Franco Donatoni_Chantal.mp3"
+    },
+    {
+      "start_seconds": 176.91785043395578,
+      "actual_seconds": 5.016,
+      "sha256": "5640964438b20271a9c37401f4492f256731a27233bb3781fcc36160470b4e6b",
+      "byte_size": 201645,
+      "output_filename": "0063.mp3",
+      "source_filename": "Franco Donatoni_Movimento.mp3"
+    },
+    {
+      "start_seconds": 170.56115508815608,
+      "actual_seconds": 5.04,
+      "sha256": "46c6967dda3051425eab3884bd97712d8a84fa052f99b644a2b0d82308a13329",
+      "byte_size": 202605,
+      "output_filename": "0064.mp3",
+      "source_filename": "Franco Evangelisti_Aleatorio.mp3"
+    },
+    {
+      "start_seconds": 819.9655361347316,
+      "actual_seconds": 5.016,
+      "sha256": "63b2372f65875049c4761dcbf68b34ef2400bf264656d41befc69dda13023713",
+      "byte_size": 201645,
+      "output_filename": "0065.mp3",
+      "source_filename": "Friedrich Cerha_Sinfonie.mp3"
+    },
+    {
+      "start_seconds": 322.0363424522272,
+      "actual_seconds": 5.016,
+      "sha256": "37c0b7ca0d6bcac231ea5ca44f276a4e74221f6bc155d2cecb79a122eeab1389",
+      "byte_size": 201645,
+      "output_filename": "0066.mp3",
+      "source_filename": "Félix Ibarrondo_Pakeruntz.mp3"
+    },
+    {
+      "start_seconds": 284.3330247148156,
+      "actual_seconds": 5.016,
+      "sha256": "2ae593b39fb5fcbaeb186038764504eb96fa7772c33533bdd9c22ca789fe354b",
+      "byte_size": 201645,
+      "output_filename": "0067.mp3",
+      "source_filename": "Galina Ustvolskaïa_Piano Sonata No. 4.mp3"
+    },
+    {
+      "start_seconds": 621.3206702321161,
+      "actual_seconds": 5.016,
+      "sha256": "5fd84bddcc932a4a7d4d247b5a66603cede3680e4afffd4ac1856100520b32ce",
+      "byte_size": 201645,
+      "output_filename": "0068.mp3",
+      "source_filename": "Georg Friedrich Haas_Anachronism.mp3"
+    },
+    {
+      "start_seconds": 3036.093619217979,
+      "actual_seconds": 5.04,
+      "sha256": "7a3b885dd2c5c038facf8cf3619474aa9edc43dc9218a8704c147b5dd5837952",
+      "byte_size": 202605,
+      "output_filename": "0069.mp3",
+      "source_filename": "Georg Friedrich Haas_solstices.mp3"
+    },
+    {
+      "start_seconds": 635.9427006984535,
+      "actual_seconds": 5.016,
+      "sha256": "fb1afb08fc0492963c2d248360c8a3854651aa63606a15520b5c65df1c335ea8",
+      "byte_size": 201645,
+      "output_filename": "0070.mp3",
+      "source_filename": "George Antheil_Symphony for Five Instruments.mp3"
+    },
+    {
+      "start_seconds": 253.57843793533874,
+      "actual_seconds": 5.04,
+      "sha256": "7d9c3ba773afe52f9c42e6c034d769ef7002fac347d8fb19b4e77bd2682a52f4",
+      "byte_size": 202605,
+      "output_filename": "0071.mp3",
+      "source_filename": "George Crumb_Pastoral Drone.mp3"
+    },
+    {
+      "start_seconds": 37.04692814093397,
+      "actual_seconds": 5.016,
+      "sha256": "78fd722cc16becc0a2ef50f17bc3ac819a3be6f302b5759c1d0feed22ee0a053",
+      "byte_size": 201645,
+      "output_filename": "0072.mp3",
+      "source_filename": "George Lewis_The Will to Adorn.mp3"
+    },
+    {
+      "start_seconds": 33.98048676680271,
+      "actual_seconds": 5.04,
+      "sha256": "4f25d9e870262bfba7bd53c2e883700e9793bc7d32a1cd44bd09c2996b0581d7",
+      "byte_size": 202605,
+      "output_filename": "0073.mp3",
+      "source_filename": "Georges Aperghis_À bout de bras.mp3"
+    },
+    {
+      "start_seconds": 214.48558890335926,
+      "actual_seconds": 5.041633,
+      "sha256": "7fc046351ab6d80db7f30840291bf614383d3d2a7b2c0f55b16ebcdf616fc937",
+      "byte_size": 202853,
+      "output_filename": "0074.mp3",
+      "source_filename": "Giacinto Scelsi_Natura renovatur.mp3"
+    },
+    {
+      "start_seconds": 23.655471829372036,
+      "actual_seconds": 5.016,
+      "sha256": "9be4d859d48d3cd9342c6201d17e0ef9b3220f005710847a0e0520949ef941dd",
+      "byte_size": 201645,
+      "output_filename": "0075.mp3",
+      "source_filename": "Giovanni Bertelli_Autoritratto in tre passaggi.mp3"
+    },
+    {
+      "start_seconds": 374.63263610578105,
+      "actual_seconds": 5.016,
+      "sha256": "8d508c87e97ed8a64ae8f9bc21b8c12b370df663df3a7a681230c0e9870a5bd2",
+      "byte_size": 201645,
+      "output_filename": "0076.mp3",
+      "source_filename": "Graciane Finzi_Fantaisie romantique.mp3"
+    },
+    {
+      "start_seconds": 73.03627230926782,
+      "actual_seconds": 5.041633,
+      "sha256": "32d88cfadf06412c7fd6dc743fdcd499489a1b852d7aa5276d1148e368a756e5",
+      "byte_size": 202854,
+      "output_filename": "0077.mp3",
+      "source_filename": "György Kurtág_Ligatura-Message to Frances-Marie.mp3"
+    },
+    {
+      "start_seconds": 477.7903690052756,
+      "actual_seconds": 5.04,
+      "sha256": "a0f43bfeeea27e6f6a88005203d4f5b30f01a21e9e92e0618be60d3316dd91f0",
+      "byte_size": 202605,
+      "output_filename": "0078.mp3",
+      "source_filename": "György Ligeti_String Quartet No. 1.mp3"
+    },
+    {
+      "start_seconds": 54.69554395652936,
+      "actual_seconds": 5.04,
+      "sha256": "d7b8e98222627af44bba71cefa9539b58393e711e1950d436cd6ce727a649c3a",
+      "byte_size": 202605,
+      "output_filename": "0079.mp3",
+      "source_filename": "Gérard Pesson_Nebenstück.mp3"
+    },
+    {
+      "start_seconds": 242.25279332214672,
+      "actual_seconds": 5.04,
+      "sha256": "87955b169e923e15597f94ab2e14fbdca597d28d937e8531436c3b266aee9683",
+      "byte_size": 202605,
+      "output_filename": "0080.mp3",
+      "source_filename": "Hans Abrahamsen_Lied in Fall.mp3"
+    },
+    {
+      "start_seconds": 63.83296162739685,
+      "actual_seconds": 5.01551,
+      "sha256": "81ffe840e48e617008d3418721f259cbbbae0f1d12ec3e01b6521d5beffac2dd",
+      "byte_size": 201809,
+      "output_filename": "0081.mp3",
+      "source_filename": "Hans Werner Henze_La mano sinistra.mp3"
+    },
+    {
+      "start_seconds": 808.8731727393227,
+      "actual_seconds": 5.016,
+      "sha256": "4aa5a93a005a61c7397e54520ac79d9bbd0b0032ee68c06069d420b8922a141d",
+      "byte_size": 201645,
+      "output_filename": "0082.mp3",
+      "source_filename": "Hans Werner Henze_Symphony No. 8.mp3"
+    },
+    {
+      "start_seconds": 560.3963320319915,
+      "actual_seconds": 5.04,
+      "sha256": "1b5f7e38034f6059610531f3043a80bf79536fd0d2ae5aec3f21f4e5c2fd22fd",
+      "byte_size": 202605,
+      "output_filename": "0083.mp3",
+      "source_filename": "Heinz Holliger_Partita.mp3"
+    },
+    {
+      "start_seconds": 627.3746056903503,
+      "actual_seconds": 5.016,
+      "sha256": "87cc085d2300fae0f8d0aa4e72e55c2380595690ff21e9c0f8025451bd20b422",
+      "byte_size": 201645,
+      "output_filename": "0084.mp3",
+      "source_filename": "Helena Tulve_stream 2.mp3"
+    },
+    {
+      "start_seconds": 351.5917746358892,
+      "actual_seconds": 5.016,
+      "sha256": "ca871471c28068971c30d485ae5bedf6a2d6f805e06d979a4b5b0d55665b224a",
+      "byte_size": 201645,
+      "output_filename": "0085.mp3",
+      "source_filename": "Helmut Lachenmann_Souvenir.mp3"
+    },
+    {
+      "start_seconds": 505.84639740632883,
+      "actual_seconds": 5.04,
+      "sha256": "012794bfcb7370b6cb03553596fbf0a18af7eea8fb43aed8685245262e6f33c7",
+      "byte_size": 202605,
+      "output_filename": "0086.mp3",
+      "source_filename": "Henri Pousseur_Mobile.mp3"
+    },
+    {
+      "start_seconds": 1621.8554809854074,
+      "actual_seconds": 5.016,
+      "sha256": "481d895950e34431c981844c482552438b0f85b73712050313898c5532a28561",
+      "byte_size": 201645,
+      "output_filename": "0087.mp3",
+      "source_filename": "Henryk Mikolaj Gorecki_Quasi una Fantasia.mp3"
+    },
+    {
+      "start_seconds": 1215.858283874931,
+      "actual_seconds": 5.04,
+      "sha256": "dd6e5da13a2c8e5634ef44297848bd406a574f2f85c0a3b8eccb538513615ff3",
+      "byte_size": 202605,
+      "output_filename": "0088.mp3",
+      "source_filename": "Iannis Xenakis_Alax.mp3"
+    },
+    {
+      "start_seconds": 883.1877590069096,
+      "actual_seconds": 5.016,
+      "sha256": "55782fe33834d165dabce37c9c7972748f7c984869a7f5c1a4757aca9bfa8b77",
+      "byte_size": 201645,
+      "output_filename": "0089.mp3",
+      "source_filename": "Iannis Xenakis_Jonchaies.mp3"
+    },
+    {
+      "start_seconds": 385.05416472969904,
+      "actual_seconds": 5.04,
+      "sha256": "32c448c1fe51624a89f8a62a8d741aebd452faaa2f8cad7b34d800bc3aef9bfb",
+      "byte_size": 202605,
+      "output_filename": "0090.mp3",
+      "source_filename": "Iannis Xenakis_Roscobeck.mp3"
+    },
+    {
+      "start_seconds": 138.89334741440388,
+      "actual_seconds": 5.016,
+      "sha256": "4a79392a40ad323b874500cafc8e7987650c564c61800e0f53cabbc9d7279e06",
+      "byte_size": 201645,
+      "output_filename": "0091.mp3",
+      "source_filename": "Ichiro Nodaïra_Une autre.........lune.mp3"
+    },
+    {
+      "start_seconds": 541.6996553439762,
+      "actual_seconds": 5.04,
+      "sha256": "fab4d33ad55bfe85d50c32a77b72eb80a19519a5288d819d2e61f9b07f5b1f0d",
+      "byte_size": 202605,
+      "output_filename": "0092.mp3",
+      "source_filename": "Isabel Mundry_Depuis le jour (mit Blick auf Sweelinck).mp3"
+    },
+    {
+      "start_seconds": 692.0713755578081,
+      "actual_seconds": 5.016,
+      "sha256": "654e608e3658ae8f49aae71199260bd287af68ef20cb7055b4843760f96c9a6c",
+      "byte_size": 201645,
+      "output_filename": "0093.mp3",
+      "source_filename": "Isang Yun_Etüden.mp3"
+    },
+    {
+      "start_seconds": 80.59817747398871,
+      "actual_seconds": 5.016,
+      "sha256": "dfc4e637b0b5f228e591c1ff526ac211e3eb63a19405a6db65c40206ea9c28b6",
+      "byte_size": 201645,
+      "output_filename": "0094.mp3",
+      "source_filename": "Isang Yun_Musik für sieben Instrumente.mp3"
+    },
+    {
+      "start_seconds": 82.03014276676265,
+      "actual_seconds": 5.04,
+      "sha256": "da1cb984b219a65331134d54299b7cb411012698150b5b8cbb4f16fdd56297b2",
+      "byte_size": 202605,
+      "output_filename": "0095.mp3",
+      "source_filename": "Ivan Fedele_Air on air.mp3"
+    },
+    {
+      "start_seconds": 513.7680355694654,
+      "actual_seconds": 5.04,
+      "sha256": "5fffac161ce85e33a67c9223a91e1a829f15c754138e78db875fb3b4a11e1201",
+      "byte_size": 202605,
+      "output_filename": "0096.mp3",
+      "source_filename": "Ivan Fedele_Modus.mp3"
+    },
+    {
+      "start_seconds": 289.84580834945956,
+      "actual_seconds": 5.04,
+      "sha256": "0bca547187109e134f082116cf69c0406452ea8740b13a4f12716302d45ddede",
+      "byte_size": 202605,
+      "output_filename": "0097.mp3",
+      "source_filename": "Ivan Wyschnegradsky_Troisième fragment symphonique.mp3"
+    },
+    {
+      "start_seconds": 465.5622612907999,
+      "actual_seconds": 5.016,
+      "sha256": "fa190c58fd1ba257801532d42dcc25cd1b0027c6fbf49e9fe6b62ebbcf8eca79",
+      "byte_size": 201645,
+      "output_filename": "0098.mp3",
+      "source_filename": "James Dillon_String Quartet No. 5.mp3"
+    },
+    {
+      "start_seconds": 557.5484239778838,
+      "actual_seconds": 5.016,
+      "sha256": "e4c4b122b78293d674e91ac1c652008a880396c42bcd1179a27820d118291bc8",
+      "byte_size": 201645,
+      "output_filename": "0099.mp3",
+      "source_filename": "James Tenney_Seegersong #1.mp3"
+    },
+    {
+      "start_seconds": 282.7258859019979,
+      "actual_seconds": 5.01551,
+      "sha256": "c54c1bea8849e363451715c6377d09923375ae02fbaa22eccd30f0c33643deab",
+      "byte_size": 201809,
+      "output_filename": "0100.mp3",
+      "source_filename": "Jason Eckardt_Trespass.mp3"
+    },
+    {
+      "start_seconds": 407.0987632151961,
+      "actual_seconds": 5.016,
+      "sha256": "0fa78fb8052e9467b624e0695a94cd1f732ee2211af1bd10b6a43310b167b832",
+      "byte_size": 201645,
+      "output_filename": "0101.mp3",
+      "source_filename": "Jean-Claude Eloy_Équivalences.mp3"
+    },
+    {
+      "start_seconds": 293.7651533224233,
+      "actual_seconds": 5.016,
+      "sha256": "4cd683a261775f22303dc6d8fc4210abfef09c0ea18a775cfeaff61cb532f69c",
+      "byte_size": 201645,
+      "output_filename": "0102.mp3",
+      "source_filename": "Joan Magrané Figuera_...secreta desolación.mp3"
+    },
+    {
+      "start_seconds": 70.91667812594291,
+      "actual_seconds": 5.04,
+      "sha256": "f280ff0ce0c0594a7fbc5847a8df9877b59c7265fc06bc69df6dae74422e7adf",
+      "byte_size": 202605,
+      "output_filename": "0103.mp3",
+      "source_filename": "John Adams_China Gates.mp3"
+    },
+    {
+      "start_seconds": 1208.7767078964698,
+      "actual_seconds": 5.016,
+      "sha256": "6f507b6067890d012bbce13946876c2cf93c4aa7f7d7f8652e8a79f1cb2414e1",
+      "byte_size": 201645,
+      "output_filename": "0104.mp3",
+      "source_filename": "John Cage_Fifty-Eight.mp3"
+    },
+    {
+      "start_seconds": 101.37222362953428,
+      "actual_seconds": 5.04,
+      "sha256": "59fb343ae042832d21e27dcb819d9597342e798c9b5fa51c8b1d8b8867f9c734",
+      "byte_size": 202605,
+      "output_filename": "0105.mp3",
+      "source_filename": "John Cage_Ophelia.mp3"
+    },
+    {
+      "start_seconds": 578.8046236760081,
+      "actual_seconds": 5.04,
+      "sha256": "264b325016af359bb2d2f96138e2db1de8fbaf2d31072294dae3f36b5f892107",
+      "byte_size": 202605,
+      "output_filename": "0106.mp3",
+      "source_filename": "John Cage_Two Pastorales.mp3"
+    },
+    {
+      "start_seconds": 409.9500407098472,
+      "actual_seconds": 5.016,
+      "sha256": "492d814ed178dae45287e9634121d3e27d530a094d1281c3d1072a235eccbf5b",
+      "byte_size": 201645,
+      "output_filename": "0107.mp3",
+      "source_filename": "John Zorn_Carny.mp3"
+    },
+    {
+      "start_seconds": 518.3240696338389,
+      "actual_seconds": 5.04,
+      "sha256": "85555bfdf69b946db4c2d4d4fb960c14babe669a7c80763e3841770022f98ccd",
+      "byte_size": 202605,
+      "output_filename": "0108.mp3",
+      "source_filename": "Jonathan Dove_Piano Quintet.mp3"
+    },
+    {
+      "start_seconds": 416.47360457864386,
+      "actual_seconds": 5.016,
+      "sha256": "6f2a7aa55f14ff881e9daa1a8c134f8efcfa82210c177292d3b221fdc3fe1429",
+      "byte_size": 201645,
+      "output_filename": "0109.mp3",
+      "source_filename": "Jorge Torres Sáenz_“...y entreabro la puerta del jardín de los muertos”.mp3"
+    },
+    {
+      "start_seconds": 138.08634532844857,
+      "actual_seconds": 5.016,
+      "sha256": "6c23f168f63bea19b53309705915953f0d0a86ea8f47505e8b1070f76de3e766",
+      "byte_size": 201645,
+      "output_filename": "0110.mp3",
+      "source_filename": "José María Sánchez-Verdú_El sueño de la razón produce monstruos.mp3"
+    },
+    {
+      "start_seconds": 291.61613863297157,
+      "actual_seconds": 5.016,
+      "sha256": "a4e08274acd8292247f6483e77ef9f3d281e77fb6866712db37e8e8257c3092e",
+      "byte_size": 201645,
+      "output_filename": "0111.mp3",
+      "source_filename": "Julia Purgina_Kammermusik II.mp3"
+    },
+    {
+      "start_seconds": 344.91257203231436,
+      "actual_seconds": 5.016,
+      "sha256": "83f3b2aa32e9ff77ea7748bad15bc131aedd206dad8c2bb2285c9dbdccae405d",
+      "byte_size": 201645,
+      "output_filename": "0112.mp3",
+      "source_filename": "Julius Eastman_Piano 2.mp3"
+    },
+    {
+      "start_seconds": 225.50232006754317,
+      "actual_seconds": 5.04,
+      "sha256": "e178a8aa37a35cfbaf0f13e23d4eaa9ac9373b63205b176fef0ab92c1ffdd5f9",
+      "byte_size": 202605,
+      "output_filename": "0113.mp3",
+      "source_filename": "Jörg Widmann_Air.mp3"
+    },
+    {
+      "start_seconds": 418.17636698851265,
+      "actual_seconds": 5.04,
+      "sha256": "a8451b79700af572c6b40fc7da8bb9d4820aaed6bcb02ca5dc981c224cb3d1b8",
+      "byte_size": 202605,
+      "output_filename": "0114.mp3",
+      "source_filename": "Jörg Widmann_Sonatina facile.mp3"
+    },
+    {
+      "start_seconds": 113.77992074890703,
+      "actual_seconds": 5.04,
+      "sha256": "2e1a3821a084a24508199c5d09e977a7d78d33e0d9dfac5fa7d2e2ae97c06d5c",
+      "byte_size": 202605,
+      "output_filename": "0115.mp3",
+      "source_filename": "Jürg Frey_Wen 25.mp3"
+    },
+    {
+      "start_seconds": 19.48149397182823,
+      "actual_seconds": 5.04,
+      "sha256": "010ccb82f57172e18de4248c3a76f7807f02f0e021ec724f958e1ec502d593b3",
+      "byte_size": 202605,
+      "output_filename": "0116.mp3",
+      "source_filename": "Kaija Saariaho_Figura.mp3"
+    },
+    {
+      "start_seconds": 732.9667292035462,
+      "actual_seconds": 5.016,
+      "sha256": "93689dd3ebf573d26bc8af420bd662daa18e3883f0b4a936ff06b5d59cf3cd8c",
+      "byte_size": 201645,
+      "output_filename": "0117.mp3",
+      "source_filename": "Karl Amadeus Hartmann_String Quartet No. 1.mp3"
+    },
+    {
+      "start_seconds": 4.063708496379,
+      "actual_seconds": 5.016,
+      "sha256": "c853aba281fe896784f09e1c2a39c56ddc825b18767038f8635a37f32c0daf24",
+      "byte_size": 201645,
+      "output_filename": "0118.mp3",
+      "source_filename": "Karlheinz Stockhausen_Knabenduett.mp3"
+    },
+    {
+      "start_seconds": 172.87882203921018,
+      "actual_seconds": 5.016,
+      "sha256": "25572c5976f1940bc9bda9687f54f72d814b40ff5aa9a851c61f775958c34bfd",
+      "byte_size": 201645,
+      "output_filename": "0119.mp3",
+      "source_filename": "Kevin Juillerat_Study on phonetics.mp3"
+    },
+    {
+      "start_seconds": 215.58606681679225,
+      "actual_seconds": 5.04,
+      "sha256": "356d7206f23d11ee49c489572368e9a8e9fc1f9bdd23de51d0525c3c13821c9b",
+      "byte_size": 202605,
+      "output_filename": "0120.mp3",
+      "source_filename": "Klaus K. Hübler_String Quartet No. 3.mp3"
+    },
+    {
+      "start_seconds": 991.5341798576663,
+      "actual_seconds": 5.04,
+      "sha256": "16605df85b74462cfafd0d99297ff908ca44a47c6427173fabfa7255574895a8",
+      "byte_size": 202605,
+      "output_filename": "0121.mp3",
+      "source_filename": "Klaus Lang_seven views of white.mp3"
+    },
+    {
+      "start_seconds": 250.83608135832492,
+      "actual_seconds": 5.016,
+      "sha256": "ef4f01a893bdcead19154c78b39a154fdafd51041e74c1308fed958ce5f78697",
+      "byte_size": 201645,
+      "output_filename": "0122.mp3",
+      "source_filename": "Krzysztof Penderecki_Przebudzenie Jakuba.mp3"
+    },
+    {
+      "start_seconds": 463.2046192323377,
+      "actual_seconds": 5.016,
+      "sha256": "a753082c1a6f3bf7f13a96600af766ea9243bf3b5c59a6ac1f1add2a382f0529",
+      "byte_size": 201645,
+      "output_filename": "0123.mp3",
+      "source_filename": "Laurent Petitgirard_Tryptique pour guitare.mp3"
+    },
+    {
+      "start_seconds": 470.90459331348126,
+      "actual_seconds": 5.041633,
+      "sha256": "84a3ac8cbbd1621ad2ab9094e8af5878ddf2541f9b76a55939e26e0a681af4b8",
+      "byte_size": 202853,
+      "output_filename": "0124.mp3",
+      "source_filename": "Lionel Bord_Fantasmi.mp3"
+    },
+    {
+      "start_seconds": 532.0435330202614,
+      "actual_seconds": 5.016,
+      "sha256": "3d671bf2a924b57c61a0798f31658d855237fc1f5934a84a051e076af45d5b78",
+      "byte_size": 201645,
+      "output_filename": "0125.mp3",
+      "source_filename": "Liza Lim_Mary Transcendence after Trauma.mp3"
+    },
+    {
+      "start_seconds": 431.32367213163803,
+      "actual_seconds": 5.04,
+      "sha256": "00dc4973f7a50eb08de70ad21ee24caf91f0ed7263f389a3587aeb3b23d82999",
+      "byte_size": 202605,
+      "output_filename": "0126.mp3",
+      "source_filename": "Lou Harrison_Concerto No. 1 for Flute and Percussion.mp3"
+    },
+    {
+      "start_seconds": 41.36449022011651,
+      "actual_seconds": 5.016,
+      "sha256": "4d10cff258faccac625fae19d82e3b9a7ce7eabe16a4f3227900977b19c8995e",
+      "byte_size": 201645,
+      "output_filename": "0127.mp3",
+      "source_filename": "Louis Andriessen_Berceuse voor Annie van Os.mp3"
+    },
+    {
+      "start_seconds": 1012.1468414057363,
+      "actual_seconds": 5.04,
+      "sha256": "94fe4b2a0026d92d65da2014236a1522748eeeafdd5d18e96a1bcd989c6e2310",
+      "byte_size": 202605,
+      "output_filename": "0128.mp3",
+      "source_filename": "Luc Ferrari_String Quartet.mp3"
+    },
+    {
+      "start_seconds": 511.82198715221705,
+      "actual_seconds": 5.04,
+      "sha256": "bfab990c2b0c1781548055bc05db74b143b6aa772b67c0ec1d301c991896da5c",
+      "byte_size": 202605,
+      "output_filename": "0129.mp3",
+      "source_filename": "Lucia Ronchetti_Requiem.mp3"
+    },
+    {
+      "start_seconds": 78.83657081354009,
+      "actual_seconds": 5.04,
+      "sha256": "a589036cd1e8e12a686c0af342706d397175635ccbd10dc2aa5d227f6721b291",
+      "byte_size": 202605,
+      "output_filename": "0130.mp3",
+      "source_filename": "Luciano Berio_Ricorrenze.mp3"
+    },
+    {
+      "start_seconds": 260.89993007227696,
+      "actual_seconds": 5.04,
+      "sha256": "5162456a4a45ccf7593c671e1bcb5f2b1c7a3ddcec915385a7be7913756445e2",
+      "byte_size": 202605,
+      "output_filename": "0131.mp3",
+      "source_filename": "Luigi Dallapiccola_Tartiniana seconda.mp3"
+    },
+    {
+      "start_seconds": 294.6701187754164,
+      "actual_seconds": 5.04,
+      "sha256": "574ffc16d2468595fb4c11f73daebe9826f9bdf0444c769ea8d211de9689d48d",
+      "byte_size": 202605,
+      "output_filename": "0132.mp3",
+      "source_filename": "Lukas Foss_String Quartet no. 3.mp3"
+    },
+    {
+      "start_seconds": 37.059929360401,
+      "actual_seconds": 5.016,
+      "sha256": "5209d6ac5fb5a2e39cb912289ac77a90cc74ba89f02ac9cab0ebc0136e09d5e0",
+      "byte_size": 201645,
+      "output_filename": "0133.mp3",
+      "source_filename": "Magnus Lindberg_Play I.mp3"
+    },
+    {
+      "start_seconds": 168.307583040718,
+      "actual_seconds": 5.04,
+      "sha256": "e947e0935d7f69f375958354ece30ae6460363b27523397ea2416bd57f27ea6b",
+      "byte_size": 202605,
+      "output_filename": "0134.mp3",
+      "source_filename": "Malika Kishino_Monochromer Garten VII.mp3"
+    },
+    {
+      "start_seconds": 341.58545616776775,
+      "actual_seconds": 5.04,
+      "sha256": "824ac9ac6c3fea16467842af6decea1ceccd2c92b3712da8b36bc88308a9f197",
+      "byte_size": 202605,
+      "output_filename": "0135.mp3",
+      "source_filename": "Marc Monnet_Patatras !.mp3"
+    },
+    {
+      "start_seconds": 387.2741488955999,
+      "actual_seconds": 5.016,
+      "sha256": "8ce411cf2213bbd2b11f676e3d72ed48846b0aa5980f782aa8dd9addbd64e6d5",
+      "byte_size": 201645,
+      "output_filename": "0136.mp3",
+      "source_filename": "Mario Lavista_Canto del alba.mp3"
+    },
+    {
+      "start_seconds": 499.4205402750041,
+      "actual_seconds": 5.016,
+      "sha256": "fa6d3606d585aefc927c9460812df1cd8add77cc5f7f8796e3c3d9a7e83f55cb",
+      "byte_size": 201645,
+      "output_filename": "0137.mp3",
+      "source_filename": "Mark Andre_un-fini I.mp3"
+    },
+    {
+      "start_seconds": 278.8012670232926,
+      "actual_seconds": 5.04,
+      "sha256": "edc43b94fcacae8f6f6b8e40aeae3a59b4abdc6d13333a02d8d4ff77d7d0c389",
+      "byte_size": 202605,
+      "output_filename": "0138.mp3",
+      "source_filename": "Martin Smolka_Slzy.mp3"
+    },
+    {
+      "start_seconds": 1118.4561597609916,
+      "actual_seconds": 5.016,
+      "sha256": "c56e77b6c6be40c9520f60244807ca58031ab1192965937f356fed0948798d99",
+      "byte_size": 201645,
+      "output_filename": "0139.mp3",
+      "source_filename": "Matthew Shlomowitz_Grand Epic Fanfare.mp3"
+    },
+    {
+      "start_seconds": 477.7336065605538,
+      "actual_seconds": 5.016,
+      "sha256": "23e4fb822f61747c4cf040d22b8e639ce8c3a813afdebc345b081ea8a0ed1e37",
+      "byte_size": 201645,
+      "output_filename": "0140.mp3",
+      "source_filename": "Maurice Ohana_Concerto.mp3"
+    },
+    {
+      "start_seconds": 1035.1867620253008,
+      "actual_seconds": 5.04,
+      "sha256": "6894082f76e0ea73c1652a40766ff9888630961e3ee2f2e1e53622583ed5fd13",
+      "byte_size": 202605,
+      "output_filename": "0141.mp3",
+      "source_filename": "Maurice Ravel_String Quartet.mp3"
+    },
+    {
+      "start_seconds": 100.08003759466114,
+      "actual_seconds": 5.04,
+      "sha256": "42914ba3848498252fad3c998379e53c1eb8c5dadb5de958e0406e690e95582b",
+      "byte_size": 202605,
+      "output_filename": "0142.mp3",
+      "source_filename": "Mauricio Kagel_Unguis incarnatus est.mp3"
+    },
+    {
+      "start_seconds": 607.960677420384,
+      "actual_seconds": 5.016,
+      "sha256": "6c6e10d5c1cab5ccc47e207d45bea3ec5c9afb1f91dd125146936f7c9f269351",
+      "byte_size": 201645,
+      "output_filename": "0143.mp3",
+      "source_filename": "Meredith Monk_Stringsongs.mp3"
+    },
+    {
+      "start_seconds": 346.86639781433865,
+      "actual_seconds": 5.04,
+      "sha256": "77d7d100fc3f33031d2da4e870e86b72d7e81c98d69b283bafa6a233d4aa9973",
+      "byte_size": 202605,
+      "output_filename": "0144.mp3",
+      "source_filename": "Michael Jarrell_Lied ohne Worte.mp3"
+    },
+    {
+      "start_seconds": 579.6556751675118,
+      "actual_seconds": 5.016,
+      "sha256": "867007b12d0fd876cdd6b3cfa4a67cd224aa7780344dc6776e31b06da54f5233",
+      "byte_size": 201645,
+      "output_filename": "0145.mp3",
+      "source_filename": "Michael Nyman_Time Will Pronounce.mp3"
+    },
+    {
+      "start_seconds": 201.7380942173812,
+      "actual_seconds": 5.04,
+      "sha256": "01fd84287f6b3222137e27c82122a2933aea927bff68bb2063be2b3dca16f7e0",
+      "byte_size": 202605,
+      "output_filename": "0146.mp3",
+      "source_filename": "Mikel Urquiza_Les lueurs se sont multipliées.mp3"
+    },
+    {
+      "start_seconds": 486.97322109506393,
+      "actual_seconds": 5.016,
+      "sha256": "af598a793a2dcebc0647eb3069e05a7987e164bc4bc35d8b121ed9221673d73a",
+      "byte_size": 201645,
+      "output_filename": "0147.mp3",
+      "source_filename": "Morton Feldman_Bass Clarinet and Percussion.mp3"
+    },
+    {
+      "start_seconds": 7486.509166223139,
+      "actual_seconds": 5.04,
+      "sha256": "aa80d5dddd2e533f601fe5a9deef88c83d473f62da03ea6eebe54fbf40800ba3",
+      "byte_size": 202605,
+      "output_filename": "0148.mp3",
+      "source_filename": "Morton Feldman_String Quartet No. 2.mp3"
+    },
+    {
+      "start_seconds": 443.8906154581625,
+      "actual_seconds": 5.016,
+      "sha256": "1d4de03f180a2bdeeeaaed632d59dc815a48ff689c7965ae473720b4d89fd36d",
+      "byte_size": 201645,
+      "output_filename": "0149.mp3",
+      "source_filename": "Nadir Vassena_Triptych – Crucifixion.mp3"
+    },
+    {
+      "start_seconds": 322.7009383407289,
+      "actual_seconds": 5.04,
+      "sha256": "84817fffe8a703e266f2c769863caf568e74153c1235b0dcc32d8f5ce93cc914",
+      "byte_size": 202605,
+      "output_filename": "0150.mp3",
+      "source_filename": "Nico Muhly_One Line, Two Shapes.mp3"
+    },
+    {
+      "start_seconds": 826.8241862516857,
+      "actual_seconds": 5.04,
+      "sha256": "a8672a8e69efb52096412e56b06854679087c74e131869594d625a07dd759f6c",
+      "byte_size": 202605,
+      "output_filename": "0151.mp3",
+      "source_filename": "Nicolaus A. Huber_Disappearances.mp3"
+    },
+    {
+      "start_seconds": 594.4206920611585,
+      "actual_seconds": 5.016,
+      "sha256": "33a0a70d94b43c533eb7dc5ff5ba2a4f181d6da8dbfad9581308cb5d4501adb2",
+      "byte_size": 201645,
+      "output_filename": "0152.mp3",
+      "source_filename": "Nina Šenk_Quadrum.mp3"
+    },
+    {
+      "start_seconds": 56.88107447788717,
+      "actual_seconds": 5.016,
+      "sha256": "fd37cb6c30d3920c240624539c1c359a161f5ac56a7c199a025f8359174a81af",
+      "byte_size": 201645,
+      "output_filename": "0153.mp3",
+      "source_filename": "Olga Neuwirth_...ad auras.mp3"
+    },
+    {
+      "start_seconds": 119.60792791890184,
+      "actual_seconds": 5.016,
+      "sha256": "e8f43dbe891f60e624d851e7ee469fd9ac82c099059bce01bca0db36851e0d1c",
+      "byte_size": 201645,
+      "output_filename": "0154.mp3",
+      "source_filename": "Oliver Knussen_Sonya's Lullaby.mp3"
+    },
+    {
+      "start_seconds": 371.3276921105473,
+      "actual_seconds": 5.04,
+      "sha256": "fe3acf55c7efd437627aa6cee170a3b72ab4d17269a73103bcfba04b76b05d40",
+      "byte_size": 202605,
+      "output_filename": "0155.mp3",
+      "source_filename": "Olivier Messiaen_Le Banquet Céleste.mp3"
+    },
+    {
+      "start_seconds": 29.31181946114163,
+      "actual_seconds": 5.016,
+      "sha256": "2df738696a6d28352f00c8e8504598a2915ab4bf14733855a5d04f9080c298fd",
+      "byte_size": 201645,
+      "output_filename": "0156.mp3",
+      "source_filename": "Ondřej Adámek_Lo que no’ contamo’.mp3"
+    },
+    {
+      "start_seconds": 556.7687284421547,
+      "actual_seconds": 5.016,
+      "sha256": "4c4e2e21203f85e3eef15fdd95caafef78a6b9bd7c30d5ba5f2958a207a707fb",
+      "byte_size": 201645,
+      "output_filename": "0157.mp3",
+      "source_filename": "Pascal Dusapin_Clam.mp3"
+    },
+    {
+      "start_seconds": 619.7594034311356,
+      "actual_seconds": 5.016,
+      "sha256": "c708f24b321478a64f31cb94b2258b20c5a69ec247801dd37df81217ec451cd7",
+      "byte_size": 201645,
+      "output_filename": "0158.mp3",
+      "source_filename": "Pascale Criton_Trans.mp3"
+    },
+    {
+      "start_seconds": 3118.4769188901632,
+      "actual_seconds": 5.016,
+      "sha256": "954d0304749081151f25726e03e29b274e4c994dfe77d390e02475679d33b192",
+      "byte_size": 201645,
+      "output_filename": "0159.mp3",
+      "source_filename": "Paul Hindemith_Ludus tonalis.mp3"
+    },
+    {
+      "start_seconds": 318.0504096597228,
+      "actual_seconds": 5.016,
+      "sha256": "ae10562e5e33cb10e550c89932a670abe4cb82c39229d13645e74841584a6fd9",
+      "byte_size": 201645,
+      "output_filename": "0160.mp3",
+      "source_filename": "Per Nørgård_Luna.mp3"
+    },
+    {
+      "start_seconds": 827.6103135729552,
+      "actual_seconds": 5.04,
+      "sha256": "4047b1e650c8e2ade5571a807309e5eb6a1fee007709dd14f4942c012b2ecaa7",
+      "byte_size": 202605,
+      "output_filename": "0161.mp3",
+      "source_filename": "Peter Ablinger_Verkündigung.mp3"
+    },
+    {
+      "start_seconds": 11.408907965423055,
+      "actual_seconds": 5.016,
+      "sha256": "116dac217762a53bd17b3ac54063c86d5861882723a6783b15acef415b24e805",
+      "byte_size": 201645,
+      "output_filename": "0162.mp3",
+      "source_filename": "Philip Glass_Façades.mp3"
+    },
+    {
+      "start_seconds": 458.8880454484188,
+      "actual_seconds": 5.016,
+      "sha256": "a31909f937e6c9d03e83ab370a42e7249503d4de0b75d1de7052249da66b62d3",
+      "byte_size": 201645,
+      "output_filename": "0163.mp3",
+      "source_filename": "Philipp Maintz_upon a moment's shallow rim.mp3"
+    },
+    {
+      "start_seconds": 166.0508191923337,
+      "actual_seconds": 5.04,
+      "sha256": "2982f7ca6d55a3d3e19b1dc235173134fd4538b4242b1741fff0db727475a49c",
+      "byte_size": 202605,
+      "output_filename": "0164.mp3",
+      "source_filename": "Philippe Hersant_Sept miniatures.mp3"
+    },
+    {
+      "start_seconds": 995.7491022636585,
+      "actual_seconds": 5.016,
+      "sha256": "d68186e96eef17445b09fe10687226a6047533ed6bbf7ad1cee909060516fbe4",
+      "byte_size": 201645,
+      "output_filename": "0165.mp3",
+      "source_filename": "Philippe Hurel_Six miniatures en trompe-l'œil.mp3"
+    },
+    {
+      "start_seconds": 203.77617742935223,
+      "actual_seconds": 5.016,
+      "sha256": "59d189c9e604710342bfc1f9a026ebc40dcaa84d77dac778f5e646688755e226",
+      "byte_size": 201645,
+      "output_filename": "0166.mp3",
+      "source_filename": "Philippe Leroux_Masse(s)...Mémo(ire).mp3"
+    },
+    {
+      "start_seconds": 221.37595675220078,
+      "actual_seconds": 5.04,
+      "sha256": "f85c3f73072c35f704f5ac524e0598ac59a295dc881c8a7011c63fce69caa45d",
+      "byte_size": 202605,
+      "output_filename": "0167.mp3",
+      "source_filename": "Philippe Schœller_Lune d’argent.mp3"
+    },
+    {
+      "start_seconds": 534.6483736552492,
+      "actual_seconds": 5.04,
+      "sha256": "fb711ba1bcdf7b64cc1e5b51e532d3936fbc9932e61ae2eecd6f500d2723ac33",
+      "byte_size": 202605,
+      "output_filename": "0168.mp3",
+      "source_filename": "Pierre Boulez_Sonatine.mp3"
+    },
+    {
+      "start_seconds": 351.13978169145247,
+      "actual_seconds": 5.04,
+      "sha256": "7a3ace20efdd2393b621a39f57c2dc0bbd5320c9ebb9c41081650d1ddcdc1bb4",
+      "byte_size": 202605,
+      "output_filename": "0169.mp3",
+      "source_filename": "Raphaël Cendo_Ars Satura.mp3"
+    },
+    {
+      "start_seconds": 345.8675728645862,
+      "actual_seconds": 5.016,
+      "sha256": "a41a5156ba2f625b70e45b4a35840a57f141e96c224833286ac3dc620434e40c",
+      "byte_size": 201645,
+      "output_filename": "0170.mp3",
+      "source_filename": "Rebecca Saunders_Hauch II.mp3"
+    },
+    {
+      "start_seconds": 160.80043461416025,
+      "actual_seconds": 5.04,
+      "sha256": "84b457f8c4476bccb0f20be299560890d0a25a57df1c2b731e35740bb254b1fc",
+      "byte_size": 202605,
+      "output_filename": "0171.mp3",
+      "source_filename": "Ricardo Nillni_Transeo Tandem.mp3"
+    },
+    {
+      "start_seconds": 189.8421719838932,
+      "actual_seconds": 5.016,
+      "sha256": "c579b710a72b275d62e1f21a3ad87ddcdc49da8850296701c1bb1c2e13e560ba",
+      "byte_size": 201645,
+      "output_filename": "0172.mp3",
+      "source_filename": "Robin De Raaff_Der Einsame im Herbst.mp3"
+    },
+    {
+      "start_seconds": 557.6624867019209,
+      "actual_seconds": 5.04,
+      "sha256": "de7d8f9c912c7094b9de6449e630bd20dc2204ae39619cd0bff625dfabbf0a5b",
+      "byte_size": 202605,
+      "output_filename": "0173.mp3",
+      "source_filename": "Rune Glerup_Concerto.mp3"
+    },
+    {
+      "start_seconds": 1218.7312696020215,
+      "actual_seconds": 5.016,
+      "sha256": "ca3b4e7b18e1b3701c2549d307facfd728db9462fad5f376b270878725e8dddc",
+      "byte_size": 201645,
+      "output_filename": "0174.mp3",
+      "source_filename": "Salvatore Sciarrino_4 Adagi.mp3"
+    },
+    {
+      "start_seconds": 169.5640077756908,
+      "actual_seconds": 5.016,
+      "sha256": "44f31adfc1919b217c6255351b921fa86958c0ccbc414987549dbe62f979ffa7",
+      "byte_size": 201645,
+      "output_filename": "0175.mp3",
+      "source_filename": "Salvatore Sciarrino_Il motivo degli oggetti di vetro.mp3"
+    },
+    {
+      "start_seconds": 348.92449458759523,
+      "actual_seconds": 5.016,
+      "sha256": "dec73a56998b54b383c1798dbe6073f1a07a38920794087eb5464ad11955ee80",
+      "byte_size": 201645,
+      "output_filename": "0176.mp3",
+      "source_filename": "Salvatore Sciarrino_Vento d'ombra.mp3"
+    },
+    {
+      "start_seconds": 205.80138521805483,
+      "actual_seconds": 5.016,
+      "sha256": "d8954323615930c5ebd2aa6b515f9ef2535aac718df24c637d41cead168ceeee",
+      "byte_size": 201645,
+      "output_filename": "0177.mp3",
+      "source_filename": "Sarah Nemtsov_Unscheinbare Pforten Paris.mp3"
+    },
+    {
+      "start_seconds": 227.46840407258367,
+      "actual_seconds": 5.04,
+      "sha256": "51ec0f553eb8c795c24dfae085207ce68c303ee7e239897159958dede8b43c16",
+      "byte_size": 202605,
+      "output_filename": "0178.mp3",
+      "source_filename": "Simon Steen-Andersen_in-side-out-side-in.mp3"
+    },
+    {
+      "start_seconds": 612.5921103637411,
+      "actual_seconds": 5.016,
+      "sha256": "c61cb0de0fb16fa71f6e3fbc696528e36f8bab130f1473aab49bcd83067c11be",
+      "byte_size": 201645,
+      "output_filename": "0179.mp3",
+      "source_filename": "Sofia Goubaïdoulina_Quaternion.mp3"
+    },
+    {
+      "start_seconds": 627.3067896975534,
+      "actual_seconds": 5.04,
+      "sha256": "afbfe220b239320406da62ca508d7910eb505f365e05c21e8769a1b2a0331975",
+      "byte_size": 202605,
+      "output_filename": "0180.mp3",
+      "source_filename": "Stefano Gervasoni_Studio di disabitudine.mp3"
+    },
+    {
+      "start_seconds": 75.15514661266573,
+      "actual_seconds": 5.016,
+      "sha256": "b4d44f0490a7ccea55d3e00e9ff78211155039b4277a8d72e335ee1b1fb2aeb8",
+      "byte_size": 201645,
+      "output_filename": "0181.mp3",
+      "source_filename": "Tania León_A La Par.mp3"
+    },
+    {
+      "start_seconds": 362.4595628262284,
+      "actual_seconds": 5.016,
+      "sha256": "7a3b5f0cf9aa3d2d9905ac2e99adde6bbbd60b0226e66b425a0199206a2e3c17",
+      "byte_size": 201645,
+      "output_filename": "0182.mp3",
+      "source_filename": "Tansy Davies_Iris.mp3"
+    },
+    {
+      "start_seconds": 50.312120803226854,
+      "actual_seconds": 5.016,
+      "sha256": "fa1f3380e3ed279efe2df6237c6e7b43c3c1ab34fe49f78378af4167f890109f",
+      "byte_size": 201645,
+      "output_filename": "0183.mp3",
+      "source_filename": "Thierry Escaich_Choral's dream.mp3"
+    },
+    {
+      "start_seconds": 43.99305172800799,
+      "actual_seconds": 5.016,
+      "sha256": "620eac961ef67fb3a3ea8a1f7f72be75e68a8e612756955d1b863cd2c271abce",
+      "byte_size": 201645,
+      "output_filename": "0184.mp3",
+      "source_filename": "Thierry Pécou_Soleil-Feu.mp3"
+    },
+    {
+      "start_seconds": 294.3955004841439,
+      "actual_seconds": 5.041633,
+      "sha256": "a696bced2fc02cf0c1ef3396315c41f07a93a53f203c5b969aa8e17b60e817e4",
+      "byte_size": 202853,
+      "output_filename": "0185.mp3",
+      "source_filename": "Théo Loevendie_Ackermusik.mp3"
+    },
+    {
+      "start_seconds": 259.8358439444545,
+      "actual_seconds": 5.016,
+      "sha256": "5eacc3cc9fdcab9b4fb29ddca0aacf189c7207479f987b81ee2413dd5c86e541",
+      "byte_size": 201645,
+      "output_filename": "0186.mp3",
+      "source_filename": "Toshi Ichiyanagi_Flowers Blooming in Summer.mp3"
+    },
+    {
+      "start_seconds": 104.73434886760161,
+      "actual_seconds": 5.04,
+      "sha256": "4771ddd52f714d83a982bf8054d79e578a9aa6e92c30cce21e0b56c944fc04d1",
+      "byte_size": 202605,
+      "output_filename": "0187.mp3",
+      "source_filename": "Toshio Hosokawa_Edi.mp3"
+    },
+    {
+      "start_seconds": 925.7889421778742,
+      "actual_seconds": 5.016,
+      "sha256": "cc1be60a07969feab6555660fddd257721b5035a9abb40e34326cd8b9e04247c",
+      "byte_size": 201645,
+      "output_filename": "0188.mp3",
+      "source_filename": "Toshio Hosokawa_Prayer.mp3"
+    },
+    {
+      "start_seconds": 198.28324151650466,
+      "actual_seconds": 5.04,
+      "sha256": "537c51fad96d5b04f8aa145956a7daf98e11b7d6dc1f76a867b4c2df1dcc673e",
+      "byte_size": 202605,
+      "output_filename": "0189.mp3",
+      "source_filename": "Toshio Hosokawa_Voyage VII.mp3"
+    },
+    {
+      "start_seconds": 1020.7688274143648,
+      "actual_seconds": 5.04,
+      "sha256": "d997ac265537f9432654d228afca06ad2247f4471a77b517945169e04b5e0a5f",
+      "byte_size": 202605,
+      "output_filename": "0190.mp3",
+      "source_filename": "Tristan Murail_MémoireErosion.mp3"
+    },
+    {
+      "start_seconds": 484.9536442244203,
+      "actual_seconds": 5.016,
+      "sha256": "731b41a928b73ccb15a0bd09568633e6affb20c2429fdffda56d4692c0bc3905",
+      "byte_size": 201645,
+      "output_filename": "0191.mp3",
+      "source_filename": "Tōru Takemitsu_FantasmaCantos.mp3"
+    },
+    {
+      "start_seconds": 754.9701994160646,
+      "actual_seconds": 5.016,
+      "sha256": "bd13ee713ced0074a0447e21bede64b000758cdc528d32e531826185a03ad6e9",
+      "byte_size": 201645,
+      "output_filename": "0192.mp3",
+      "source_filename": "Unsuk Chin_Alaraph ‘Ritus des Herzschlags’.mp3"
+    },
+    {
+      "start_seconds": 457.64950624569383,
+      "actual_seconds": 5.04,
+      "sha256": "c74906d68120ea27952a4f301d3b27bac8b5a94b6f3e351feffb385134e0949b",
+      "byte_size": 202605,
+      "output_filename": "0193.mp3",
+      "source_filename": "Vincent David_Échos éclatés.mp3"
+    },
+    {
+      "start_seconds": 445.0334887677239,
+      "actual_seconds": 5.016,
+      "sha256": "9ad31e1c97765a419f0cb000706d0ea5b19428fa3bf402f356489ffd80d09fb0",
+      "byte_size": 201645,
+      "output_filename": "0194.mp3",
+      "source_filename": "Vito Žuraj_Hawk-Eye.mp3"
+    },
+    {
+      "start_seconds": 28.89634425838232,
+      "actual_seconds": 5.04,
+      "sha256": "c736bab2df7f071c7285cb853504b365dc7c9fd29e9df4893e8f1ca5542a06db",
+      "byte_size": 202605,
+      "output_filename": "0195.mp3",
+      "source_filename": "Witold Lutosławski_Bukoliki.mp3"
+    },
+    {
+      "start_seconds": 1428.7436732060746,
+      "actual_seconds": 5.04,
+      "sha256": "6728c0a4cbad229a371cfd94f8b8be528cd2659966e6d51b8583bb83e610a801",
+      "byte_size": 202605,
+      "output_filename": "0196.mp3",
+      "source_filename": "Witold Lutosławski_Symphony No.3.mp3"
+    },
+    {
+      "start_seconds": 142.74025016559088,
+      "actual_seconds": 5.016,
+      "sha256": "6ca170daf18b64a827bb90de50afbc6e1b7ee93099ffd7b1b998b9b5c3e8f592",
+      "byte_size": 201645,
+      "output_filename": "0197.mp3",
+      "source_filename": "Wolfgang Rihm_Hekton.mp3"
+    },
+    {
+      "start_seconds": 925.0462856287152,
+      "actual_seconds": 5.016,
+      "sha256": "e25496d4dd13c2a6450041bc573b1a6682319fccc2c646299afecc12eba282cc",
+      "byte_size": 201645,
+      "output_filename": "0198.mp3",
+      "source_filename": "Wolfgang Rihm_Sub-Kontur.mp3"
+    },
+    {
+      "start_seconds": 118.2772623464307,
+      "actual_seconds": 5.016,
+      "sha256": "3d881e1c9845e9b0fe7480b4af0b2b3ec31407a61a10c3f508abc5bea4914c71",
+      "byte_size": 201645,
+      "output_filename": "0199.mp3",
+      "source_filename": "Yann Robin_Extraction.mp3"
+    },
+    {
+      "start_seconds": 33.948280375694644,
+      "actual_seconds": 5.016,
+      "sha256": "1789080aac126594426be1fffe3442dbe509d865d9e580f8347412972af4a5ee",
+      "byte_size": 201645,
+      "output_filename": "0200.mp3",
+      "source_filename": "York Höller_Trias.mp3"
+    }
+  ],
+  "candidate": null,
+  "keep_pending": false
+}
